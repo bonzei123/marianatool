@@ -16,3 +16,26 @@ body::before { content:''; position:fixed; top:0; left:0; width:100%; height:100
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
 .btn-brand { background-color: var(--brand-color); color: white; border: none; font-weight: bold; }
 .btn-brand:hover { background-color: #146c4a; color: white; }
+.img-white {
+    filter: brightness(0) invert(1);
+}
+/* Der Container bekommt die Wunschfarbe für das ursprüngliche Schwarz */
+.logo-color-wrapper {
+    background-color: #19835A; /* Dein Hauptgrün */
+    display: inline-block;     /* Damit der Wrapper so groß ist wie das Bild */
+    line-height: 0;            /* Verhindert Geisterabstände unten */
+}
+
+/* Das Bild wird transformiert */
+.logo-color-transform {
+    height: 40px;              /* Deine gewünschte Höhe */
+    width: auto;
+    opacity: 1;                /* Opacity muss 1 sein für den Effekt */
+
+    /* 1. Bild umkehren: Schwarz->Weiß, Weiß->Schwarz */
+    filter: invert(1);
+
+    /* 2. Verrechnen: Weißes (invertiertes Logo) wird zur Hintergrundfarbe (Grün),
+          Schwarzes (invertierter Hintergrund) bleibt Schwarz */
+    mix-blend-mode: multiply;
+}

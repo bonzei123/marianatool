@@ -3,19 +3,22 @@ version: '3.8'
 services:
   webtool:
     build: .
+    container_name: marianatool
     restart: always
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Port 5000 auf dem NAS erreichbar
     environment:
-      # Hier setzen wir den Trigger für deine app.py
-      # WICHTIG: 4 Slashes für absolute Pfade in SQLite (sqlite:////...)
-      # Da wir im Python Code f'sqlite:///{path}' nutzen (3 Slashes),
-      # muss der Pfad hier absolut sein (z.B. /data/site.db).
+      # WICHTIG: Pfad zur DB im Container (/data Ordner)
+      # Dieser Pfad muss mit dem Volume-Mapping unten übereinstimmen!
       - DB_PATH=/data/site.db
+      - SECRET_KEY=dein_sehr_geheimes_passwort_fuers_nas
     volumes:
-      # Mapping: Ordner auf dem Server : Ordner im Container
-      # 'immo_db_data' ist der Ordner auf deinem Server (wird erstellt)
-      # '/data' ist der Ordner im Container
-      - ./immo_db_data:/data
-      # Auch Uploads sollten persistent sein:
-      - ./uploads:/app/static/uploads
+      # 1. DATENBANK PERSISTENZ
+      # Links: Ordner auf dem NAS (relativ zur docker-compose.yml oder absolut)
+      # Rechts: Ordner im Container (Muss /data sein, wie im Dockerfile vorbereitet)
+      - ./db_data:/data
+
+      # 2. UPLOADS PERSISTENZ
+      # Links: Ordner auf dem NAS
+      # Rechts: Der Upload-Pfad im Container (app/static/uploads)
+      - ./uploads:/app/app/static/uploads
