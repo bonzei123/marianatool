@@ -1,0 +1,28 @@
+/* Styling für User Tabelle und Modals */
+.header-shadow {
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.modal-header {
+    border-bottom: 0;
+}
+
+.bg-success {
+    background-color: #27ae60 !important;
+}
+
+.bg-primary {
+    background-color: #3498db !important;
+}
+
+/* Checkbox Container Style */
+.form-check.border {
+    transition: background-color 0.2s;
+}
+.form-check.border:hover {
+    background-color: #f8f9fa !important;
+}

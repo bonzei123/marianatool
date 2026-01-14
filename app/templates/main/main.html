@@ -1,18 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<style>
-    .tile {
-        background: white; border: none; border-radius: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: all 0.3s ease;
-        text-decoration: none; color: #333; height: 100%; display: block; padding: 30px;
-        position: relative; overflow: hidden;
-    }
-    .tile:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(25, 131, 90, 0.15); }
-    .tile-icon { font-size: 3rem; margin-bottom: 15px; color: var(--brand-color); }
-    .tile-title { font-weight: 800; font-size: 1.3rem; margin-bottom: 10px; }
-    .tile-desc { color: #777; font-size: 0.95rem; line-height: 1.5; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
 <div class="row mb-5">
     <div class="col">
@@ -23,7 +12,7 @@
 
 <div class="row g-4">
     <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('immo_form') }}" class="tile">
+        <a href="{{ url_for('immo.immo_form') }}" class="tile">
             <div class="tile-icon"><i class="bi bi-house-check-fill"></i></div>
             <div class="tile-title">Immobilien Check</div>
             <div class="tile-desc">Starte eine neue Besichtigung oder führe ein Protokoll fort.</div>
@@ -32,7 +21,7 @@
 
     {% if is_admin %}
     <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
+        <a href="{{ url_for('admin.immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
             <div class="tile-icon text-danger"><i class="bi bi-tools"></i></div>
             <div class="tile-title text-danger">Formular Builder</div>
             <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
@@ -40,7 +29,7 @@
     </div>
 
     <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
+        <a href="{{ url_for('admin.user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
             <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>
             <div class="tile-title text-primary">User Verwaltung</div>
             <div class="tile-desc">Benutzer anlegen, Passwörter verwalten und löschen.</div>
@@ -48,7 +37,7 @@
     </div>
 
     <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
+        <a href="{{ url_for('admin.settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
             <div class="tile-icon text-secondary"><i class="bi bi-gear-fill"></i></div>
             <div class="tile-title text-secondary">Einstellungen</div>
             <div class="tile-desc">Hintergrundbild ändern und E-Mail Konfiguration.</div>

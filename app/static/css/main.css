@@ -1,0 +1,10 @@
+.tile {
+    background: white; border: none; border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: all 0.3s ease;
+    text-decoration: none; color: #333; height: 100%; display: block; padding: 30px;
+    position: relative; overflow: hidden;
+}
+.tile:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(25, 131, 90, 0.15); }
+.tile-icon { font-size: 3rem; margin-bottom: 15px; color: var(--brand-color); }
+.tile-title { font-weight: 800; font-size: 1.3rem; margin-bottom: 10px; }
+.tile-desc { color: #777; font-size: 0.95rem; line-height: 1.5; }

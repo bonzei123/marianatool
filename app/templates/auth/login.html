@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
         <div class="card card-custom p-4 p-md-5">
@@ -7,30 +9,23 @@
                 <h2 class="fw-bold" style="color: var(--brand-color);">Willkommen</h2>
                 <p class="text-muted">Bitte melde dich an</p>
             </div>
-
             <form method="post" action="">
                 {{ form.hidden_tag() }}
-
                 <div class="mb-3">
                     {{ form.username.label(class="form-label fw-bold small text-muted") }}
                     {{ form.username(class="form-control", placeholder="Dein Benutzername") }}
                 </div>
-
                 <div class="mb-4">
                     {{ form.password.label(class="form-label fw-bold small text-muted") }}
                     {{ form.password(class="form-control", placeholder="••••••••") }}
                 </div>
-
                 <div class="d-grid gap-2">
                     {{ form.submit(class="btn btn-brand btn-lg") }}
                 </div>
             </form>
-
             <div class="text-center mt-4">
                 <small class="text-muted">Noch kein Mitglied?
-                    <a href="{{ url_for('register') }}" style="color: var(--brand-color); text-decoration: none; font-weight: bold;">
-                        Hier registrieren
-                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="auth-link">Hier registrieren</a>
                 </small>
             </div>
         </div>

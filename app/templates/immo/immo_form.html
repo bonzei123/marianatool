@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block sidebar_specific %}
+    <button class="btn btn-brand w-100 mb-2" onclick="app.generatePDF(false)">Absenden</button>
+    <button class="btn btn-light border w-100 mb-2" onclick="app.generatePDF(true)">Druckvorlage</button>
+    <button class="btn btn-danger w-100" onclick="app.reset()">Leeren</button>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/immo_form.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<div class="container container-custom">
+    <h2 class="text-center mb-4" style="color:#2c3e50">Immobilien Check</h2>
+    <div class="top-controls">
+        <div class="row">
+            <div class="col-md-6">
+                <label class="required-label">CSC Name / Projekt *</label>
+                <input type="text" id="global_csc_name">
+            </div>
+            <div class="col-md-6">
+                <label class="required-label">Immobilien Typ *</label>
+                <select id="immoSelector" onchange="app.render()">
+                    <option value="" disabled selected>Wählen...</option>
+                    <option value="einzel">Einzelanbau</option>
+                    <option value="cluster">Anbaucluster</option>
+                    <option value="ausgabe">Ausgabestelle</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div id="form-generator-output"></div>
+    <div class="mt-5 text-center">
+        <button class="btn btn-success btn-lg px-5" onclick="app.generatePDF(false)">PROTOKOLL ABSCHLIEßEN</button>
+    </div>
+</div>
+
+<div id="uploadModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>Upload läuft...</h3>
+    <div id="uploadList" class="upload-list"></div>
+    <button class="btn btn-primary" id="startUploadBtn" onclick="uploader.start()">Starten</button>
+    <button class="btn btn-light" onclick="document.getElementById('uploadModal').style.display='none'">Abbrechen</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/immo_form.js') }}"></script>
+{% endblock %}

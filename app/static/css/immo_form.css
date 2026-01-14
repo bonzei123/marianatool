@@ -1,0 +1,17 @@
+.container-custom { background: rgba(255,255,255,0.96); padding: 40px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-top: 20px; margin-bottom: 50px; }
+details { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; background: #fff; overflow: hidden; }
+summary { padding: 15px; cursor: pointer; font-weight: bold; background: #f9f9f9; display: flex; justify-content: space-between; }
+details[open] summary { background: #e8f5e9; color: #19835A; border-bottom: 1px solid #ddd; }
+summary:after { content: '+'; font-size: 1.2em; color: #aaa; }
+details[open] summary:after { content: '-'; }
+.field-wrapper { margin-bottom: 15px; }
+.w-half { width: 48%; display: inline-block; vertical-align: top; margin-right: 1%; }
+.w-full { width: 100%; display: block; }
+label { font-weight: 600; font-size: 0.9em; margin-bottom: 5px; display: block; color: #444; }
+.required-label { color: #c0392b; }
+.top-controls { background:#ecf0f1; padding:20px; border-radius:8px; border-left:5px solid #c0392b; margin-bottom:30px; }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+input:focus, select:focus { border-color: #19835A; outline: none; }
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; }
+.modal-box { position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:10px; width:400px; text-align:center; }
+.upload-list { text-align:left; margin:15px 0; max-height:150px; overflow:auto; }

@@ -1,10 +1,12 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
+
 <div class="row">
     <div class="col-md-10 mx-auto">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="m-0 text-white" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.5);">👥 User Verwaltung</h2>
+            <h2 class="m-0 text-white header-shadow">👥 User Verwaltung</h2>
             <div class="d-flex gap-2">
                 <input type="text" id="userSearch" class="form-control" placeholder="🔍 Suche..." onkeyup="filterUsers()">
                 <button class="btn btn-success fw-bold shadow" data-bs-toggle="modal" data-bs-target="#createModal">+ User anlegen</button>
@@ -44,7 +46,7 @@
 
 <div class="modal fade" id="createModal" tabindex="-1">
     <div class="modal-dialog">
-        <form class="modal-content" action="{{ url_for('create_user') }}" method="POST">
+        <form class="modal-content" action="{{ url_for('admin.create_user') }}" method="POST">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title fw-bold">Neuen User anlegen</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -109,50 +111,10 @@
     </div>
 </div>
 
-<script>
-    // Wir warten, bis der DOM geladen ist, bevor wir Modal-Instanzen erstellen
-    document.addEventListener('DOMContentLoaded', function() {
-        // Hilfsfunktion zum Öffnen des Modals
-        window.openEditModal = function(row) {
-            // Daten aus den data-Attributen holen
-            var id = row.getAttribute('data-id');
-            var name = row.getAttribute('data-username');
-            var isAdmin = row.getAttribute('data-admin') === 'true';
-            var servicesRaw = row.getAttribute('data-services');
-            var services = servicesRaw ? servicesRaw.split(',').map(Number) : [];
+<div id="js-config"
+     data-update-url="{{ url_for('admin.update_user', user_id=0) }}"
+     data-delete-url="{{ url_for('admin.delete_user', user_id=0) }}">
+</div>
 
-            // Formular Action URL setzen
-            document.getElementById('editForm').action = "/admin/users/update/" + id;
-
-            // Felder befüllen
-            document.getElementById('editTitle').innerText = "User: " + name;
-            document.getElementById('editUser').value = name;
-            document.getElementById('editAdmin').checked = isAdmin;
-
-            // Lösch-Button Link setzen
-            var delBtn = document.getElementById('delBtn');
-            delBtn.href = "/admin/users/delete/" + id;
-            delBtn.onclick = function() { return confirm("User '" + name + "' wirklich löschen?"); };
-
-            // Checkboxen resetten und setzen
-            document.querySelectorAll('.edit-srv').forEach(cb => {
-                cb.checked = services.includes(parseInt(cb.value));
-            });
-
-            // Modal sicher öffnen (getOrCreateInstance verhindert Fehler bei mehrfachem Aufruf)
-            var myModal = new bootstrap.Modal(document.getElementById('editModal'));
-            myModal.show();
-        };
-
-        // Suchfunktion
-        window.filterUsers = function() {
-            var filter = document.getElementById('userSearch').value.toLowerCase();
-            var rows = document.querySelectorAll('#userTable tbody tr');
-            rows.forEach(r => {
-                var text = r.innerText.toLowerCase();
-                r.style.display = text.includes(filter) ? '' : 'none';
-            });
-        };
-    });
-</script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
 {% endblock %}
