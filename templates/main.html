@@ -1,4 +1,57 @@
 {% extends "layout.html" %}
+
 {% block content %}
-    <h1>Template</h1>
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <h1 class="fw-bold text-dark">Meine Apps</h1>
+        <p class="text-muted mb-0">
+            Hallo <span style="color: var(--brand-color); font-weight: bold;">{{ current_user.username }}</span>,
+            hier sind deine verfügbaren Tools.
+        </p>
+    </div>
+</div>
+
+{% if services %}
+    <div class="row g-4">
+        {% for service in services %}
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <a href="{{ service.url }}" class="text-decoration-none text-dark" target="_blank">
+                <div class="card card-custom h-100 p-4 hover-effect border-start border-4 {{ service.color_class }}" style="border-color: var(--brand-color) !important;"> <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box">
+                            <i class="bi {{ service.icon }}" style="font-size: 2.5rem; color: var(--brand-color);"></i>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right text-muted small"></i>
+                    </div>
+
+                    <h5 class="card-title fw-bold mb-1">{{ service.name }}</h5>
+                    <p class="card-text text-muted small">{{ service.description }}</p>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-3">
+        <i class="bi bi-info-circle me-2"></i> Dir wurden noch keine Services zugewiesen. Bitte wende dich an den Admin.
+    </div>
+{% endif %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+    /* Hover Animation */
+    .hover-effect {
+        transition: all 0.25s ease;
+    }
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(25, 131, 90, 0.2) !important;
+        background-color: #fff;
+    }
+
+    /* Icon Box optional stylen */
+    .icon-box {
+        margin-bottom: 15px;
+    }
+</style>
 {% endblock content %}
