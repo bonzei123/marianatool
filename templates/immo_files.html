@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    /* ORIGINAL FOLDER CARD STYLE */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+    .folder-card { background: #f8f9fa; border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; transition: transform 0.2s; position:relative; }
+    .folder-card:hover { transform: translateY(-5px); border-color: #27ae60; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .folder-icon { font-size: 3em; margin-bottom: 10px; display: block; text-decoration: none; }
+    .folder-name { font-weight: bold; color: #333; word-break: break-all; }
+    .meta { color: #7f8c8d; font-size: 0.85em; margin-top: 5px; }
+    a.card-link { position: absolute; top:0; left:0; width:100%; height:100%; }
+</style>
+
+<h2 class="mb-4">Eingereichte Berichte</h2>
+<div class="grid">
+    {% for p in projects %}
+    <div class="folder-card">
+        <div class="folder-icon">📁</div>
+        <div class="folder-name">{{ p.name }}</div>
+        <div class="meta">{{ p.date }}</div>
+        <div class="meta">{{ p.count }} Dateien | {{ p.size }} MB</div>
+        <a href="{{ url_for('immo_view_project', project_name=p.name) }}" class="card-link"></a>
+    </div>
+    {% else %}
+        <p style="color:#777; grid-column: 1/-1; text-align:center;">Keine Uploads vorhanden.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,57 +1,59 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="row mb-4 align-items-center">
+<style>
+    .tile {
+        background: white; border: none; border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: all 0.3s ease;
+        text-decoration: none; color: #333; height: 100%; display: block; padding: 30px;
+        position: relative; overflow: hidden;
+    }
+    .tile:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(25, 131, 90, 0.15); }
+    .tile-icon { font-size: 3rem; margin-bottom: 15px; color: var(--brand-color); }
+    .tile-title { font-weight: 800; font-size: 1.3rem; margin-bottom: 10px; }
+    .tile-desc { color: #777; font-size: 0.95rem; line-height: 1.5; }
+</style>
+
+<div class="row mb-5">
     <div class="col">
-        <h1 class="fw-bold text-dark">Meine Apps</h1>
-        <p class="text-muted mb-0">
-            Hallo <span style="color: var(--brand-color); font-weight: bold;">{{ current_user.username }}</span>,
-            hier sind deine verfügbaren Tools.
-        </p>
+        <h1 class="fw-bold">Willkommen, {{ current_user.username }}!</h1>
+        <p class="text-muted">Deine Zentrale für Immobilien und Verwaltung.</p>
     </div>
 </div>
 
-{% if services %}
-    <div class="row g-4">
-        {% for service in services %}
-        <div class="col-md-6 col-lg-4 col-xl-3">
-            <a href="{{ service.url }}" class="text-decoration-none text-dark" target="_blank">
-                <div class="card card-custom h-100 p-4 hover-effect border-start border-4 {{ service.color_class }}" style="border-color: var(--brand-color) !important;"> <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box">
-                            <i class="bi {{ service.icon }}" style="font-size: 2.5rem; color: var(--brand-color);"></i>
-                        </div>
-                        <i class="bi bi-box-arrow-up-right text-muted small"></i>
-                    </div>
-
-                    <h5 class="card-title fw-bold mb-1">{{ service.name }}</h5>
-                    <p class="card-text text-muted small">{{ service.description }}</p>
-                </div>
-            </a>
-        </div>
-        {% endfor %}
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('immo_form') }}" class="tile">
+            <div class="tile-icon"><i class="bi bi-house-check-fill"></i></div>
+            <div class="tile-title">Immobilien Check</div>
+            <div class="tile-desc">Starte eine neue Besichtigung oder führe ein Protokoll fort.</div>
+        </a>
     </div>
-{% else %}
-    <div class="alert alert-warning border-0 shadow-sm rounded-3">
-        <i class="bi bi-info-circle me-2"></i> Dir wurden noch keine Services zugewiesen. Bitte wende dich an den Admin.
+
+    {% if is_admin %}
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
+            <div class="tile-icon text-danger"><i class="bi bi-tools"></i></div>
+            <div class="tile-title text-danger">Formular Builder</div>
+            <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
+        </a>
     </div>
-{% endif %}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
+            <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>
+            <div class="tile-title text-primary">User Verwaltung</div>
+            <div class="tile-desc">Benutzer anlegen, Passwörter verwalten und löschen.</div>
+        </a>
+    </div>
 
-<style>
-    /* Hover Animation */
-    .hover-effect {
-        transition: all 0.25s ease;
-    }
-    .hover-effect:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(25, 131, 90, 0.2) !important;
-        background-color: #fff;
-    }
-
-    /* Icon Box optional stylen */
-    .icon-box {
-        margin-bottom: 15px;
-    }
-</style>
-{% endblock content %}
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
+            <div class="tile-icon text-secondary"><i class="bi bi-gear-fill"></i></div>
+            <div class="tile-title text-secondary">Einstellungen</div>
+            <div class="tile-desc">Hintergrundbild ändern und E-Mail Konfiguration.</div>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

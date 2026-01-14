@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <h2 class="mb-4 text-white" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.5);">⚙️ Einstellungen</h2>
+        <div class="card p-4 border-0 shadow-lg rounded-3">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Empfänger E-Mail</label>
+                    <input type="email" name="email_receiver" class="form-control" value="{{ email }}">
+                </div>
+
+                <div class="mb-4 border-top pt-3">
+                    <label class="form-label fw-bold">Hintergrundbild</label>
+                    <input type="file" name="background_image" class="form-control" accept="image/*">
+                </div>
+
+                <div class="mb-4 border-top pt-3 bg-light p-3 rounded">
+                    <label class="form-label fw-bold text-danger">⚠️ Fragen Backup einspielen (JSON)</label>
+                    <input type="file" name="backup_file" class="form-control" accept=".json">
+                    <div class="form-text text-danger">Achtung: Überschreibt alle aktuellen Fragen und Abschnitte!</div>
+                </div>
+
+                <button class="btn btn-success w-100 fw-bold py-2">Speichern & Anwenden</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

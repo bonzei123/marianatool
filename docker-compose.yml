@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  webtool:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      # Hier setzen wir den Trigger für deine app.py
+      # WICHTIG: 4 Slashes für absolute Pfade in SQLite (sqlite:////...)
+      # Da wir im Python Code f'sqlite:///{path}' nutzen (3 Slashes),
+      # muss der Pfad hier absolut sein (z.B. /data/site.db).
+      - DB_PATH=/data/site.db
+    volumes:
+      # Mapping: Ordner auf dem Server : Ordner im Container
+      # 'immo_db_data' ist der Ordner auf deinem Server (wird erstellt)
+      # '/data' ist der Ordner im Container
+      - ./immo_db_data:/data
+      # Auch Uploads sollten persistent sein:
+      - ./uploads:/app/static/uploads

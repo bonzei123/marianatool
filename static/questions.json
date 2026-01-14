@@ -1,0 +1,2903 @@
+[
+  {
+    "id": "section",
+    "title": "Willkommen zur Immobilien-Dokumentations-App (Anleitung)",
+    "content": [
+      {
+        "id": "",
+        "label": "Warum gibt es dieses System?",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "In den vergangenen Monaten haben zahlreiche Vorstände aus unseren lokalen Vereinen in Göttingen um Unterstützung bei der Immobiliensuche gebeten. Gleichzeitig haben viele von euch ihre aktive Hilfe bei genau dieser Suche angeboten. Aus diesem wechselseitigen Bedarf ist eine Lösung entstanden, die beiden Seiten gerecht wird und dabei die Stärke unseres Netzwerks optimal nutzt.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768175864494",
+        "label": "Das Kernproblem war bisher: Unsere Fachexperten aus der Immobilien-AG mussten für jede einzelne Besichtigung hunderte Kilometer zurücklegen, nur um grundlegende Informationen zu sammeln, die letztlich entscheiden, ob eine Immobilie überhaupt weiter in Betracht gezogen wird. Dabei haben wir vor Ort ein engagiertes Netzwerk aus Mitgliedern, die diese Aufgabe wesentlich schneller und effizienter übernehmen können.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Wie funktioniert das neue System?",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Nach einer kompakten Schulung in der Mariana Academy und einem Briefing durch die Bereichsleitung erhalten Vorstände selbstständiger lokaler Vereine die Möglichkeit, Immobilienbesichtigungen nach standardisierten Vorgaben durchzuführen. Ihr sammelt dabei Dokumentationen, Fotos, Videos und detaillierte Informationen zur Immobilie, die ihr anschließend über diese Web-App direkt an die Immobilien-AG übermittelt. So können unsere Fachexperten auf Basis eurer sorgfältigen Vorarbeit fundierte Entscheidungen treffen, ohne jedes Objekt persönlich aufsuchen zu müssen. Im Idealfall erspart ihr der Immo-AG damit unnötige Fahrten zu Objekten, die bereits in der Erstprüfung durchfallen würden.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Dies ist echter Teamgeist in der Praxis: Ihr vor Ort kennt die Gegend, könnt flexibel Termine wahrnehmen und tragt mit eurer Arbeit dazu bei, dass alle Vereine schneller zu passenden Räumlichkeiten kommen. Gleichzeitig entwickelt ihr ein besseres Verständnis dafür, worauf es bei der Immobiliensuche ankommt – Wissen, das eurem eigenen Verein langfristig zugutekommt.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Die Datenerfassung:",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Füllt die vorgegebenen Felder im Dokumentationsbogen so ausführlich wie möglich aus. Je mehr Details, desto besser kann die Immo-AG einschätzen, ob die Immobilie was für euch ist. Packt eure Fotos und Anhänge dazu und leitet alle offenen Fragen weiter, die aufgekommen sind.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768177746984",
+        "label": "Eure konkrete Aufgabe - Der Rahmen eures Einsatzes",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768175999117",
+        "label": "Eure Rolle ist klar definiert: Ihr seid die Augen und Ohren vor Ort, nicht die Verhandlungsführer. Eure Aufgabe besteht darin, potenzielle Immobilien für euren Verein oder euer Cluster anzuschauen, zu dokumentieren und alle relevanten Informationen zu sammeln. Kontaktiert dafür die Vermieter oder Makler und vereinbart einen Besichtigungstermin – mehr nicht.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176010007",
+        "label": "Absolut wichtig: Trefft keine Zusagen zu Mietpreisen, Mietdauer, Vertragskonditionen oder sonstigen Vereinbarungen. Eure Aufgabe ist ausschließlich die Informationsbeschaffung, nicht die Verhandlung. Sollten während der Besichtigung Fragen aufkommen, die ihr nicht beantworten könnt oder sollt, notiert euch diese gewissenhaft und leitet sie später an die Immobilien-AG weiter. Verweist in solchen Situationen freundlich und selbstbewusst darauf, dass diese Details vom Experten-Team des Vereins geklärt werden. Ihr seid die Scouts, die das Terrain erkunden – die finale Einschätzung und Verhandlung übernehmen dann die Spezialisten.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768153380862",
+        "label": "⚠️ Damit sich eure Arbeit auszahlt, ist es zwingend erforderlich, sorgfältig und korrekt vorzugehen. Ungenauigkeiten in Details können später erheblichen Zeit- und Arbeitsaufwand verursachen. Nehmt die Aufgabe daher ernst und sammelt so viele relevante Informationen und Dokumentationen wie möglich.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176021478",
+        "label": "Diese klare Rollenverteilung schützt sowohl euch vor übereilten Entscheidungen als auch den gesamten Verein vor möglicherweise ungünstigen Zusagen. Haltet euch strikt daran.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176023849",
+        "label": "Die Besichtigung: Worauf es ankommt",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176040869",
+        "label": "Bei der Besichtigung selbst geht es darum herauszufinden, ob die Immobilie grundsätzlich für euren Verein geeignet ist. Dabei sind mehrere Aspekte zu beachten:",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176100082",
+        "label": "Dokumentation ist alles: Macht umfassend Fotos von sämtlichen Räumen, Außenbereichen und allen wichtigen Details. Fotografiert nicht nur die offensichtlichen Bereiche, sondern auch Kleinigkeiten wie Steckdosen, Heizkörper, Fenster, Bodenbeläge, sanitäre Anlagen und potenzielle Problemstellen. Dreht zusätzlich Videos, die einen Gesamteindruck vermitteln – ein Rundgang durch die Räume gibt der Immobilien-AG ein viel besseres Gefühl für die Raumaufteilung und Atmosphäre als statische Fotos allein.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176236735",
+        "label": "⚠️Hinweis zum Datenschutz: Beachtet bei Fotos und Videos die Persönlichkeitsrechte. Fotografiert keine Personen ohne deren Einwilligung und achtet darauf, dass keine sensiblen Daten Dritter (wie Dokumente mit persönlichen Informationen) sichtbar sind. Vielen Dank für euren Einsatz und eure Unterstützung! Gemeinsam machen wir die Immobiliensuche für alle Vereine effizienter und erfolgreicher.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176101774",
+        "label": "Achtet besonders auf den Zustand der Immobilie. Gibt es Feuchtigkeitsschäden, Risse in Wänden oder Decken, defekte Fenster oder Türen? Sind die Elektroinstallationen veraltet? Wie ist der Zustand der Heizung? Welche Besonderheiten gibt es – positiv wie negativ? All diese Details können später entscheidend sein, also dokumentiert lieber zu viel als zu wenig.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "⚠️Professionelles Auftreten ist Pflicht: Denkt stets daran, dass ihr euren Verein repräsentiert. Euer Verhalten bei der Besichtigung wirft ein Licht auf die gesamte Organisation. Kleidet euch angemessen, seid pünktlich, höflich und respektvoll im Umgang mit Vermietern und Maklern. Stellt eure Fragen strukturiert und hört aufmerksam zu. Zur Not brecht ihr eine Besichtigung ab, bevor ihr euch zu einem Fehlverhalten hinreißen lasst. Zeigt euch wie die Profis, die ihr seid. Wichtig: Kommt nicht mit mehr als drei Personen zur Besichtigung.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176103895",
+        "label": "Es kann vorkommen, dass ihr auf Ablehnung, Vorurteile oder sogar Provokationen stoßt. Lasst euch davon nicht aus der Ruhe bringen. Bleibt in jeder Situation höflich und professionell. Sollte eine Situation eskalieren oder unangenehm werden, ist es besser, die Besichtigung höflich abzubrechen, als sich zu einem Fehlverhalten hinreißen zu lassen. Zeigt euch als die kompetenten, vernünftigen Profis, die ihr seid. Ihr baut durch euer Verhalten Brücken für alle nachfolgenden Besichtigungen – oder verbrennt sie. Wählt weise.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768178535023",
+        "label": "⚠️Wichtig: Kommt nicht mit mehr als drei Personen zur Besichtigung.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176161799",
+        "label": "Gruppengröße beachten: Kommt nicht mit mehr als drei Personen zur Besichtigung. Unsere Erfahrung hat deutlich gezeigt, dass größere Besuchergruppen auf Vermieter und Makler einschüchternd oder chaotisch wirken können. Dies kann die Atmosphäre negativ beeinflussen und eure Chancen verschlechtern. Zwei bis drei Personen sind ideal: Einer führt das Gespräch, einer macht die Dokumentation, und gegebenenfalls unterstützt eine dritte Person bei der Detailerfassung.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176180160",
+        "label": "Die systematische Datenerfassung",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176181041",
+        "label": "Nach der Besichtigung kommt der vielleicht wichtigste Teil eurer Arbeit: die sorgfältige Dokumentation in der App.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176233434",
+        "label": "Füllt alle vorgegebenen Felder im Dokumentationsbogen so ausführlich und präzise wie möglich aus. Je detaillierter eure Angaben sind, desto besser kann die Immobilien-AG einschätzen, ob die Immobilie für euren Verein geeignet ist, ohne selbst vor Ort gewesen zu sein. Macht euch bewusst: Eure Dokumentation ist die Entscheidungsgrundlage für weitere Schritte. Unvollständige oder ungenaue Angaben führen im schlimmsten Fall dazu, dass die Immo-AG doch anreisen muss oder dass eine eigentlich passende Immobilie übersehen wird.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176234215",
+        "label": "Ladet alle eure Fotos und Videos hoch. Organisiert diese nachvollziehbar – benennt Dateien sinnvoll, sodass später klar ist, was zu sehen ist. Ergänzt eure Dokumentation um alle offenen Fragen, die während der Besichtigung aufgekommen sind, sowie um Beobachtungen, die nicht in die Standardfelder passen, aber relevant sein könnten.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176235595",
+        "label": "Kritisch wichtig: Damit sich eure ehrenamtliche Arbeit und der investierte Zeitaufwand auszahlen, ist absolute Sorgfalt erforderlich. Ungenauigkeiten oder Flüchtigkeitsfehler bei scheinbar kleinen Details können später erheblichen Zeit- und Arbeitsaufwand bei der Immo-AG verursachen. Noch problematischer: Sie können zu Fehlentscheidungen führen, die den gesamten Verein betreffen. Nehmt diese Verantwortung ernst. Checkt eure Eingaben doppelt, bevor ihr sie einreicht. Qualität geht hier eindeutig vor Geschwindigkeit.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768177412137",
+        "label": "Bestätige bitte",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768177287692",
+        "label": "Ich habe alle Texte aufmerksam gelesen und verstanden.",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768176887702",
+        "label": "⚠️Ich verstehe, dass wir ausschließlich Informationen sammeln und dokumentieren, aber keinerlei Zusagen zu Miet- oder Vertragskonditionen treffen dürfen – alle solchen Fragen notiere ich uns stattdessen für die spätere Weiterleitung an die Immobilien-AG.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768177448351",
+        "label": "⚠️Ich werde keinerlei Zusagen oder Absprachen zu Miet- oder Vertragskonditionen tätigen.",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768177492808",
+        "label": "Ich stimme zu!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_a",
+    "title": "Informationen",
+    "content": [
+      {
+        "id": "q_1768150882543",
+        "label": "Verantwortliche Person für die Besichtigung und die Datenerfassung ist:",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "kontakt_sucher_1",
+        "label": "Name",
+        "type": "text",
+        "width": "third",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "kontakt_sucher_2",
+        "label": "Position im Verein",
+        "type": "select",
+        "width": "third",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied"
+        ]
+      },
+      {
+        "id": "kontakt_sucher_3",
+        "label": "Telefon / E-Mail",
+        "type": "text",
+        "width": "third",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768341553202",
+        "label": "Clusterinformationen",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336614271",
+        "label": "Clustername",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336479025",
+        "label": "Clustergröße",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336474884",
+        "label": "Zugehörige CSCs (Stadtname)",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336615286",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336616385",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336617465",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336618458",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768336620787",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768340411677",
+        "label": "CSC- (Stadtname)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_b",
+    "title": "Die Immobilie ",
+    "content": [
+      {
+        "id": "q_1768151423083",
+        "label": "Hier sammeln wir alle Informationen zur Immobilie und zum Inserat. Trage so viele Daten zusammen wie möglich und vergewissere dich der Richtigkeit!",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Basisdaten",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "link",
+        "label": "Link zum Inserat",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768154512921",
+        "label": "Objekt- / Inserats-ID",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "adresse",
+        "label": "Adresse der Immobilie",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165139185",
+        "label": "Satellitenansicht der Immobilie (GoogleMaps)  ",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768341777868",
+        "label": "Wieviele CSCs sollen der Immobilie anbauen?",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "qm_halle",
+        "label": "Lager-/Hallenfläche (m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768335608083",
+        "label": "Mögliche Hallenfläche pro CSC (m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "cluster"
+        ]
+      },
+      {
+        "id": "qm_buero",
+        "label": "Bürofläche (m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "qm_grund",
+        "label": "Grundstücksfläche (m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "deckenhoehe",
+        "label": "Deckenhöhe Halle (m)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768099948619",
+        "label": "Anzahl der Hallen",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768165347568",
+        "label": "Anzahl der Nebengebäude",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768165348485",
+        "label": "Fläche (m²) der Nebengebäude",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768099873154",
+        "label": "Anzahl der Räume",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768163441632",
+        "label": "Anzahl der Etagen",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768163608384",
+        "label": "Keller(-abteil) vorhanden?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "warteraum",
+        "label": "Warteraum möglich?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Verfügbarkeit",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "bezug",
+        "label": "Verfügbar ab",
+        "type": "date",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "mietbar",
+        "label": "Verkauf oder Vermietung?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vermietung",
+          "Verkauf",
+          "beides möglich"
+        ]
+      },
+      {
+        "id": "q_1768109018506",
+        "label": "Alleiniger Eigentümer/Mieter auf Grundstück/ in Objekt",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768171223551",
+        "label": "Werden gängige Auskünfte benötigt (z.B. Mieterselbstauskunft o.ä)",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Kosten",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "miete",
+        "label": "Mietkosten (pro Monat)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768164572154",
+        "label": "Mietkosten (pro m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "kaufpreis",
+        "label": "Kaufpreis",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768178730311",
+        "label": " Kaufpreis (pro m²)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768148444200",
+        "label": "Ungefäre höhe der letzten Nebenkosten (jährlich oder monatlich) wenn bekannt",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Lage",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768168229065",
+        "label": "Die Umgebung vor und um die Immobilie muss fotografiert werden um einen Eindruck vermitteln zu können!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "check_gebiete",
+        "label": "In welchem Gebiet liegt die Immobilie?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Mischgebiet (MI)",
+          "Dorfgebiet (MD)",
+          "Urbanes Gebiet (MU)",
+          "Kerngebiet (MK)",
+          "Gewerbegebiet (GE)",
+          "Industriegebiet (GI)",
+          "Sondergebiet"
+        ]
+      },
+      {
+        "id": "q_1768167337780",
+        "label": "Wie wurde das Objekt bisher genutzt?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Einzelhandel/Ladenfläche",
+          "Büro/Praxis",
+          "Gastronomie",
+          "Werkstatt",
+          "Lager/Logistik",
+          "Produktion/Industrie",
+          "Landwirtschaft",
+          "Sonstiges"
+        ]
+      },
+      {
+        "id": "freistehend",
+        "label": "Freistehend?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein (mindestens eine Hauswand berührt ein anderes Gebäude)"
+        ]
+      },
+      {
+        "id": "barrierefrei",
+        "label": "Barrierefreier Zugang?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768164238679",
+        "label": "Erreichbarkeit mit ÖPNV",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr gut",
+          "Gut",
+          "OK",
+          "Nicht gut",
+          "Schlecht"
+        ]
+      },
+      {
+        "id": "q_1768168057355",
+        "label": "Nächste Haltestelle",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768168107024",
+        "label": "Fußweg Haltestelle (Min.)",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768164259060",
+        "label": "Erreichbarkeit mit Auto",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr gut",
+          "Gut",
+          "OK",
+          "Nicht gut",
+          "Schlecht"
+        ]
+      },
+      {
+        "id": "q_1768168056534",
+        "label": "Entfernung Autobahn in km",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768164278567",
+        "label": "Parkplatzsituation vor Ort",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr gut",
+          "Gut",
+          "OK",
+          "Nicht gut",
+          "Schlecht"
+        ]
+      },
+      {
+        "id": "q_1768167588856",
+        "label": "Eigene Parkplätze",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "unklar"
+        ]
+      },
+      {
+        "id": "q_1768099499557",
+        "label": "Publikumsverkehr unmittelbar an der Immobilie (Autos, Passanten)",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "viel",
+          "etwas",
+          "wenig",
+          "kaum"
+        ]
+      },
+      {
+        "id": "q_1768153094307",
+        "label": "⚠️ Der nächste Teil ist besonders wichtig: Die 200m Abstandsregel muss eingehalten und zwingend überprüft werden!",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165246982",
+        "label": "Link zur Bubatzkarte der Immobilie",
+        "type": "text",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "check_bubatz",
+        "label": "200m Abstandsregel laut Bubatzkarte eingehalten?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "check_bubatz2",
+        "label": "200m Abstandsregel persönlich (vor Ort) überprüft?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Kontaktdaten",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152714708",
+        "label": "Kontaktdaten der Immobilienagentur, der Eigentümer oder Vormieter können (soweit bekannt) hier eingetragen werden. So können Rückfragen aus der Immo-AG Zielgerichtet gestellt werden.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768151853118",
+        "label": "Immobilienagentur",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768090773320",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768090784751",
+        "label": "Telefon / E-Mail",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768151857047",
+        "label": "Eigentümer",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768151762610",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768151763631",
+        "label": "Telefon / E-Mail",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152683660",
+        "label": "Vormieter",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152700791",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152702311",
+        "label": "Telefon / E-Mail",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_c",
+    "title": "Details",
+    "content": [
+      {
+        "id": "q_1768151530129",
+        "label": "Hier sammeln wir Informationen zu Details wie z.B. technischen Gegebenheiten. Trage so viele Daten zusammen wie möglich und vergewissere dich der Richtigkeit!",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768155184199",
+        "label": "Türen / Tore / Fenster / Kuppeln",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165931358",
+        "label": "Türen, Tore, Fenster und Kuppeln müssen ausgiebig fotografiert werden!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768108079220",
+        "label": "Anzahl der Eingänge",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768338390545",
+        "label": "Art des Eingänge",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "direkter Zugang",
+          "geteilter Zugang (z.B. über ein Treppenhaus/Vorhalle)",
+          "beides"
+        ]
+      },
+      {
+        "id": "q_1768108073806",
+        "label": "Anzahl der Fenster",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768108085013",
+        "label": "Anzahl der Tore",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768108101225",
+        "label": "Art der Tore",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sektionaltor",
+          "Rolltor",
+          "Schnelllauftor",
+          "Schiebetor",
+          "Falttor"
+        ]
+      },
+      {
+        "id": "q_1768160716948",
+        "label": "Anzahl an vorhandenen Lichtkuppeln o.ä.",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768155261002",
+        "label": "Wasser & Sanitär",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165828114",
+        "label": "Die Hauswasserversorgung und sanitäre Situation muss ausgiebig fotografiert werden!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "wasser",
+        "label": "Wasseranschluss vorhanden (Zu- und Abwasser)?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768155654345",
+        "label": "Toiletten vorhanden",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768110628208",
+        "label": "Toiletten funktionstüchtig?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768165491935",
+        "label": "Sind geschlechtergetrennte Toiletten vorhanden?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768155271187",
+        "label": "Strom",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165646458",
+        "label": "Der Hausanschlusskasten muss ausgiebig fotografiert werden!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "starkstrom",
+        "label": "Starkstrom vorhanden?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Unklar",
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768172792641",
+        "label": "Min. 50 kW für Grow verfügbar?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768172803761",
+        "label": "60 kW für gesamte Immobilie verfügbar?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "strom_kw",
+        "label": "Stromleistung (kW/Ampere)",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768163062274",
+        "label": "Nachträgliche Überarbeitung des Stromanschlusses möglich?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768155250337",
+        "label": "Heizung",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768165990901",
+        "label": "Die Heizungsanlage muss ausgiebig fotografiert werden!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "check_heizung_vorhanden",
+        "label": "Heizungsanlage vorhanden",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "check_heizung_funktioniert",
+        "label": "Heizungsanlage funktionstüchtig",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768156208470",
+        "label": "Art der Heizung / Wärmeverteilung (wie wird geheizt)?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Heizkörperheizung",
+          "Fußbodenheizung",
+          "Warmluftheizung",
+          "Deckenstrahlheizung",
+          "Hallenstrahlheizung",
+          "Lufterhitzer",
+          "Infrarotheizung"
+        ]
+      },
+      {
+        "id": "check_heizung_art",
+        "label": "Wärmeerzeugung / Energieträger (womit wird geheizt)?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Gas (Erdgas)",
+          "Strom",
+          "Fernwärme",
+          "Öl (Heizöl)",
+          "Flüssiggas",
+          "Wärmepumpe",
+          "Biomasse (Pellets/Hackschnitzel)"
+        ]
+      },
+      {
+        "id": "q_1768163804167",
+        "label": "Nachträgliches überarbeiten der Heizungsanlage möglich?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Räumlichkeiten",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768110651023",
+        "label": "Funktionstüchtige Küche vorhanden?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "unklar"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Bauliche Substanz",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768168366663",
+        "label": "Sind Säulen in der Halle?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768168433072",
+        "label": "Vorhandene Säulen, gerade in der Halle sollten fotografiert werden!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "feucht",
+        "label": "Ist Feuchtigkeit oder Schimmel nachweisbar oder bekannt?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "unklar"
+        ]
+      },
+      {
+        "id": "q_1768170453277",
+        "label": "Ist ein auffälliger Geruch wahrnehmbar?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Nein",
+          "leicht abgestanden",
+          "stark muffig",
+          "beißend"
+        ]
+      },
+      {
+        "id": "q_1768163061576",
+        "label": "Ist die Dichtheit des Dachs gewährleistet?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768154770817",
+        "label": "Sicherheit",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "zaun_ist",
+        "label": "Grundstück / Objekt eingezäunt?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768167941089",
+        "label": "Zaunhöhe, wenn vorhanden",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "zaun_kann",
+        "label": "Nachträgliches überarbeiten der Einzäungung möglich?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768163063215",
+        "label": "Nachträgliches vergittern von Fenstern / Kuppeln möglich?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768338152910",
+        "label": "Sind die Fenster aktuell blickdicht (z.B. durch Folie)?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      },
+      {
+        "id": "q_1768338236393",
+        "label": "Dürfen die Fenster nachträglich blickdicht gemacht werden (z.B. durch Folie)",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "ausgabe"
+        ],
+        "options": [
+          "Ja",
+          "Nein",
+          "Unklar"
+        ]
+      },
+      {
+        "id": "q_1768339053186",
+        "label": "Trafo / Trafohäuschen ? von innen",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ],
+        "options": []
+      },
+      {
+        "id": "q_1768339115913",
+        "label": "Trafo / Trafohäuschen nach möglichkeit von innen   fotografieren!",
+        "type": "checkbox",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      },
+      {
+        "id": "q_1768339166191",
+        "label": "kann schwer sein,oft nur mit eigentümer sonst nur fotos außen aber am besten von innen drin.",
+        "type": "info",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_d",
+    "title": "Besichtigungstermin",
+    "content": [
+      {
+        "id": "q_1768164831854",
+        "label": "Informationen zum Besichtigungstermin",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768164849359",
+        "label": "Datum des Termins",
+        "type": "date",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768164850476",
+        "label": "Uhrzeit des Termins",
+        "type": "number",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768172410691",
+        "label": "Termin wurde vereinbart mit:",
+        "type": "info",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768172611132",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768172615971",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "KontakAsection_etdaten",
+    "title": "Wer hat besichtigt?",
+    "content": [
+      {
+        "id": "",
+        "label": "Beteiligte bei der Besichtigung können hier aufgeführt werden. So lässt sich nachhalten wer vor Ort anwesend war.",
+        "type": "info",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "⚠️ Nicht mehr als 3 Personen von Mariana",
+        "type": "alert",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768105140715",
+        "label": "Person 1",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768105393017",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768105392108",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied",
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      },
+      {
+        "id": "q_1768152201380",
+        "label": "Person 2",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768105597699",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768105601592",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied",
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      },
+      {
+        "id": "q_1768152212624",
+        "label": "Person 3",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152233736",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152234567",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied",
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      },
+      {
+        "id": "q_1768152276098",
+        "label": "Person 4",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152279989",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152280609",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied",
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      },
+      {
+        "id": "q_1768152281779",
+        "label": "Person 5",
+        "type": "header",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152285629",
+        "label": "Name",
+        "type": "text",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768152286360",
+        "label": "Position / Funktion",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Vorstand",
+          "Stellv. Vorstand",
+          "Ansprechperson",
+          "Grow",
+          "PrävB",
+          "Ausgabe",
+          "Springer",
+          "Mitglied",
+          "Makler",
+          "Eigentümer",
+          "Vormieter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_c2",
+    "title": "Bewertung",
+    "content": [
+      {
+        "id": "note",
+        "label": "Wie ist die Besichtigung gesamt verlaufen?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "sehr gut",
+          "gut",
+          "mittelmäßig",
+          "schlecht",
+          "katastrophal"
+        ]
+      },
+      {
+        "id": "q_1768091715177",
+        "label": "Welchen Eindruck hat die Immobilie auf euch gemacht?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "sehr gepflegt",
+          "gepflegt",
+          "durchschnittlich",
+          "leicht vernachlässigt",
+          "ungepflegt",
+          "stark heruntergekommen"
+        ]
+      },
+      {
+        "id": "q_1768170334025",
+        "label": "Welchen Eindruck hat das Grundstück auf euch gemacht?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "sehr gepflegt",
+          "gepflegt",
+          "durchschnittlich",
+          "leicht vernachlässigt",
+          "ungepflegt",
+          "stark heruntergekommen"
+        ]
+      },
+      {
+        "id": "q_1768091577168",
+        "label": "Welchen Eindruck hat die Umgebung auf euch gemacht?",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "sehr gepflegt",
+          "gepflegt",
+          "durchschnittlich",
+          "leicht vernachlässigt",
+          "ungepflegt",
+          "stark heruntergekommen"
+        ]
+      },
+      {
+        "id": "agent_mood",
+        "label": "Wie ist die Stimmung vom Makler ggü. Mariana/Cannabis",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "offen",
+          "positiv",
+          "neutral",
+          "reserviert",
+          "negativ"
+        ]
+      },
+      {
+        "id": "owner_mood",
+        "label": "Wie ist die Stimmung vom Eigentümer ggü. Mariana/Cannabis",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "offen",
+          "positiv",
+          "neutral",
+          "reserviert",
+          "negativ"
+        ]
+      },
+      {
+        "id": "q_1768168705459",
+        "label": "Beschreibung der Gesprächsatmosphäre",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr gut",
+          "Gut",
+          "Neutral",
+          "Angespannt"
+        ]
+      },
+      {
+        "id": "q_1768170099947",
+        "label": "Eindruck vom Makler",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr professionell",
+          "Professionell",
+          "Weniger professionell"
+        ]
+      },
+      {
+        "id": "q_1768170393608",
+        "label": "Eindruck der Kooperationsbereitschaft",
+        "type": "select",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "Sehr kooperativ",
+          "Kooperativ",
+          "Zurückhaltend"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec-1768169983249",
+    "title": "Protokolle & Notizen",
+    "content": [
+      {
+        "id": "q_1768170020561",
+        "label": "Protokolle",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768170019700",
+        "label": "Notizen",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768170826659",
+        "label": "Offene Fragen",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768170021320",
+        "label": "Sonstiges",
+        "type": "text",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "section_d2",
+    "title": "Fotos & Anhänge",
+    "content": [
+      {
+        "id": "",
+        "label": "📸 Fotos hochladen:",
+        "type": "info",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_aussen",
+        "label": "Außenansichten (Objekt)",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_umgebung",
+        "label": "Umgebung (um Objekt)",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_innen",
+        "label": "Innenansichten",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768173159481",
+        "label": "Säulen",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_fenster",
+        "label": "Türen / Tore / Fenster / Kuppeln",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_raeume",
+        "label": "Büro- & Sozialräume / Küche",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_strom",
+        "label": "⚡ Strom / Technik",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "up_wasser",
+        "label": "💧 Wasser / Sanitär",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768096303479",
+        "label": "Sonstige Fotos",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "",
+        "label": "Anhänge hochladen:",
+        "type": "info",
+        "width": "half",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768096151191",
+        "label": "Expose",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768096173547",
+        "label": "Grundriss",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768096185731",
+        "label": "Sonstige Dokumente",
+        "type": "file",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec-1768179768544",
+    "title": "Feedback",
+    "content": [
+      {
+        "id": "q_1768179775699",
+        "label": "Wir bitten dich um dein Feedback damit wir unsere System verbessern können.",
+        "type": "header",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768179803490",
+        "label": "Wie gefällt dir unsere neues System?",
+        "type": "select",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "sehr gut",
+          "gut",
+          "mittelmäßig",
+          "schlecht",
+          "katastrophal"
+        ]
+      },
+      {
+        "id": "q_1768179804566",
+        "label": "Würdest du unser System erneut benutzen?",
+        "type": "select",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "ganz bestimmt",
+          "unsicher",
+          "eher nicht"
+        ]
+      },
+      {
+        "id": "q_1768179805611",
+        "label": "Entspricht das neue System deinen Erwartungen?",
+        "type": "select",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ],
+        "options": [
+          "komplett",
+          "es ist ok",
+          "eher nicht",
+          "gar nicht"
+        ]
+      },
+      {
+        "id": "q_1768179807422",
+        "label": "Was können wir besser machen?",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768180158594",
+        "label": "Was hat dir gefehlt?",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      },
+      {
+        "id": "q_1768180160038",
+        "label": "Welche weitere Unterstützung wünscht du dir?",
+        "type": "textarea",
+        "width": "full",
+        "tooltip": "",
+        "types": [
+          "einzel",
+          "cluster",
+          "ausgabe"
+        ]
+      }
+    ]
+  }
+]
