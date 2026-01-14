@@ -15,4 +15,4 @@ fi
 
 # 3. Die eigentliche App starten (Gunicorn)
 # exec ist wichtig, damit gunicorn die Prozess-ID 1 übernimmt
-exec gunicorn --bind 0.0.0.0:5000 run:app -timeout 120
+exec gunicorn --bind 0.0.0.0:5000 run:app --timeout 120
