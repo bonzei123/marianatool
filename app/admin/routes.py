@@ -190,7 +190,7 @@ def settings_page():
             db.session.add(s)
         if 'background_image' in request.files:
             f = request.files['background_image']
-            if f.filename: f.save(os.path.join(current_app.config['STATIC_FOLDER'], 'background.jpg'))
+            if f.filename: f.save(os.path.join(current_app.root_path, 'static', 'img', 'backgrounds', 'background.png'))
         if 'backup_file' in request.files:
             f = request.files['backup_file']
             if f.filename.endswith('.json'):

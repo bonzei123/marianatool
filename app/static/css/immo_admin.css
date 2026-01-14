@@ -38,7 +38,7 @@
     min-width: 320px;
     overflow-y: auto;
     background-color: #f0f2f5;
-    background-image: url("{{ url_for('static', filename='background.jpg') }}");
+    background-image: url("{{ url_for('static', filename='background.png') }}");
     background-size: cover;
     background-attachment: fixed;
     padding: 20px;

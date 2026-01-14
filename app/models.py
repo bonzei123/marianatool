@@ -76,6 +76,17 @@ class ImmoBackup(db.Model):
     name = db.Column(db.String(100))
     data_json = db.Column(db.Text)
 
+
+class SiteContent(db.Model):
+    id = db.Column(db.String(50), primary_key=True)  # z.B. 'roadmap'
+    content = db.Column(db.Text, nullable=True)  # Markdown Text
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Wer hat es zuletzt bearbeitet?
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    author = db.relationship('User', backref='content_updates')
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

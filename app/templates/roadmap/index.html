@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/roadmap.css') }}">
+
+<div class="container py-4">
+    
+    <div class="text-center mb-4">
+        <h1 class="fw-bold display-5">🚀 Roadmap</h1>
+        <p class="text-muted">Aktueller Planungsstand des Projekts.</p>
+        
+        {% if meta and meta.updated_at %}
+        <div class="d-inline-block border rounded px-3 py-1 bg-light text-secondary small">
+            <i class="bi bi-clock me-1"></i> {{ meta.updated_at.strftime('%d.%m.%Y') }}
+            {% if meta.author %}
+                <span class="mx-2">•</span> 
+                <i class="bi bi-person-fill me-1"></i> {{ meta.author.username }}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if current_user.is_admin %}
+    <div class="card shadow-sm mb-5 border-warning">
+        <div class="card-header bg-warning bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#editorBox" style="cursor:pointer">
+            <h6 class="m-0 fw-bold text-dark"><i class="bi bi-pencil-fill me-2"></i> Inhalt bearbeiten (Admin)</h6>
+        </div>
+        <div id="editorBox" class="collapse show">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control font-monospace bg-light" rows="10">{{ content }}</textarea>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-primary fw-bold"><i class="bi bi-save me-2"></i> Speichern</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow border-0">
+        <div class="card-body p-4 p-lg-5 markdown-body">
+            {{ content | markdown | safe }}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

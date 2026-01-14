@@ -1,48 +1,63 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
-<div class="row mb-5">
-    <div class="col">
-        <h1 class="fw-bold">Willkommen, {{ current_user.username }}!</h1>
-        <p class="text-muted">Deine Zentrale für Immobilien und Verwaltung.</p>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('immo.immo_form') }}" class="tile" style="border-left: 5px solid #19835A;">
-            <div class="tile-icon"><i class="bi bi-house-check-fill"></i></div>
-            <div class="tile-title">Immobilien Check</div>
-            <div class="tile-desc">Starte eine neue Besichtigung oder führe ein Protokoll fort.</div>
-        </a>
+    <div class="row mb-5">
+        <div class="col">
+            <h1 class="fw-bold">Willkommen, {{ current_user.username }}!</h1>
+            <p class="text-muted">Deine Zentrale für Immobilien und Verwaltung.</p>
+        </div>
     </div>
 
-    {% if is_admin %}
-    <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('admin.immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
-            <div class="tile-icon text-danger"><i class="bi bi-tools"></i></div>
-            <div class="tile-title text-danger">Formular Builder</div>
-            <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
-        </a>
-    </div>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ url_for('immo.immo_form') }}" class="tile" style="border-left: 5px solid #19835A;">
+                <div class="tile-icon"><i class="bi bi-house-check-fill"></i></div>
+                <div class="tile-title">Immobilien Check</div>
+                <div class="tile-desc">Starte eine neue Besichtigung oder führe ein Protokoll fort.</div>
+            </a>
+        </div>
 
-    <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('admin.user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
-            <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>
-            <div class="tile-title text-primary">User Verwaltung</div>
-            <div class="tile-desc">Benutzer anlegen, Passwörter verwalten und löschen.</div>
-        </a>
-    </div>
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ url_for('roadmap.index') }}" class="tile" style="border-left: 5px solid #8e44ad;">
+                <div class="tile-icon" style="color: #8e44ad;"><i class="bi bi-map-fill"></i></div>
+                <div class="tile-title" style="color: #8e44ad;">Roadmap</div>
+                <div class="tile-desc">
+                    Projektstatus und geplante Features.
+                    {% if roadmap_meta and roadmap_meta.updated_at %}
+                        <div class="mt-2 small text-muted" style="font-size: 0.85rem;">
+                            <i class="bi bi-clock-history me-1"></i> Stand: {{ roadmap_meta.updated_at.strftime('%d.%m.%Y') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
 
-    <div class="col-md-6 col-lg-4">
-        <a href="{{ url_for('admin.settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
-            <div class="tile-icon text-secondary"><i class="bi bi-gear-fill"></i></div>
-            <div class="tile-title text-secondary">Einstellungen</div>
-            <div class="tile-desc">Hintergrundbild ändern und E-Mail Konfiguration.</div>
-        </a>
+        {% if current_user.is_admin %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ url_for('admin.immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
+                    <div class="tile-icon text-danger"><i class="bi bi-tools"></i></div>
+                    <div class="tile-title text-danger">Formular Builder</div>
+                    <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ url_for('admin.user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
+                    <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>
+                    <div class="tile-title text-primary">User Verwaltung</div>
+                    <div class="tile-desc">Benutzer anlegen, Passwörter verwalten und löschen.</div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ url_for('admin.settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
+                    <div class="tile-icon text-secondary"><i class="bi bi-gear-fill"></i></div>
+                    <div class="tile-title text-secondary">Einstellungen</div>
+                    <div class="tile-desc">Hintergrundbild ändern und E-Mail Konfiguration.</div>
+                </a>
+            </div>
+        {% endif %}
     </div>
-    {% endif %}
-</div>
 {% endblock %}

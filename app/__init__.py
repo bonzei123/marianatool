@@ -1,5 +1,7 @@
 import os
 import json
+import markdown
+import bleach
 from flask import Flask
 from werkzeug.security import generate_password_hash
 from config import Config
@@ -35,10 +37,50 @@ def create_app(config_class=Config):
     from app.admin import bp as admin_bp
     app.register_blueprint(admin_bp)
 
+    from app.roadmap import bp as roadmap_bp
+    app.register_blueprint(roadmap_bp, url_prefix='/roadmap')
+
     # Datenbank & Erstdaten beim ersten Request (oder CLI)
     with app.app_context():
         db.create_all()
         init_db_data(app)
+
+    @app.context_processor
+    def inject_roadmap_meta():
+        from app.models import SiteContent
+        from app.extensions import db
+        # Wir holen die Info, falls sie existiert
+        meta = db.session.get(SiteContent, 'roadmap')
+        return dict(roadmap_meta=meta)
+
+    @app.template_filter('markdown')
+    def markdown_filter(text):
+        if not text:
+            return ""
+        html = markdown.markdown(text, extensions=['fenced_code', 'tables'])
+
+        # --- HIER IST DER FIX ---
+        # Wir müssen list() um bleach.sanitizer.ALLOWED_TAGS setzen!
+        allowed_tags = list(bleach.sanitizer.ALLOWED_TAGS) + [
+            'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'ul', 'ol', 'li', 'pre', 'code', 'table', 'thead',
+            'tbody', 'tr', 'th', 'td', 'blockquote', 'hr',
+            'strong', 'em', 'a', 'img'
+        ]
+
+        allowed_attrs = {'*': ['class'], 'a': ['href', 'rel'], 'img': ['src', 'alt', 'style']}
+        return bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
+
+    @app.context_processor
+    def inject_globals():
+        from app.models import SiteContent
+        # Roadmap UND Background laden
+        roadmap = db.session.get(SiteContent, 'roadmap')
+        bg = db.session.get(SiteContent, 'background')
+
+        # Beide Variablen stehen nun in ALLEN Templates zur Verfügung
+        return dict(roadmap_meta=roadmap, background_meta=bg)
+
 
     return app
 
@@ -57,7 +99,8 @@ def init_db_data(app):
 
     # 2. Admin User
     if not User.query.first():
-        db.session.add(User(username="admin", password_hash=generate_password_hash("admin123"), is_admin=True, email="admin@admin.admin"))
+        db.session.add(User(username="admin", password_hash=generate_password_hash("admin123"), is_admin=True,
+                            email="admin@admin.admin"))
         db.session.commit()
 
     # 3. Questions aus JSON laden (einmalig)
