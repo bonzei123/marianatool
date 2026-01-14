@@ -1,31 +1,44 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container py-5">
-  <h2>Registrieren</h2>
-  <form method="post" action="">
-    {{ form.hidden_tag() }}
-    <fieldset class="form-group">
-      <div class="form-group">
-        {{ form.username.label(class="form-control-label") }}
-        {{ form.username(class="form-control form-control-lg") }}
-      </div>
-      <div class="form-group">
-        {{ form.password.label(class="form-control-label") }}
-        {{ form.password(class="form-control form-control-lg") }}
-      </div>
-      <div class="form-group">
-        {{ form.confirm_password.label(class="form-control-label") }}
-        {{ form.confirm_password(class="form-control form-control-lg") }}
-      </div>
-    </fieldset>
-    <div class="form-group mt-3">
-        {{ form.submit(class="btn btn-outline-info") }}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card card-custom p-4 p-md-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="color: var(--brand-color);">Mitglied werden</h2>
+                <p class="text-muted">Erstelle deinen Account</p>
+            </div>
+
+            <form method="post" action="">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.username.label(class="form-label fw-bold small text-muted") }}
+                    {{ form.username(class="form-control", placeholder="Wunsch-Benutzername") }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.password.label(class="form-label fw-bold small text-muted") }}
+                    {{ form.password(class="form-control", placeholder="Passwort wählen") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.confirm_password.label(class="form-label fw-bold small text-muted") }}
+                    {{ form.confirm_password(class="form-control", placeholder="Passwort bestätigen") }}
+                </div>
+
+                <div class="d-grid gap-2">
+                    {{ form.submit(class="btn btn-brand btn-lg") }}
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <small class="text-muted">Bereits registriert?
+                    <a href="{{ url_for('login') }}" style="color: var(--brand-color); text-decoration: none; font-weight: bold;">
+                        Zum Login
+                    </a>
+                </small>
+            </div>
+        </div>
     </div>
-  </form>
-  <div class="border-top pt-3">
-      <small class="text-muted">
-          Bereits einen Account? <a class="ml-2" href="{{ url_for('login') }}">Einloggen</a>
-      </small>
-  </div>
 </div>
 {% endblock content %}
