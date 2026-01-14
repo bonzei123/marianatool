@@ -1,7 +1,12 @@
 import os
 import json
+import threading
+
+from flask import url_for, current_app
 from app.extensions import db
-from app.models import ImmoSection, ImmoQuestion
+from app.models import ImmoSection, ImmoQuestion, User
+from flask_mail import Message
+from app.extensions import mail
 
 
 def import_json_data(data):
@@ -45,3 +50,38 @@ def import_json_data(data):
         db.session.rollback()
         print(f"❌ Fehler beim Import: {e}")
         raise e
+
+
+# Hilfsfunktion für asynchrones Senden (damit die Webseite nicht hängt)
+def send_async_email(app, msg):
+    with app.app_context():
+        try:
+            with mail.connect() as conn:
+                conn.send(msg)
+            print("✅ E-Mail erfolgreich versendet.")
+        except Exception as e:
+            print(f"❌ Fehler beim E-Mail Versand: {e}")
+            # print(app.config.get('MAIL_USERNAME'))
+
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    reset_url = url_for('auth.reset_token', token=token, _external=True)
+
+    msg = Message('Passwort zurücksetzen - Vereins-Portal',
+                  recipients=[user.email])
+
+    msg.body = f'''Hallo {user.username},
+
+Um dein Passwort zurückzusetzen, klicke bitte auf den folgenden Link:
+{reset_url}
+
+Dieser Link ist 30 Minuten gültig.
+Wenn du dies nicht angefordert hast, ignoriere diese E-Mail einfach.
+'''
+
+    # Asynchron senden (in einem Hintergrund-Thread)
+    # WICHTIG: Wir müssen die 'current_app' (die aktuelle Flask Instanz) übergeben
+    # da der Thread sonst den Kontext verliert.
+    app = current_app._get_current_object()
+    threading.Thread(target=send_async_email, args=(app, msg)).start()

@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from app.admin import bp
 from app.extensions import db
 from app.models import User, Service, ImmoSetting, ImmoBackup, ImmoQuestion, ImmoSection
-from app.utils import import_json_data
+from app.utils import import_json_data, send_reset_email
 
 
 # HELPER
@@ -108,12 +108,15 @@ def user_management():
 def create_user():
     if not current_user.is_admin: return redirect(url_for('main.home'))
     username = request.form.get('username')
-    password = request.form.get('password')
+    email = request.form.get('email')  # <--- NEU
+    password = request.form.get('password')  # Initialpasswort beim Anlegen ist okay
     is_admin = 'is_admin' in request.form
-    if User.query.filter_by(username=username).first():
-        flash('User existiert bereits', 'danger')
+
+    if User.query.filter((User.username == username) | (User.email == email)).first():
+        flash('User oder E-Mail existiert bereits', 'danger')
     else:
-        new_user = User(username=username, password_hash=generate_password_hash(password), is_admin=is_admin)
+        new_user = User(username=username, email=email, password_hash=generate_password_hash(password),
+                        is_admin=is_admin)
         for s_id in request.form.getlist('services'):
             s = db.session.get(Service, int(s_id))
             if s: new_user.services.append(s)
@@ -129,16 +132,39 @@ def update_user(user_id):
     if not current_user.is_admin: return jsonify({"error": "Forbidden"}), 403
     user = db.session.get(User, user_id)
     if user:
+        # 1. Basisdaten
         user.is_admin = 'is_admin' in request.form
-        pw = request.form.get('password')
-        if pw and pw.strip(): user.password_hash = generate_password_hash(pw)
+
+        # 2. Email Update (Prüfung auf Duplikate wäre hier gut)
+        new_email = request.form.get('email')
+        if new_email and new_email != user.email:
+            if not User.query.filter_by(email=new_email).first():
+                user.email = new_email
+            else:
+                flash(f'E-Mail {new_email} ist schon vergeben!', 'warning')
+                return redirect(url_for('admin.user_management'))
+
+        # 3. Services
         user.services = []
         for s_id in request.form.getlist('services'):
             s = db.session.get(Service, int(s_id))
             if s: user.services.append(s)
+
         db.session.commit()
         flash(f'{user.username} aktualisiert', 'success')
     return redirect(url_for('admin.user_management'))
+
+
+# --- NEUE ROUTE FÜR DEN BUTTON ---
+@bp.route('/admin/users/trigger_reset/<int:user_id>', methods=['POST'])
+@login_required
+def trigger_user_reset(user_id):
+    if not current_user.is_admin: return jsonify({"error": "Forbidden"}), 403
+    user = db.session.get(User, user_id)
+    if user:
+        send_reset_email(user)  # Nutzt die Funktion aus utils.py
+        return jsonify({"success": True, "message": f"Reset-Link an {user.email} gesendet."})
+    return jsonify({"success": False, "message": "User nicht gefunden"}), 404
 
 
 @bp.route('/admin/users/delete/<int:user_id>')

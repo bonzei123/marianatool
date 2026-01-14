@@ -16,18 +16,19 @@
         <div class="card border-0 shadow-lg rounded-3 overflow-hidden">
             <table class="table table-hover mb-0 align-middle" id="userTable">
                 <thead class="bg-light">
-                    <tr><th class="ps-4">User</th><th>Rolle</th><th>Rechte</th><th class="text-end pe-4">Aktion</th></tr>
+                    <tr><th class="ps-4">User</th><th>E-Mail</th><th>Rolle</th><th>Rechte</th><th class="text-end pe-4">Aktion</th></tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr style="cursor:pointer;"
                         data-id="{{ user.id }}"
                         data-username="{{ user.username }}"
+                        data-email="{{ user.email }}"
                         data-admin="{{ 'true' if user.is_admin else 'false' }}"
                         data-services="{{ user.services|map(attribute='id')|list|join(',') }}"
                         onclick="openEditModal(this)">
                         <td class="ps-4 fw-bold text-dark">{{ user.username }}</td>
-                        <td>
+                        <td class="text-muted">{{ user.email }}</td> <td>
                             {% if user.is_admin %}
                                 <span class="badge bg-danger">Admin</span>
                             {% else %}
@@ -53,7 +54,9 @@
             </div>
             <div class="modal-body p-4">
                 <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="username" class="form-control" required></div>
-                <div class="mb-3"><label class="fw-bold">Passwort</label><input type="text" name="password" class="form-control" required></div>
+                <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" class="form-control" required></div>
+                <div class="mb-3"><label class="fw-bold">Start-Passwort</label><input type="text" name="password" class="form-control" required></div>
+
                 <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
                     <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" style="float:none;">
                     <label class="form-check-label fw-bold">Admin?</label>
@@ -85,7 +88,17 @@
             </div>
             <div class="modal-body p-4">
                 <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
-                <div class="mb-3"><label class="fw-bold">Neues Passwort</label><input type="text" name="password" class="form-control" placeholder="(optional)"></div>
+
+                <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
+
+                <div class="mb-3 p-3 border rounded bg-light text-center">
+                    <label class="fw-bold d-block mb-2 text-muted small">Passwort Management</label>
+                    <button type="button" class="btn btn-outline-warning w-100 fw-bold" onclick="sendResetMail()">
+                        <i class="bi bi-envelope-at-fill me-2"></i> Reset-Link senden
+                    </button>
+                    <div class="form-text small mt-1">Sendet eine E-Mail an den User, um das Passwort neu zu setzen.</div>
+                </div>
+
                 <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
                     <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" id="editAdmin" style="float:none;">
                     <label class="form-check-label fw-bold">Admin?</label>
@@ -113,7 +126,8 @@
 
 <div id="js-config"
      data-update-url="{{ url_for('admin.update_user', user_id=0) }}"
-     data-delete-url="{{ url_for('admin.delete_user', user_id=0) }}">
+     data-delete-url="{{ url_for('admin.delete_user', user_id=0) }}"
+     data-reset-url="{{ url_for('admin.trigger_user_reset', user_id=0) }}">
 </div>
 
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>

@@ -1,4 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
+from time import time
+from flask import current_app
 from flask_login import UserMixin
 from app.extensions import db, login_manager
 
@@ -20,12 +23,30 @@ class Service(db.Model):
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False) # <--- NEU
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    services = db.relationship('Service', secondary=user_services, lazy='subquery', backref=db.backref('users', lazy=True))
+    services = db.relationship('Service', secondary='user_services', lazy='subquery', backref=db.backref('users', lazy=True))
 
     def has_service(self, slug_name):
         return any(s.slug == slug_name for s in self.services) or self.is_admin
+
+    # --- TOKEN LOGIK FÜR PASSWORT VERGESSEN ---
+    def get_reset_token(self, expires_sec=1800):
+        # Erstellt ein Token, das 30 Minuten gültig ist
+        return jwt.encode(
+            {'user_id': self.id, 'exp': time() + expires_sec},
+            current_app.config['SECRET_KEY'], algorithm='HS256'
+        )
+
+    @staticmethod
+    def verify_reset_token(token):
+        try:
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_id = data.get('user_id')
+        except:
+            return None
+        return db.session.get(User, user_id)
 
 class ImmoSetting(db.Model):
     key = db.Column(db.String(50), primary_key=True)

@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash
 from config import Config
 from app.extensions import db, login_manager
 from app.utils import import_json_data
+from app.extensions import db, login_manager, migrate, mail
 
 
 def create_app(config_class=Config):
@@ -17,6 +18,9 @@ def create_app(config_class=Config):
     # Extensions init
     db.init_app(app)
     login_manager.init_app(app)
+
+    migrate.init_app(app, db, render_as_batch=True)
+    mail.init_app(app)
 
     # Blueprints registrieren
     from app.auth import bp as auth_bp
@@ -53,7 +57,7 @@ def init_db_data(app):
 
     # 2. Admin User
     if not User.query.first():
-        db.session.add(User(username="admin", password_hash=generate_password_hash("admin123"), is_admin=True))
+        db.session.add(User(username="admin", password_hash=generate_password_hash("admin123"), is_admin=True, email="admin@admin.admin"))
         db.session.commit()
 
     # 3. Questions aus JSON laden (einmalig)

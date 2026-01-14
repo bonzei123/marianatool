@@ -7,19 +7,18 @@ services:
     container_name: marianatool
     restart: always
     ports:
-      - "5000:5000"  # Port 5000 auf dem NAS erreichbar
+      - "4420:5000"  # Port 4420 auf dem NAS erreichbar
     environment:
-      # WICHTIG: Pfad zur DB im Container (/data Ordner)
       # Dieser Pfad muss mit dem Volume-Mapping unten übereinstimmen!
       - DB_PATH=/data/site.db
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY
+      # NEU: E-Mail Konfiguration durchreichen
+      - MAIL_SERVER
+      - MAIL_PORT
+      - MAIL_USE_TLS
+      - MAIL_USERNAME
+      - MAIL_PASSWORD
+      - MAIL_DEFAULT_SENDER
     volumes:
-      # 1. DATENBANK PERSISTENZ
-      # Links: Ordner auf dem NAS (relativ zur docker-compose.yml oder absolut)
-      # Rechts: Ordner im Container (Muss /data sein, wie im Dockerfile vorbereitet)
       - ./db_data:/data
-
-      # 2. UPLOADS PERSISTENZ
-      # Links: Ordner auf dem NAS
-      # Rechts: Der Upload-Pfad im Container (app/static/uploads)
       - ./uploads:/app/app/static/uploads
