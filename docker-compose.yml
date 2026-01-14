@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   webtool:
-    build: .
+    build:
+      context: https://github.com/bonzei123/marianatool.git
     container_name: marianatool
     restart: always
     ports:
