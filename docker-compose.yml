@@ -11,7 +11,7 @@ services:
       # WICHTIG: Pfad zur DB im Container (/data Ordner)
       # Dieser Pfad muss mit dem Volume-Mapping unten übereinstimmen!
       - DB_PATH=/data/site.db
-      - SECRET_KEY=dein_sehr_geheimes_passwort_fuers_nas
+      - SECRET_KEY=8601fa73e96f6251778e617559d8f090
     volumes:
       # 1. DATENBANK PERSISTENZ
       # Links: Ordner auf dem NAS (relativ zur docker-compose.yml oder absolut)

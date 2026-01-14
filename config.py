@@ -3,7 +3,7 @@ import os
 
 class Config:
     # ... deine anderen Configs ...
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dein_geheimer_key'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or '7be05da9bd2c091116f985c7501452dd'
 
     # --- DATENBANK LOGIK ---
     # Prüfen, ob eine DB_PATH Variable existiert (wird nur von Docker gesetzt)
