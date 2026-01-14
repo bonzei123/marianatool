@@ -13,4 +13,8 @@ RUN mkdir -p /data
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "run:app", "--timeout", "120"]
+COPY boot.sh ./
+RUN chmod +x boot.sh
+
+# Statt CMD [...] nutzen wir jetzt das Skript als Einstiegspunkt
+ENTRYPOINT ["./boot.sh"]
