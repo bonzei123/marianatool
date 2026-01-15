@@ -106,30 +106,54 @@ def create_app(config_class=Config):
         )
     return app
 
+
 def init_db_data(app):
-    from app.models import User, Service, ImmoSection
+    """
+    Erstellt Standard-Daten, falls die DB leer ist.
+    """
+    from app.models import Service, User, SiteContent
+    from werkzeug.security import generate_password_hash
+    from sqlalchemy.exc import OperationalError  # <--- WICHTIG: Importieren
 
-    # 1. Services
-    if Service.query.count() == 0:
-        s1 = Service(name="Immo Check", slug="immo_user", description="Besichtigungs-Formular", url="/immo",
-                     icon="bi-house-check", color_class="border-success")
-        s2 = Service(name="Immo Admin", slug="immo_admin", description="Builder & Dateien", url="/immo/admin",
-                     icon="bi-tools", color_class="border-danger")
-        db.session.add_all([s1, s2])
-        db.session.commit()
+    try:
+        # Wir versuchen, auf die DB zuzugreifen
+        if Service.query.count() == 0:
+            print("Initialisiere Datenbank mit Standard-Werten...")
 
-    # 2. Admin User
-    if not User.query.first():
-        db.session.add(User(username="admin", password_hash=generate_password_hash("admin123"), is_admin=True,
-                            email="admin@admin.admin"))
-        db.session.commit()
+            # ... (Dein Code zum Anlegen von Usern & Services) ...
+            # Hier nichts ändern, nur einrücken!
 
-    # 3. Questions aus JSON laden (einmalig)
-    if not ImmoSection.query.first():
-        json_path = os.path.join(app.config['STATIC_FOLDER'], 'questions.json')
-        if os.path.exists(json_path):
-            try:
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    import_json_data(json.load(f))
-            except Exception as e:
-                print(f"Init Import Error: {e}")
+            # Admin User (Falls keiner da ist)
+            if User.query.count() == 0:
+                admin = User(username='admin', email='admin@example.com', is_admin=True)
+                admin.set_password('admin')
+                db.session.add(admin)
+
+            # Standard Services
+            services = [
+                Service(name="Immobilien Tool", slug="immo_tool", description="Besichtigungen und Protokolle",
+                        icon="bi-house-check-fill", url="/immo"),
+                Service(name="Roadmap Ansehen", slug="roadmap_access", description="Darf die Roadmap sehen",
+                        icon="bi-eye", url="#"),
+                Service(name="Roadmap Bearbeiten", slug="roadmap_edit", description="Darf die Roadmap bearbeiten",
+                        icon="bi-pencil", url="#"),
+                Service(name="Datei Manager", slug="immo_files_access", description="Zugriff auf Uploads",
+                        icon="bi-folder2-open", url="/immo/admin/files")
+            ]
+
+            for s in services:
+                # Prüfen ob es den Service schon gibt (vermeidet Duplikate beim Neustart)
+                existing = Service.query.filter_by(slug=s.slug).first()
+                if not existing:
+                    db.session.add(s)
+
+            db.session.commit()
+            print("Fertig.")
+
+    except OperationalError:
+        # HIER IST DER RETTER:
+        # Wenn die DB-Tabelle noch alt ist (Spalte fehlt), landen wir hier.
+        # Wir machen einfach NICHTS (pass).
+        # Dadurch stürzt die App nicht ab, und 'flask db upgrade' kann endlich laufen!
+        print("Datenbank noch nicht bereit für Initialisierung (Migration steht aus). Überspringe...")
+        pass
