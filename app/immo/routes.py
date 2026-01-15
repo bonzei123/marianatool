@@ -9,7 +9,7 @@ from app.models import ImmoSection
 @bp.route('/immo')
 @login_required
 def immo_form():
-    if not current_user.has_service('immo_user'): return redirect(url_for('main.home'))
+    if not current_user.has_permission('immo_user'): return redirect(url_for('main.home'))
     return render_template('immo/immo_form.html')
 
 @bp.route('/api/config')

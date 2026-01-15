@@ -6,17 +6,24 @@ from app.models import SiteContent
 from app.extensions import db
 from datetime import datetime
 
-
 @bp.route("/", methods=['GET', 'POST'])
 @login_required
 def index():
+    # --- TÜRSTEHER 1: DARF ER REIN? ---
+    # Wir prüfen, ob der User das Recht "roadmap_access" hat.
+    # (Admins haben das automatisch, weil has_permission bei Admins immer True ist)
+    if not current_user.has_permission('roadmap_access'):
+        flash('Du hast keine Berechtigung, die Roadmap einzusehen.', 'danger')
+        return redirect(url_for('main.home'))
+
     # Content laden (Schlüssel ist 'roadmap')
     page_content = db.session.get(SiteContent, 'roadmap')
 
-    # SPEICHERN (Nur Admins)
+    # --- TÜRSTEHER 2: DARF ER SPEICHERN? ---
     if request.method == 'POST':
-        if not current_user.is_admin:
-            flash('Nur Admins dürfen speichern!', 'danger')
+        # Hier prüfen wir das Recht "roadmap_edit"
+        if not current_user.has_permission('roadmap_edit'):
+            flash('Nur Roadmap-Redakteure dürfen speichern!', 'danger')
             return redirect(url_for('roadmap.index'))
 
         new_text = request.form.get('content')
@@ -33,7 +40,7 @@ def index():
         flash('Roadmap erfolgreich gespeichert.', 'success')
         return redirect(url_for('roadmap.index'))
 
-    # ANZEIGEN (Für alle eingeloggten)
+    # ANZEIGEN (Für alle, die Türsteher 1 passiert haben)
     markdown_text = page_content.content if page_content else "Noch keine Roadmap definiert."
 
     return render_template('roadmap/index.html', content=markdown_text, meta=page_content)

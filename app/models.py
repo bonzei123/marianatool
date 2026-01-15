@@ -15,7 +15,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
-    url = db.Column(db.String(200), nullable=False)
+    url = db.Column(db.String(200), nullable=True)
     icon = db.Column(db.String(50), default="bi-box")
     color_class = db.Column(db.String(50), default="border-primary")
     slug = db.Column(db.String(50), unique=True)
@@ -28,10 +28,13 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     services = db.relationship('Service', secondary='user_services', lazy='subquery', backref=db.backref('users', lazy=True))
 
-    def has_service(self, slug_name):
-        return any(s.slug == slug_name for s in self.services) or self.is_admin
+    def has_permission(self, slug_name):
+        # Admin darf alles (Gott-Modus)
+        if self.is_admin:
+            return True
+        # Sonst prüfen wir, ob der User den Service/Permission hat
+        return any(s.slug == slug_name for s in self.services)
 
-    # --- TOKEN LOGIK FÜR PASSWORT VERGESSEN ---
     def get_reset_token(self, expires_sec=1800):
         # Erstellt ein Token, das 30 Minuten gültig ist
         return jwt.encode(

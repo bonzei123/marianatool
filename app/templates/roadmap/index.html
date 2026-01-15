@@ -20,7 +20,7 @@
         {% endif %}
     </div>
 
-    {% if current_user.is_admin %}
+    {% if current_user.has_permission('roadmap_edit') %}
     <div class="card shadow-sm mb-5 border-warning">
         <div class="card-header bg-warning bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#editorBox" style="cursor:pointer">
             <h6 class="m-0 fw-bold text-dark"><i class="bi bi-pencil-fill me-2"></i> Inhalt bearbeiten (Admin)</h6>

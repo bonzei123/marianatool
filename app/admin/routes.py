@@ -21,14 +21,14 @@ def get_setting(key, default=""):
 @bp.route('/immo/admin')
 @login_required
 def immo_admin_dashboard():
-    if not current_user.has_service('immo_admin'): return redirect(url_for('main.home'))
+    if not current_user.has_permission('immo_admin'): return redirect(url_for('main.home'))
     return render_template('admin/immo_admin.html')
 
 
 @bp.route('/immo/admin/save', methods=['POST'])
 @login_required
 def immo_save_config():
-    if not current_user.has_service('immo_admin'): return jsonify({"error": "Forbidden"}), 403
+    if not current_user.has_permission('immo_admin'): return jsonify({"error": "Forbidden"}), 403
     try:
         new_data = request.json
         # Backup
@@ -46,7 +46,7 @@ def immo_save_config():
 @bp.route('/immo/admin/backups')
 @login_required
 def get_backups():
-    if not current_user.has_service('immo_admin'): return jsonify([])
+    if not current_user.has_permission('immo_admin'): return jsonify([])
     backups = ImmoBackup.query.order_by(ImmoBackup.created_at.desc()).limit(20).all()
     return jsonify([{"id": b.id, "name": b.name, "data": json.loads(b.data_json)} for b in backups])
 
@@ -55,7 +55,7 @@ def get_backups():
 @bp.route('/immo/admin/files')
 @login_required
 def immo_admin_files():
-    if not current_user.has_service('immo_admin'): return redirect(url_for('main.home'))
+    if not current_user.has_permission('immo_admin'): return redirect(url_for('main.home'))
     projects = []
     up_folder = current_app.config['UPLOAD_FOLDER']
     if os.path.exists(up_folder):
@@ -74,7 +74,7 @@ def immo_admin_files():
 @bp.route('/immo/admin/files/<project_name>')
 @login_required
 def immo_view_project(project_name):
-    if not current_user.has_service('immo_admin'): return redirect(url_for('main.home'))
+    if not current_user.has_permission('immo_admin'): return redirect(url_for('main.home'))
     safe_name = secure_filename(project_name)
     target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], safe_name)
     files = []
