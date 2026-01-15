@@ -86,7 +86,14 @@ function renderEditor() {
 }
 
 function renderQ(list, q) {
-    const div = document.createElement('div'); div.className = 'question-card';
+    const div = document.createElement('div');
+    div.className = 'question-card';
+
+    // --- NEU: Hier setzen wir die Farbe beim Laden ---
+    if (['info', 'alert', 'header'].includes(q.type)) {
+        div.classList.add('type-' + q.type);
+    }
+
     const types = q.types || ['einzel','cluster','ausgabe'];
     if(!q.id) q.id = generateUniqueId('q');
 
@@ -109,7 +116,23 @@ function renderQ(list, q) {
 }
 
 function tog(el) { el.classList.toggle('active'); sync(); }
-function toggleOpt(sel) { sel.closest('.question-card').querySelector('.q-opts').style.display = sel.value==='select'?'block':'none'; }
+
+// --- NEU: toggleOpt aktualisiert jetzt auch die Farbe sofort ---
+function toggleOpt(sel) {
+    // 1. Optionen-Feld ein/ausblenden
+    const card = sel.closest('.question-card');
+    card.querySelector('.q-opts').style.display = sel.value==='select'?'block':'none';
+
+    // 2. Farb-Klasse aktualisieren
+    // Erstmal alle Farb-Klassen löschen
+    card.classList.remove('type-info', 'type-alert', 'type-header');
+
+    // Dann neue Klasse setzen, wenn es einer der speziellen Typen ist
+    if (['info', 'alert', 'header'].includes(sel.value)) {
+        card.classList.add('type-' + sel.value);
+    }
+}
+
 function removeEl(btn) { btn.closest(btn.classList.contains('btn-del')?'.question-card':'.section-card').remove(); sync(); }
 function addSection() { config.push({id: generateUniqueId('s'), title:'Neu', content:[]}); renderEditor(); sync(); }
 function addQ(btn) { renderQ(btn.parentElement.previousElementSibling, {id: generateUniqueId('q'), label:'', type:'text'}); sync(); }

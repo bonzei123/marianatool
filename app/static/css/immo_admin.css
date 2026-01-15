@@ -38,7 +38,6 @@
     min-width: 320px;
     overflow-y: auto;
     background-color: #f0f2f5;
-    background-image: url("{{ url_for('static', filename='background.png') }}");
     background-size: cover;
     background-attachment: fixed;
     padding: 20px;
@@ -87,3 +86,19 @@
 .preview-pane .alert { padding: 10px; border-radius: 5px; font-size: 0.9em; margin-bottom: 10px; }
 .preview-pane .alert-info { background: #e8f6f3; color: #2c3e50; border: 1px solid #d1ece6; }
 .preview-pane .alert-danger { background: #fdeaea; color: #c0392b; border: 1px solid #fadbd8; }
+.question-card.type-info {
+    border-left: 5px solid #0dcaf0;
+    background-color: #f8fcfd; /* Ganz leichtes Blau im Hintergrund */
+}
+
+/* Alert: Rot (wie alert-danger) */
+.question-card.type-alert {
+    border-left: 5px solid #dc3545;
+    background-color: #fff5f5; /* Ganz leichtes Rot im Hintergrund */
+}
+
+/* Optional: Header (Dunkel) für bessere Struktur */
+.question-card.type-header {
+    border-left: 5px solid #343a40;
+    background-color: #f8f9fa;
+}

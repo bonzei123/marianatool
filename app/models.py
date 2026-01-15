@@ -19,6 +19,7 @@ class Service(db.Model):
     icon = db.Column(db.String(50), default="bi-box")
     color_class = db.Column(db.String(50), default="border-primary")
     slug = db.Column(db.String(50), unique=True)
+    background_image = db.Column(db.String(100), nullable=True)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

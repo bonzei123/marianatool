@@ -42,7 +42,19 @@
                     <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
                 </a>
             </div>
-
+            {% if current_user.has_permission('immo_files_access') %}
+                <div class="col-md-6 col-lg-4">
+                    <a href="/immo/admin/files" class="tile" style="border-left: 5px solid #f1c40f;">
+                        <div class="tile-icon text-warning">
+                            <i class="bi bi-folder2-open"></i>
+                        </div>
+                        <div class="tile-title text-warning">Datei Manager</div>
+                        <div class="tile-desc">
+                            Verwalte alle hochgeladenen Bilder und PDF-Dateien zentral.
+                        </div>
+                    </a>
+                </div>
+            {% endif %}
             <div class="col-md-6 col-lg-4">
                 <a href="{{ url_for('admin.user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
                     <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>

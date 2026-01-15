@@ -73,17 +73,38 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_globals():
-        from app.models import SiteContent
-        # Roadmap UND Background laden
+        from flask import request
+        from app.models import SiteContent, Service, User  # Imports hier drin, um Zirkelbezüge zu vermeiden
+        from app.extensions import db
+
+        global_bg_meta = db.session.get(SiteContent, 'background')
+
+        if global_bg_meta and global_bg_meta.content:
+            current_bg = global_bg_meta.content
+        else:
+            current_bg = 'background.png'
+
+        # 2. Spezifisches Bild suchen basierend auf Blueprint
+        if request.blueprint:
+            # A. Versuch: Exakter Match (Blueprint Name == Service Slug)
+            svc = Service.query.filter_by(slug=request.blueprint).first()
+
+            # B. Versuch: Fuzzy Match (Blueprint 'immo' findet Service 'immo_tool')
+            if not svc:
+                svc = Service.query.filter(Service.slug.contains(request.blueprint)).first()
+
+            # Wenn ein Service gefunden wurde UND ein Bild hat -> Überschreiben
+            if svc and svc.background_image:
+                current_bg = svc.background_image
+
+            # 3. Roadmap Metadaten (für das Datum auf der Kachel)
         roadmap = db.session.get(SiteContent, 'roadmap')
-        bg = db.session.get(SiteContent, 'background')
 
-        # Beide Variablen stehen nun in ALLEN Templates zur Verfügung
-        return dict(roadmap_meta=roadmap, background_meta=bg)
-
-
+        return dict(
+            roadmap_meta=roadmap,
+            current_background_image=current_bg
+        )
     return app
-
 
 def init_db_data(app):
     from app.models import User, Service, ImmoSection

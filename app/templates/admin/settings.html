@@ -1,30 +1,167 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 mx-auto">
-        <h2 class="mb-4 text-white" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.5);">⚙️ Einstellungen</h2>
-        <div class="card p-4 border-0 shadow-lg rounded-3">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Empfänger E-Mail</label>
-                    <input type="email" name="email_receiver" class="form-control" value="{{ email }}">
-                </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings_bg.css') }}">
 
-                <div class="mb-4 border-top pt-3">
-                    <label class="form-label fw-bold">Hintergrundbild</label>
-                    <input type="file" name="background_image" class="form-control" accept="image/*">
-                </div>
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="fw-bold">⚙️ Einstellungen</h1>
+            <p class="text-muted">Verwaltung der globalen Konfigurationen.</p>
+        </div>
+    </div>
 
-                <div class="mb-4 border-top pt-3 bg-light p-3 rounded">
-                    <label class="form-label fw-bold text-danger">⚠️ Fragen Backup einspielen (JSON)</label>
-                    <input type="file" name="backup_file" class="form-control" accept=".json">
-                    <div class="form-text text-danger">Achtung: Überschreibt alle aktuellen Fragen und Abschnitte!</div>
-                </div>
+    <div class="row g-4">
 
-                <button class="btn btn-success w-100 fw-bold py-2">Speichern & Anwenden</button>
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white fw-bold">📧 E-Mail Konfiguration</div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Empfänger E-Mail für Besichtigungen</label>
+                            <input type="email" name="email_receiver" value="{{ email }}" class="form-control" placeholder="empfaenger@beispiel.de">
+                            <div class="form-text">An diese Adresse werden die PDF-Protokolle gesendet (falls aktiviert).</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Speichern</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white fw-bold">🎨 Design & Erscheinungsbild</div>
+                <div class="card-body">
+
+                    <form method="POST" enctype="multipart/form-data" class="mb-4">
+                        <label class="form-label">Globales Hintergrundbild (Standard)</label>
+                        <div class="input-group">
+                            <input type="file" name="background_image" class="form-control" accept="image/*">
+                            <button class="btn btn-outline-secondary" type="submit">Hochladen</button>
+                        </div>
+                        <div class="form-text">Dieses Bild wird überall genutzt, wo kein spezifisches Bild definiert ist.</div>
+                    </form>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Erweiterter Hintergrund Manager</strong><br>
+                            <small class="text-muted">Bilder für einzelne Services (Roadmap, Immo etc.) festlegen.</small>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bgManagerModal">
+                            <i class="bi bi-images me-2"></i> Manager öffnen
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> System & Wartung
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-danger fw-bold">⚠️ Fragen Backup einspielen (JSON)</h5>
+                            <p class="mb-0 text-dark">
+                                <strong>Achtung:</strong> Diese Funktion überschreibt alle aktuellen Fragen und Abschnitte im Formular-Builder!
+                                Nutze dies nur, um einen früheren Stand wiederherzustellen.
+                            </p>
+                        </div>
+                        <div class="col-md-4 mt-3 mt-md-0">
+                            <form method="POST" enctype="multipart/form-data">
+                                <div class="input-group">
+                                    <input type="file" name="backup_file" class="form-control" accept=".json" required>
+                                    <button class="btn btn-danger" type="submit">Importieren</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="bgManagerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-palette2 me-2"></i>Hintergründe zuweisen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST">
+                <div class="modal-body bg-light">
+                    <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Bilder müssen im Ordner <code>app/static/img/backgrounds/</code> liegen.
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="table-responsive">
+                            <table class="table table-hover bg-table mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40%;">Modul / Service</th>
+                                        <th style="width: 40%;">Bild Auswahl</th>
+                                        <th style="width: 20%;">Vorschau</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in services %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center me-3" style="width:32px; height:32px;">
+                                                    <i class="bi {{ s.icon }} text-secondary"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ s.name }}</div>
+                                                    <div class="text-muted" style="font-size: 0.75rem;">{{ s.slug }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select name="service_{{ s.id }}_bg" class="form-select form-select-sm bg-selector" data-preview-id="preview_{{ s.id }}">
+                                                <option value="">-- Standard (Global) --</option>
+                                                {% for img in background_files %}
+                                                    <option value="{{ img }}" {% if s.background_image == img %}selected{% endif %}>
+                                                        {{ img }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if s.background_image %}
+                                                <img id="preview_{{ s.id }}" class="bg-preview-img" 
+                                                     src="{{ url_for('static', filename='img/backgrounds/' + s.background_image) }}">
+                                            {% else %}
+                                                <img id="preview_{{ s.id }}" class="bg-preview-img" style="display: none;" src="">
+                                                <span class="text-muted small">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success fw-bold">Speichern übernehmen</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<script src="{{ url_for('static', filename='js/settings_bg.js') }}"></script>
 {% endblock %}

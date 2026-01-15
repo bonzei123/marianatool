@@ -1,3 +1,4 @@
+# app/admin/routes.py
 import os
 import json
 from datetime import datetime
@@ -183,14 +184,27 @@ def delete_user(user_id):
 @login_required
 def settings_page():
     if not current_user.is_admin: return redirect(url_for('main.home'))
+    bg_folder = os.path.join(current_app.root_path, 'static', 'img', 'backgrounds')
+
+    # Sicherstellen, dass der Background-Ordner existiert
+    if not os.path.exists(bg_folder):
+        os.makedirs(bg_folder)
+
     if request.method == 'POST':
+        # 1. E-Mail Einstellung
         if 'email_receiver' in request.form:
-            s = ImmoSetting.query.get('email_receiver') or ImmoSetting(key='email_receiver')
+            s = db.session.get(ImmoSetting, 'email_receiver') or ImmoSetting(key='email_receiver')
             s.value = request.form['email_receiver']
             db.session.add(s)
+
+        # 2. Globales Hintergrundbild Upload
         if 'background_image' in request.files:
             f = request.files['background_image']
-            if f.filename: f.save(os.path.join(current_app.root_path, 'static', 'img', 'backgrounds', 'background.png'))
+            if f.filename:
+                f.save(os.path.join(bg_folder, f.filename))
+                flash("Globales Hintergrundbild hochgeladen.", "success")
+
+        # 3. Backup Upload
         if 'backup_file' in request.files:
             f = request.files['backup_file']
             if f.filename.endswith('.json'):
@@ -199,8 +213,39 @@ def settings_page():
                     flash("Backup wiederhergestellt!", "success")
                 except Exception as e:
                     flash(f"Import Fehler: {e}", "danger")
-        db.session.commit()
-        if 'email_receiver' in request.form: flash("Einstellungen gespeichert.", "success")
 
+        # 4. NEU: Service Hintergründe Zuweisung
+        counter = 0
+        for key, value in request.form.items():
+            if key.startswith('service_') and key.endswith('_bg'):
+                try:
+                    s_id = int(key.split('_')[1])
+                    service = db.session.get(Service, s_id)
+                    if service:
+                        service.background_image = value if value else None
+                        db.session.add(service)
+                        counter += 1
+                except ValueError:
+                    continue
+
+        db.session.commit()
+
+        if 'email_receiver' in request.form:
+            flash("Einstellungen gespeichert.", "success")
+        elif counter > 0:
+            flash(f"{counter} Hintergründe zugewiesen.", "info")
+
+        # Redirect um erneutes Senden zu verhindern
+        return redirect(url_for('admin.settings_page'))
+
+    # Daten laden für GET-Request
     email = get_setting('email_receiver', 'test@test.de')
-    return render_template('admin/settings.html', email=email)
+
+    # Bilder und Services für das Modal laden
+    bg_files = [f for f in os.listdir(bg_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+    all_services = Service.query.order_by(Service.name).all()
+
+    return render_template('admin/settings.html',
+                           email=email,
+                           background_files=bg_files,
+                           services=all_services)

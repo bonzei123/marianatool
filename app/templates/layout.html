@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
-    {% set bg_image = background_meta.content if background_meta else 'background.png' %}
-    <style>body { background-image: url("{{ url_for('static', filename='img/backgrounds/' + bg_image) }}"); }</style>
+    <style>
+        :root {
+            --bg-image: url("{{ url_for('static', filename='img/backgrounds/' + current_background_image) }}");
+        }
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100"> <nav class="navbar navbar-dark navbar-custom sticky-top">
     <div class="container d-flex justify-content-between align-items-center">
