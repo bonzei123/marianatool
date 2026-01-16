@@ -4,11 +4,27 @@ from flask_login import login_required, current_user
 from app.main import bp
 from app.models import SiteContent
 
+from app.models import DashboardTile  # <--- WICHTIG: Import
 
-@bp.route('/', methods=["GET", "POST"])
+
+@bp.route('/home')
+@bp.route('/')
 @login_required
 def home():
-    return render_template('main/main.html', services=current_user.services, is_admin=current_user.is_admin)
+    # 1. Alle Kacheln laden, sortiert nach 'order'
+    all_tiles = DashboardTile.query.order_by(DashboardTile.order).all()
+
+    # 2. Filtern: Was darf dieser User sehen?
+    visible_tiles = []
+    for tile in all_tiles:
+        # Bedingung: Kachel braucht keine Permission ODER User hat sie ODER User ist Admin
+        if tile.required_service is None or \
+                current_user.is_admin or \
+                current_user.has_permission(tile.required_service.slug):
+            visible_tiles.append(tile)
+
+    # Wir geben 'tiles' an das Template weiter
+    return render_template('main/main.html', tiles=visible_tiles)
 
 
 @bp.route('/favicon.ico')

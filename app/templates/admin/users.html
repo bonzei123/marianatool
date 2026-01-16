@@ -62,13 +62,23 @@
                     <label class="form-check-label fw-bold">Admin?</label>
                 </div>
 
-                <label class="fw-bold mb-2">Apps:</label>
-                <div class="d-flex flex-wrap gap-2">
+                <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     {% for service in all_services %}
-                    <div class="border rounded px-3 py-2 bg-white flex-fill d-flex align-items-center">
-                        <div class="form-check m-0">
-                            <input class="form-check-input" type="checkbox" name="services" value="{{ service.id }}" id="new_srv_{{ service.id }}" checked>
-                            <label class="form-check-label small fw-bold" for="new_srv_{{ service.id }}">{{ service.name }}</label>
+                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center service-item"
+                         title="{{ service.description }}">
+                        <div class="form-check m-0 w-100">
+                            <input class="form-check-input edit-srv" type="checkbox" name="services"
+                                   value="{{ service.id }}" id="edit_srv_{{ service.id }}">
+
+                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ service.id }}" style="cursor:pointer;">
+                                <i class="bi {{ service.icon }} me-2 text-secondary"></i>
+                                <div>
+                                    <span class="small fw-bold d-block">{{ service.name }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ service.slug }}</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
                     {% endfor %}
@@ -104,13 +114,23 @@
                     <label class="form-check-label fw-bold">Admin?</label>
                 </div>
 
-                <label class="fw-bold mb-2">Apps:</label>
-                <div class="d-flex flex-wrap gap-2">
+                <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     {% for service in all_services %}
-                    <div class="border rounded px-3 py-2 bg-white flex-fill d-flex align-items-center">
-                        <div class="form-check m-0">
-                            <input class="form-check-input edit-srv" type="checkbox" name="services" value="{{ service.id }}" id="edit_srv_{{ service.id }}">
-                            <label class="form-check-label small fw-bold" for="edit_srv_{{ service.id }}">{{ service.name }}</label>
+                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center service-item"
+                         title="{{ service.description }}">
+                        <div class="form-check m-0 w-100">
+                            <input class="form-check-input edit-srv" type="checkbox" name="services"
+                                   value="{{ service.id }}" id="edit_srv_{{ service.id }}">
+
+                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ service.id }}" style="cursor:pointer;">
+                                <i class="bi {{ service.icon }} me-2 text-secondary"></i>
+                                <div>
+                                    <span class="small fw-bold d-block">{{ service.name }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ service.slug }}</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
                     {% endfor %}

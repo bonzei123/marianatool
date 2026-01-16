@@ -5,15 +5,19 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.immo import bp
 from app.models import ImmoSection
+from app.decorators import permission_required
+
 
 @bp.route('/immo')
 @login_required
+@permission_required('immo_user')
 def immo_form():
     if not current_user.has_permission('immo_user'): return redirect(url_for('main.home'))
     return render_template('immo/immo_form.html')
 
 @bp.route('/api/config')
 @login_required
+@permission_required('immo_user')
 def get_config():
     sections = ImmoSection.query.order_by(ImmoSection.order).all()
     data = []
@@ -31,6 +35,7 @@ def get_config():
 # UPLOAD API
 @bp.route('/api/upload/init', methods=['POST'])
 @login_required
+@permission_required('immo_user')
 def upload_init():
     data = request.json
     folder_name = secure_filename(data.get('folder_name'))
@@ -40,6 +45,7 @@ def upload_init():
 
 @bp.route('/api/upload/chunk', methods=['POST'])
 @login_required
+@permission_required('immo_user')
 def upload_chunk():
     try:
         file = request.files['file']
@@ -55,5 +61,6 @@ def upload_chunk():
 
 @bp.route('/api/upload/complete', methods=['POST'])
 @login_required
+@permission_required('immo_user')
 def upload_complete():
     return jsonify({"success": True})

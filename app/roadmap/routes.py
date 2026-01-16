@@ -5,9 +5,12 @@ from app.roadmap import bp
 from app.models import SiteContent
 from app.extensions import db
 from datetime import datetime
+from app.decorators import permission_required
+
 
 @bp.route("/", methods=['GET', 'POST'])
 @login_required
+@permission_required('roadmap_access')
 def index():
     # --- TÜRSTEHER 1: DARF ER REIN? ---
     # Wir prüfen, ob der User das Recht "roadmap_access" hat.

@@ -11,65 +11,36 @@
     </div>
 
     <div class="row g-4">
+        {% for tile in tiles %}
         <div class="col-md-6 col-lg-4">
-            <a href="{{ url_for('immo.immo_form') }}" class="tile" style="border-left: 5px solid #19835A;">
-                <div class="tile-icon"><i class="bi bi-house-check-fill"></i></div>
-                <div class="tile-title">Immobilien Check</div>
-                <div class="tile-desc">Starte eine neue Besichtigung oder führe ein Protokoll fort.</div>
+            <a href="{{ url_for(tile.route_name) }}" class="tile" style="border-left: 5px solid {{ tile.color_hex }};">
+
+                <div class="tile-icon" style="color: {{ tile.color_hex }};">
+                    <i class="bi {{ tile.icon }}"></i>
+                </div>
+
+                <div class="tile-title" style="color: {{ tile.color_hex }};">
+                    {{ tile.title }}
+                </div>
+
+                <div class="tile-desc">
+                    {{ tile.description }}
+
+                    {% if tile.route_name == 'roadmap.index' and roadmap_meta and roadmap_meta.updated_at %}
+                        <div class="mt-2 small text-muted">
+                            <i class="bi bi-clock-history me-1"></i>
+                            Stand: {{ roadmap_meta.updated_at.strftime('%d.%m.%Y') }}
+                        </div>
+                    {% endif %}
+                </div>
             </a>
         </div>
-        {% if current_user.has_permission('roadmap_access') %}
-            <div class="col-md-6 col-lg-4">
-                <a href="{{ url_for('roadmap.index') }}" class="tile" style="border-left: 5px solid #8e44ad;">
-                    <div class="tile-icon" style="color: #8e44ad;"><i class="bi bi-map-fill"></i></div>
-                    <div class="tile-title" style="color: #8e44ad;">Roadmap</div>
-                    <div class="tile-desc">
-                        Projektstatus und geplante Features.
-                        {% if roadmap_meta and roadmap_meta.updated_at %}
-                            <div class="mt-2 small text-muted" style="font-size: 0.85rem;">
-                                <i class="bi bi-clock-history me-1"></i> Stand: {{ roadmap_meta.updated_at.strftime('%d.%m.%Y') }}
-                            </div>
-                        {% endif %}
-                    </div>
-                </a>
+        {% else %}
+            <div class="col-12 text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1"></i><br>
+                Keine Apps verfügbar. Bitte wende dich an den Admin.
             </div>
-        {% endif %}
-        {% if current_user.is_admin %}
-            <div class="col-md-6 col-lg-4">
-                <a href="{{ url_for('admin.immo_admin_dashboard') }}" class="tile" style="border-left: 5px solid #e74c3c;">
-                    <div class="tile-icon text-danger"><i class="bi bi-tools"></i></div>
-                    <div class="tile-title text-danger">Formular Builder</div>
-                    <div class="tile-desc">Bearbeite die Fragen und das Layout des Checks.</div>
-                </a>
-            </div>
-            {% if current_user.has_permission('immo_files_access') %}
-                <div class="col-md-6 col-lg-4">
-                    <a href="/immo/admin/files" class="tile" style="border-left: 5px solid #f1c40f;">
-                        <div class="tile-icon text-warning">
-                            <i class="bi bi-folder2-open"></i>
-                        </div>
-                        <div class="tile-title text-warning">Datei Manager</div>
-                        <div class="tile-desc">
-                            Verwalte alle hochgeladenen Bilder und PDF-Dateien zentral.
-                        </div>
-                    </a>
-                </div>
-            {% endif %}
-            <div class="col-md-6 col-lg-4">
-                <a href="{{ url_for('admin.user_management') }}" class="tile" style="border-left: 5px solid #3498db;">
-                    <div class="tile-icon text-primary"><i class="bi bi-people-fill"></i></div>
-                    <div class="tile-title text-primary">User Verwaltung</div>
-                    <div class="tile-desc">Benutzer anlegen, Passwörter verwalten und löschen.</div>
-                </a>
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-                <a href="{{ url_for('admin.settings_page') }}" class="tile" style="border-left: 5px solid #34495e;">
-                    <div class="tile-icon text-secondary"><i class="bi bi-gear-fill"></i></div>
-                    <div class="tile-title text-secondary">Einstellungen</div>
-                    <div class="tile-desc">Hintergrundbild ändern und E-Mail Konfiguration.</div>
-                </a>
-            </div>
-        {% endif %}
+        {% endfor %}
     </div>
+
 {% endblock %}

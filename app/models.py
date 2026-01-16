@@ -91,6 +91,19 @@ class SiteContent(db.Model):
     author = db.relationship('User', backref='content_updates')
 
 
+class DashboardTile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(64), nullable=False)
+    description = db.Column(db.String(255))
+    icon = db.Column(db.String(64), default="bi-box")  # z.B. "bi-house-check-fill"
+    color_hex = db.Column(db.String(7), default="#19835A")  # z.B. "#19835A"
+    route_name = db.Column(db.String(128), nullable=False)  # z.B. 'immo.immo_form'
+    order = db.Column(db.Integer, default=0)  # Sortierung (1, 2, 3...)
+
+    required_service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=True)
+    required_service = db.relationship('Service')
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
