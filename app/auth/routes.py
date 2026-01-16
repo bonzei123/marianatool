@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.auth import bp
 from app.auth.forms import LoginForm, RegisterForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm
-from app.models import User, Service
+from app.models import User, Permission
 from app.extensions import db
 from app.utils import send_reset_email
 
@@ -15,8 +15,8 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=True)
-            if not user.services and not user.is_admin:
-                user.services = Service.query.all()
+            if not user.permissions and not user.is_admin:
+                user.permissions = Permission.query.all()
                 db.session.commit()
             return redirect(url_for('main.home'))
         else:
@@ -63,9 +63,8 @@ def profile():
 # --- PASSWORT VERGESSEN LOGIK ---
 
 @bp.route("/reset_password", methods=['GET', 'POST'])
+@login_required
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
     form = RequestResetForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()

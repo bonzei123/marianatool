@@ -1,6 +1,6 @@
 version: '3.8'
 
-services:
+permissions:
   webtool:
     build:
       context: https://github.com/bonzei123/marianatool.git

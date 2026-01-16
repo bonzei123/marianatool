@@ -48,7 +48,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong>Erweiterter Hintergrund Manager</strong><br>
-                            <small class="text-muted">Bilder für einzelne Services (Roadmap, Immo etc.) festlegen.</small>
+                            <small class="text-muted">Bilder für einzelne permissions (Roadmap, Immo etc.) festlegen.</small>
                         </div>
                         <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bgManagerModal">
                             <i class="bi bi-images me-2"></i> Manager öffnen
@@ -109,13 +109,13 @@
                             <table class="table table-hover bg-table mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width: 40%;">Modul / Service</th>
+                                        <th style="width: 40%;">Modul / Permission</th>
                                         <th style="width: 40%;">Bild Auswahl</th>
                                         <th style="width: 20%;">Vorschau</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for s in services %}
+                                    {% for s in permissions %}
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -129,7 +129,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <select name="service_{{ s.id }}_bg" class="form-select form-select-sm bg-selector" data-preview-id="preview_{{ s.id }}">
+                                            <select name="permission_{{ s.id }}_bg" class="form-select form-select-sm bg-selector" data-preview-id="preview_{{ s.id }}">
                                                 <option value="">-- Standard (Global) --</option>
                                                 {% for img in background_files %}
                                                     <option value="{{ img }}" {% if s.background_image == img %}selected{% endif %}>

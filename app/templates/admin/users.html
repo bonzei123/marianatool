@@ -25,7 +25,7 @@
                         data-username="{{ user.username }}"
                         data-email="{{ user.email }}"
                         data-admin="{{ 'true' if user.is_admin else 'false' }}"
-                        data-services="{{ user.services|map(attribute='id')|list|join(',') }}"
+                        data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
                         onclick="openEditModal(this)">
                         <td class="ps-4 fw-bold text-dark">{{ user.username }}</td>
                         <td class="text-muted">{{ user.email }}</td> <td>
@@ -35,7 +35,7 @@
                                 <span class="badge bg-secondary">User</span>
                             {% endif %}
                         </td>
-                        <td><small class="text-muted">{{ user.services|length }} Dienste</small></td>
+                        <td><small class="text-muted">{{ user.permissions|length }} Dienste</small></td>
                         <td class="text-end pe-4"><i class="bi bi-pencil-square text-primary fs-5"></i></td>
                     </tr>
                     {% endfor %}
@@ -65,18 +65,18 @@
                 <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    {% for service in all_services %}
-                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center service-item"
-                         title="{{ service.description }}">
+                    {% for permission in all_permissions %}
+                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
+                         title="{{ permission.description }}">
                         <div class="form-check m-0 w-100">
-                            <input class="form-check-input edit-srv" type="checkbox" name="services"
-                                   value="{{ service.id }}" id="edit_srv_{{ service.id }}">
+                            <input class="form-check-input edit-srv" type="checkbox" name="permissions"
+                                   value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
 
-                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ service.id }}" style="cursor:pointer;">
-                                <i class="bi {{ service.icon }} me-2 text-secondary"></i>
+                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
+                                <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
                                 <div>
-                                    <span class="small fw-bold d-block">{{ service.name }}</span>
-                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ service.slug }}</span>
+                                    <span class="small fw-bold d-block">{{ permission.name }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
                                 </div>
                             </label>
                         </div>
@@ -117,18 +117,18 @@
                 <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    {% for service in all_services %}
-                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center service-item"
-                         title="{{ service.description }}">
+                    {% for permission in all_permissions %}
+                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
+                         title="{{ permission.description }}">
                         <div class="form-check m-0 w-100">
-                            <input class="form-check-input edit-srv" type="checkbox" name="services"
-                                   value="{{ service.id }}" id="edit_srv_{{ service.id }}">
+                            <input class="form-check-input edit-srv" type="checkbox" name="permissions"
+                                   value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
 
-                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ service.id }}" style="cursor:pointer;">
-                                <i class="bi {{ service.icon }} me-2 text-secondary"></i>
+                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
+                                <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
                                 <div>
-                                    <span class="small fw-bold d-block">{{ service.name }}</span>
-                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ service.slug }}</span>
+                                    <span class="small fw-bold d-block">{{ permission.name }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
                                 </div>
                             </label>
                         </div>

@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = row.getAttribute('data-username');
         const email = row.getAttribute('data-email'); // NEU
         const isAdmin = row.getAttribute('data-admin') === 'true';
-        const servicesRaw = row.getAttribute('data-services');
-        const services = servicesRaw ? servicesRaw.split(',').map(Number) : [];
+        const permissionsRaw = row.getAttribute('data-permissions');
+        const permissions = permissionsRaw ? permissionsRaw.split(',').map(Number) : [];
 
         // URLs setzen
         document.getElementById('editForm').action = updateBaseUrl + currentUserId;
@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('editEmail').value = email || ""; // NEU
         document.getElementById('editAdmin').checked = isAdmin;
 
-        // Services Checkboxen
+        // permissions Checkboxen
         document.querySelectorAll('.edit-srv').forEach(cb => {
-            cb.checked = services.includes(parseInt(cb.value));
+            cb.checked = permissions.includes(parseInt(cb.value));
         });
 
         if (editModalInstance) editModalInstance.show();

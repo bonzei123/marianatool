@@ -2,7 +2,7 @@
 import sys
 from app import create_app
 from app.extensions import db
-from app.models import Service, DashboardTile
+from app.models import Permission, DashboardTile
 
 app = create_app()
 
@@ -13,7 +13,7 @@ def run_seed():
 
         # --- 1. PERMISSIONS (SERVICES) ANLEGEN ---
         # Format: (Name, Slug, Icon, Beschreibung)
-        permissions = [
+        permissions_data = [
             # User Permissions
             ("Immo Tool Zugriff", "immo_user", "bi-house-check", "Darf Besichtigungen machen"),
             ("Roadmap Ansehen", "roadmap_access", "bi-map", "Darf Roadmap sehen"),
@@ -26,21 +26,13 @@ def run_seed():
             ("Einstellungen", "view_settings", "bi-gear", "Darf System konfigurieren"),
         ]
 
-        print(f"📦 Prüfe {len(permissions)} Berechtigungen...")
+        print(f"📦 Prüfe {len(permissions_data)} Berechtigungen...")
 
-        for name, slug, icon, desc in permissions:
-            # Prüfen ob Service schon existiert
-            svc = Service.query.filter_by(slug=slug).first()
-            if not svc:
-                svc = Service(name=name, slug=slug, icon=icon, description=desc)
-                db.session.add(svc)
-                print(f"   [+] Erstellt: {slug}")
-            else:
-                # Update existierender Services (falls Icon/Name geändert wurde)
-                svc.name = name
-                svc.icon = icon
-                svc.description = desc
-                # print(f"   [=] Existiert: {slug}")
+        for name, slug, icon, desc in permissions_data:
+            perm = Permission.query.filter_by(slug=slug).first()  # <--- Permission
+            if not perm:
+                perm = Permission(name=name, slug=slug, icon=icon, description=desc)
+                db.session.add(perm)
 
         db.session.commit()
         print("✅ Berechtigungen aktuell.")
@@ -72,8 +64,8 @@ def run_seed():
         print(f"puzzle_piece Erstelle {len(tiles_data)} Dashboard-Kacheln...")
 
         for title, desc, icon, color, route, perm_slug, order in tiles_data:
-            # Wir müssen den Service (Permission) erst aus der DB holen um ihn zu verknüpfen
-            perm = Service.query.filter_by(slug=perm_slug).first()
+            # Wir müssen den Permission (Permission) erst aus der DB holen um ihn zu verknüpfen
+            perm = Permission.query.filter_by(slug=perm_slug).first()
 
             # Falls permission noch nicht existiert (sollte nicht passieren durch Schritt 1),
             # legen wir Kachel ohne Schutz an oder skippen. Hier: Warnung.
@@ -86,7 +78,7 @@ def run_seed():
                 color_hex=color,
                 route_name=route,
                 order=order,
-                required_service_id=perm_id
+                required_permission_id=perm_id if perm else None
             )
             db.session.add(tile)
 

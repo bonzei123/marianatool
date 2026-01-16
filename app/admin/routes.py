@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from app.admin import bp
 from app.extensions import db
-from app.models import User, Service, ImmoSetting, ImmoBackup, ImmoQuestion, ImmoSection
+from app.models import User, Permission, ImmoSetting, ImmoBackup, ImmoQuestion, ImmoSection
 from app.utils import import_json_data, send_reset_email
 from app.decorators import permission_required
 
@@ -102,7 +102,7 @@ def uploaded_file(project, filename):
 @login_required
 @permission_required('view_users')
 def user_management():
-    return render_template('admin/users.html', users=User.query.all(), all_services=Service.query.all())
+    return render_template('admin/users.html', users=User.query.all(), all_permissions=Permission.query.all())
 
 
 @bp.route('/admin/users/create', methods=['POST'])
@@ -120,9 +120,9 @@ def create_user():
     else:
         new_user = User(username=username, email=email, password_hash=generate_password_hash(password),
                         is_admin=is_admin)
-        for s_id in request.form.getlist('services'):
-            s = db.session.get(Service, int(s_id))
-            if s: new_user.services.append(s)
+        for s_id in request.form.getlist('permissions'):
+            s = db.session.get(Permission, int(s_id))
+            if s: new_user.permissions.append(s)
         db.session.add(new_user)
         db.session.commit()
         flash('User angelegt', 'success')
@@ -148,11 +148,11 @@ def update_user(user_id):
                 flash(f'E-Mail {new_email} ist schon vergeben!', 'warning')
                 return redirect(url_for('admin.user_management'))
 
-        # 3. Services
-        user.services = []
-        for s_id in request.form.getlist('services'):
-            s = db.session.get(Service, int(s_id))
-            if s: user.services.append(s)
+        # 3. Permissions
+        user.permissions = []
+        for s_id in request.form.getlist('permissions'):
+            s = db.session.get(Permission, int(s_id))
+            if s: user.permissions.append(s)
 
         db.session.commit()
         flash(f'{user.username} aktualisiert', 'success')
@@ -220,16 +220,16 @@ def settings_page():
                 except Exception as e:
                     flash(f"Import Fehler: {e}", "danger")
 
-        # 4. NEU: Service Hintergründe Zuweisung
+        # 4. NEU: Permission Hintergründe Zuweisung
         counter = 0
         for key, value in request.form.items():
-            if key.startswith('service_') and key.endswith('_bg'):
+            if key.startswith('permission_') and key.endswith('_bg'):
                 try:
                     s_id = int(key.split('_')[1])
-                    service = db.session.get(Service, s_id)
-                    if service:
-                        service.background_image = value if value else None
-                        db.session.add(service)
+                    permission = db.session.get(Permission, s_id)
+                    if permission:
+                        permission.background_image = value if value else None
+                        db.session.add(permission)
                         counter += 1
                 except ValueError:
                     continue
@@ -247,11 +247,11 @@ def settings_page():
     # Daten laden für GET-Request
     email = get_setting('email_receiver', 'test@test.de')
 
-    # Bilder und Services für das Modal laden
+    # Bilder und Permissions für das Modal laden
     bg_files = [f for f in os.listdir(bg_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-    all_services = Service.query.order_by(Service.name).all()
+    all_permissions = Permission.query.order_by(Permission.name).all()
 
     return render_template('admin/settings.html',
                            email=email,
                            background_files=bg_files,
-                           services=all_services)
+                           permissions=all_permissions)

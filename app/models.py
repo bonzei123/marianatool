@@ -4,22 +4,27 @@ from time import time
 from flask import current_app
 from flask_login import UserMixin
 from app.extensions import db, login_manager
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Many-to-Many Tabelle
-user_services = db.Table('user_services',
+user_permissions = db.Table('user_permissions',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('service_id', db.Integer, db.ForeignKey('service.id'), primary_key=True)
+    db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'), primary_key=True)
 )
 
-class Service(db.Model):
+
+class Permission(db.Model):
+    # Tabellenname explizit setzen (optional, aber sauber)
+    __tablename__ = 'permission'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(200))
-    url = db.Column(db.String(200), nullable=True)
-    icon = db.Column(db.String(50), default="bi-box")
-    color_class = db.Column(db.String(50), default="border-primary")
     slug = db.Column(db.String(50), unique=True)
+    description = db.Column(db.String(200))
+    icon = db.Column(db.String(50), default="bi-box")
+    url = db.Column(db.String(200), nullable=True)
     background_image = db.Column(db.String(100), nullable=True)
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,14 +32,15 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False) # <--- NEU
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    services = db.relationship('Service', secondary='user_services', lazy='subquery', backref=db.backref('users', lazy=True))
+    permissions = db.relationship('Permission', secondary=user_permissions, lazy='subquery',
+                                  backref=db.backref('users', lazy=True))
 
     def has_permission(self, slug_name):
         # Admin darf alles (Gott-Modus)
         if self.is_admin:
             return True
         # Sonst prüfen wir, ob der User den Service/Permission hat
-        return any(s.slug == slug_name for s in self.services)
+        return any(p.slug == slug_name for p in self.permissions)
 
     def get_reset_token(self, expires_sec=1800):
         # Erstellt ein Token, das 30 Minuten gültig ist
@@ -42,6 +48,12 @@ class User(UserMixin, db.Model):
             {'user_id': self.id, 'exp': time() + expires_sec},
             current_app.config['SECRET_KEY'], algorithm='HS256'
         )
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     @staticmethod
     def verify_reset_token(token):
@@ -52,9 +64,11 @@ class User(UserMixin, db.Model):
             return None
         return db.session.get(User, user_id)
 
+
 class ImmoSetting(db.Model):
     key = db.Column(db.String(50), primary_key=True)
     value = db.Column(db.Text)
+
 
 class ImmoSection(db.Model):
     id = db.Column(db.String(50), primary_key=True)
@@ -62,6 +76,7 @@ class ImmoSection(db.Model):
     order = db.Column(db.Integer)
     is_expanded = db.Column(db.Boolean, default=True)
     questions = db.relationship('ImmoQuestion', backref='section', cascade="all, delete-orphan", order_by='ImmoQuestion.order')
+
 
 class ImmoQuestion(db.Model):
     id = db.Column(db.String(50), primary_key=True)
@@ -74,6 +89,7 @@ class ImmoQuestion(db.Model):
     types_json = db.Column(db.Text)
     order = db.Column(db.Integer)
 
+
 class ImmoBackup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -85,8 +101,6 @@ class SiteContent(db.Model):
     id = db.Column(db.String(50), primary_key=True)  # z.B. 'roadmap'
     content = db.Column(db.Text, nullable=True)  # Markdown Text
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Wer hat es zuletzt bearbeitet?
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     author = db.relationship('User', backref='content_updates')
 
@@ -99,9 +113,8 @@ class DashboardTile(db.Model):
     color_hex = db.Column(db.String(7), default="#19835A")  # z.B. "#19835A"
     route_name = db.Column(db.String(128), nullable=False)  # z.B. 'immo.immo_form'
     order = db.Column(db.Integer, default=0)  # Sortierung (1, 2, 3...)
-
-    required_service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=True)
-    required_service = db.relationship('Service')
+    required_permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'), nullable=True)
+    required_permission = db.relationship('Permission')
 
 
 @login_manager.user_loader

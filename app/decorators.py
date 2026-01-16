@@ -5,7 +5,7 @@ from flask_login import current_user
 
 def permission_required(permission_slug):
     """
-    Prüft, ob der aktuelle User die nötige Berechtigung (Service-Slug) hat.
+    Prüft, ob der aktuelle User die nötige Berechtigung (permission-Slug) hat.
     Falls nicht -> Redirect zur Home-Seite mit Fehler.
     """
 

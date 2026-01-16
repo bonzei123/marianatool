@@ -59,8 +59,6 @@ def create_app(config_class=Config):
             return ""
         html = markdown.markdown(text, extensions=['fenced_code', 'tables'])
 
-        # --- HIER IST DER FIX ---
-        # Wir müssen list() um bleach.sanitizer.ALLOWED_TAGS setzen!
         allowed_tags = list(bleach.sanitizer.ALLOWED_TAGS) + [
             'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
             'ul', 'ol', 'li', 'pre', 'code', 'table', 'thead',
@@ -74,7 +72,7 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_globals():
         from flask import request
-        from app.models import SiteContent, Service, User  # Imports hier drin, um Zirkelbezüge zu vermeiden
+        from app.models import SiteContent, Permission, User  # Imports hier drin, um Zirkelbezüge zu vermeiden
         from app.extensions import db
 
         global_bg_meta = db.session.get(SiteContent, 'background')
@@ -86,14 +84,14 @@ def create_app(config_class=Config):
 
         # 2. Spezifisches Bild suchen basierend auf Blueprint
         if request.blueprint:
-            # A. Versuch: Exakter Match (Blueprint Name == Service Slug)
-            svc = Service.query.filter_by(slug=request.blueprint).first()
+            # A. Versuch: Exakter Match (Blueprint Name == Permission Slug)
+            svc = Permission.query.filter_by(slug=request.blueprint).first()
 
-            # B. Versuch: Fuzzy Match (Blueprint 'immo' findet Service 'immo_tool')
+            # B. Versuch: Fuzzy Match (Blueprint 'immo' findet Permission 'immo_tool')
             if not svc:
-                svc = Service.query.filter(Service.slug.contains(request.blueprint)).first()
+                svc = Permission.query.filter(Permission.slug.contains(request.blueprint)).first()
 
-            # Wenn ein Service gefunden wurde UND ein Bild hat -> Überschreiben
+            # Wenn ein Permission gefunden wurde UND ein Bild hat -> Überschreiben
             if svc and svc.background_image:
                 current_bg = svc.background_image
 
@@ -111,17 +109,14 @@ def init_db_data(app):
     """
     Erstellt Standard-Daten, falls die DB leer ist.
     """
-    from app.models import Service, User, SiteContent
+    from app.models import Permission, User, SiteContent
     from werkzeug.security import generate_password_hash
-    from sqlalchemy.exc import OperationalError  # <--- WICHTIG: Importieren
+    from sqlalchemy.exc import OperationalError
 
     try:
         # Wir versuchen, auf die DB zuzugreifen
-        if Service.query.count() == 0:
+        if Permission.query.count() == 0:
             print("Initialisiere Datenbank mit Standard-Werten...")
-
-            # ... (Dein Code zum Anlegen von Usern & Services) ...
-            # Hier nichts ändern, nur einrücken!
 
             # Admin User (Falls keiner da ist)
             if User.query.count() == 0:
@@ -129,21 +124,21 @@ def init_db_data(app):
                 admin.set_password('admin')
                 db.session.add(admin)
 
-            # Standard Services
-            services = [
-                Service(name="Immobilien Tool", slug="immo_tool", description="Besichtigungen und Protokolle",
+            # Standard Permissions
+            sermissions = [
+                Permission(name="Immobilien Tool", slug="immo_tool", description="Besichtigungen und Protokolle",
                         icon="bi-house-check-fill", url="/immo"),
-                Service(name="Roadmap Ansehen", slug="roadmap_access", description="Darf die Roadmap sehen",
+                Permission(name="Roadmap Ansehen", slug="roadmap_access", description="Darf die Roadmap sehen",
                         icon="bi-eye", url="#"),
-                Service(name="Roadmap Bearbeiten", slug="roadmap_edit", description="Darf die Roadmap bearbeiten",
+                Permission(name="Roadmap Bearbeiten", slug="roadmap_edit", description="Darf die Roadmap bearbeiten",
                         icon="bi-pencil", url="#"),
-                Service(name="Datei Manager", slug="immo_files_access", description="Zugriff auf Uploads",
+                Permission(name="Datei Manager", slug="immo_files_access", description="Zugriff auf Uploads",
                         icon="bi-folder2-open", url="/immo/admin/files")
             ]
 
-            for s in services:
-                # Prüfen ob es den Service schon gibt (vermeidet Duplikate beim Neustart)
-                existing = Service.query.filter_by(slug=s.slug).first()
+            for s in sermissions:
+                # Prüfen ob es den Permission schon gibt (vermeidet Duplikate beim Neustart)
+                existing = Permission.query.filter_by(slug=s.slug).first()
                 if not existing:
                     db.session.add(s)
 
@@ -151,9 +146,5 @@ def init_db_data(app):
             print("Fertig.")
 
     except OperationalError:
-        # HIER IST DER RETTER:
-        # Wenn die DB-Tabelle noch alt ist (Spalte fehlt), landen wir hier.
-        # Wir machen einfach NICHTS (pass).
-        # Dadurch stürzt die App nicht ab, und 'flask db upgrade' kann endlich laufen!
         print("Datenbank noch nicht bereit für Initialisierung (Migration steht aus). Überspringe...")
         pass
