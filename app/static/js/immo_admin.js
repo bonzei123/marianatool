@@ -18,7 +18,7 @@ async function init() {
     setPreviewState(showPreview);
 
     // 2. Config laden
-    const res = await fetch('/api/config');
+    const res = await fetch('/immo/config');
     config = await res.json();
     renderEditor();
     renderPreview();

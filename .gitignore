@@ -5,3 +5,4 @@ instance
 .venv
 .env
 migrations/__pycache__/
+app/static/uploads/*

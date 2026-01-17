@@ -117,6 +117,63 @@ class DashboardTile(db.Model):
     required_permission = db.relationship('Permission')
 
 
+class Inspection(db.Model):
+    __tablename__ = 'inspection'
+
+    # Status Konstanten (für sauberen Code)
+    STATUS_DRAFT = 'draft'  # Entwurf (noch nicht abgesendet)
+    STATUS_SUBMITTED = 'submitted'  # Abgeschickt (Grau/Blau)
+    STATUS_REVIEW = 'review'  # In Prüfung (Gelb)
+    STATUS_DONE = 'done'  # Erledigt / Genehmigt (Grün)
+    STATUS_REJECTED = 'rejected'  # Abgelehnt / Nachbesserung (Rot)
+
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Metadaten zur Besichtigung
+    csc_name = db.Column(db.String(100), nullable=False)  # Name des Anbauclubs/Projekts
+    inspection_type = db.Column(db.String(50))  # einzel, cluster, ausgabe
+
+    # Status (Ampel)
+    status = db.Column(db.String(20), default=STATUS_SUBMITTED)
+
+    # Verknüpfung zum Ersteller
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref=db.backref('inspections', lazy=True))
+
+    # Datei-Pfad (Relativ zu UPLOAD_FOLDER)
+    pdf_path = db.Column(db.String(255))
+
+    # JSON Daten (Wir speichern die kompletten Formulardaten,
+    # damit man später Statistiken fahren oder editieren kann)
+    data_json = db.Column(db.Text, nullable=True)
+
+    @property
+    def status_color(self):
+        """Gibt die Bootstrap-Farbe für den Status zurück"""
+        colors = {
+            self.STATUS_DRAFT: 'secondary',
+            self.STATUS_SUBMITTED: 'primary',
+            self.STATUS_REVIEW: 'warning',
+            self.STATUS_DONE: 'success',
+            self.STATUS_REJECTED: 'danger'
+        }
+        return colors.get(self.status, 'light')
+
+    @property
+    def status_label(self):
+        """Gibt ein schönes Label zurück"""
+        labels = {
+            self.STATUS_DRAFT: 'Entwurf',
+            self.STATUS_SUBMITTED: 'Eingereicht',
+            self.STATUS_REVIEW: 'In Prüfung',
+            self.STATUS_DONE: 'Genehmigt',
+            self.STATUS_REJECTED: 'Abgelehnt'
+        }
+        return labels.get(self.status, self.status)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

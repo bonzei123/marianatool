@@ -1,26 +1,243 @@
 const uploader = {
-    // ... (Dein Uploader Code von vorhin hier einfügen) ...
-    queue: [], isUploading: false, folderName: "", pdfBlob: null,
+    queue: [],
+    isUploading: false,
+    isPaused: false, // NEU: Pause Status
+    folderName: "",
+
+    // Initialisiert das Modal und die Queue
     initModal: function(blob, name) {
-        this.pdfBlob = blob; this.queue = [{file: new File([blob], name, {type:"application/pdf"}), status:'pending', progress:0}];
-        document.querySelectorAll('input[type="file"]').forEach(i => { if(i.files.length) Array.from(i.files).forEach(f=>this.queue.push({file:f, status:'pending', progress:0})) });
+        // Queue zurücksetzen
+        this.queue = [];
+        this.isPaused = false;
+        this.isUploading = false;
+
+        // 1. PDF hinzufügen
+        this.addItemToQueue(new File([blob], name, {type:"application/pdf"}));
+
+        // 2. Anhänge hinzufügen
+        document.querySelectorAll('input[type="file"]').forEach(i => {
+            if(i.files.length) {
+                Array.from(i.files).forEach(f => this.addItemToQueue(f));
+            }
+        });
+
         document.getElementById('uploadModal').style.display='block';
         this.renderList();
+        this.updateControls();
     },
+
+    addItemToQueue: function(file) {
+        this.queue.push({
+            file: file,
+            status: 'pending', // pending, uploading, done, error, paused
+            progress: 0,
+            uploadedChunks: 0, // Merken, wo wir sind
+            totalChunks: Math.ceil(file.size / (1024 * 1024)) // 1MB Chunks
+        });
+    },
+
+    // UI Rendern (Balken & Texte)
     renderList: function() {
-        document.getElementById('uploadList').innerHTML = this.queue.map(i=>`<div>${i.status=='done'?'✅':'⏳'} ${i.file.name}</div>`).join('');
+        const list = document.getElementById('uploadList');
+
+        // Gesamtfortschritt berechnen
+        const totalSize = this.queue.reduce((acc, item) => acc + item.file.size, 0);
+        const totalLoaded = this.queue.reduce((acc, item) => acc + (item.progress / 100 * item.file.size), 0);
+        const totalPercent = totalSize > 0 ? Math.round((totalLoaded / totalSize) * 100) : 0;
+
+        let html = `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                    <span>Gesamtfortschritt</span>
+                    <span>${totalPercent}%</span>
+                </div>
+                <div class="progress" style="height: 15px;">
+                    <div class="progress-bar bg-success" style="width: ${totalPercent}%"></div>
+                </div>
+            </div>
+            <hr>
+        `;
+
+        html += this.queue.map((item, index) => {
+            let icon = '⏳';
+            let statusClass = 'status-pending';
+            let statusText = 'Warteschlange...';
+
+            if(item.status === 'uploading') { icon = '🚀'; statusClass = 'status-uploading'; statusText = 'Lädt hoch...'; }
+            if(item.status === 'done') { icon = '✅'; statusClass = 'status-done'; statusText = 'Fertig'; }
+            if(item.status === 'error') { icon = '❌'; statusClass = 'status-error'; statusText = 'Fehler (Wird wiederholt)'; }
+            if(item.status === 'paused') { icon = '⏸️'; statusClass = 'status-paused'; statusText = 'Pausiert'; }
+
+            return `
+            <div class="upload-item">
+                <div class="upload-info ${statusClass}">
+                    <span>${icon} ${item.file.name}</span>
+                    <span>${item.progress}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar ${item.status === 'error' ? 'bg-danger' : ''}" style="width: ${item.progress}%"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">${statusText}</small>
+                    <small class="text-muted">${(item.file.size / (1024*1024)).toFixed(2)} MB</small>
+                </div>
+            </div>`;
+        }).join('');
+
+        list.innerHTML = html;
     },
+
+    // Steuert die Buttons (Start, Pause, Weiter)
+    updateControls: function() {
+        const btnStart = document.getElementById('startUploadBtn');
+        const btnPause = document.getElementById('pauseUploadBtn'); // Den musst du im HTML hinzufügen
+
+        if (!btnStart || !btnPause) return;
+
+        if (this.isUploading) {
+            btnStart.style.display = 'none';
+            btnPause.style.display = 'inline-block';
+            btnPause.innerText = this.isPaused ? "▶️ Fortsetzen" : "⏸️ Pause";
+            btnPause.className = this.isPaused ? "btn btn-warning" : "btn btn-secondary";
+        } else {
+            // Noch nicht gestartet oder fertig/fehler
+            const hasPending = this.queue.some(i => i.status !== 'done');
+            btnStart.style.display = hasPending ? 'inline-block' : 'none';
+            btnStart.innerText = this.queue.some(i => i.uploadedChunks > 0) ? "Fortsetzen" : "Starten";
+            btnPause.style.display = 'none';
+        }
+    },
+
+    togglePause: function() {
+        this.isPaused = !this.isPaused;
+
+        // Wenn wir ent-pausieren, müssen wir den Upload-Loop wieder anstoßen
+        if (!this.isPaused) {
+            this.start();
+        }
+        this.renderList();
+        this.updateControls();
+    },
+
     start: async function() {
-        // ... (Hier der Fetch Upload Code aus dem letzten Chat) ...
-        // Dummy für Demo:
-        alert("Upload Startet (Hier Code einfügen)");
+        if (this.isUploading && !this.isPaused) return; // Läuft schon
+        this.isUploading = true;
+        this.isPaused = false;
+        this.updateControls();
+
+        try {
+            // 1. Ordner Init (nur einmalig, wenn noch nicht da)
+            if (!this.folderName) {
+                const baseName = this.queue[0].file.name.replace('.pdf', '');
+                const initRes = await fetch('/immo/upload/init', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ folder_name: baseName + "_" + Date.now() })
+                });
+                const initJson = await initRes.json();
+                if (!initJson.success) throw new Error("Ordner Init fehlgeschlagen");
+                this.folderName = initJson.path;
+            }
+
+            // 2. Queue abarbeiten
+            for (const item of this.queue) {
+                if (item.status === 'done') continue; // Schon fertig
+
+                item.status = 'uploading';
+                this.renderList();
+
+                const chunkSize = 1024 * 1024; // 1MB
+
+                // HIER IST DIE RESUME LOGIK:
+                // Wir starten bei 'item.uploadedChunks', nicht bei 0!
+                for (let i = item.uploadedChunks; i < item.totalChunks; i++) {
+
+                    // CHECK PAUSE
+                    if (this.isPaused) {
+                        item.status = 'paused';
+                        this.renderList();
+                        this.updateControls();
+                        return; // Funktion verlassen (Status bleibt erhalten)
+                    }
+
+                    const start = i * chunkSize;
+                    const end = Math.min(start + chunkSize, item.file.size);
+                    const chunk = item.file.slice(start, end);
+
+                    const fd = new FormData();
+                    fd.append('file', chunk);
+                    fd.append('filename', item.file.name);
+                    fd.append('folder', this.folderName);
+                    fd.append('chunkIndex', i);
+                    fd.append('totalChunks', item.totalChunks);
+
+                    try {
+                        const res = await fetch('/immo/upload/chunk', { method: 'POST', body: fd });
+                        if (!res.ok) throw new Error("Netzwerkfehler");
+
+                        // Fortschritt speichern
+                        item.uploadedChunks = i + 1;
+                        item.progress = Math.round((item.uploadedChunks / item.totalChunks) * 100);
+                        this.renderList();
+
+                    } catch (err) {
+                        console.error(err);
+                        item.status = 'error';
+                        this.isPaused = true; // Bei Fehler automatisch pausieren
+                        this.renderList();
+                        this.updateControls();
+                        alert(`Fehler bei ${item.file.name}. Bitte überprüfe deine Verbindung und klicke auf Fortsetzen.`);
+                        return; // Abbruch
+                    }
+                }
+
+                item.status = 'done';
+                this.renderList();
+            }
+
+            // 3. Abschluss (nur wenn alles done)
+            if (this.queue.every(i => i.status === 'done')) {
+                const cscName = document.getElementById('global_csc_name').value;
+                const immoType = document.getElementById('immoSelector').value;
+
+                const finalRes = await fetch('/immo/upload/complete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        filename: this.queue[0].file.name,
+                        folder: this.folderName,
+                        csc_name: cscName,
+                        immo_type: immoType,
+                        form_data: app.data
+                    })
+                });
+
+                const finalJson = await finalRes.json();
+                if (finalJson.success) {
+                    alert("✅ Upload erfolgreich!");
+                    document.getElementById('uploadModal').style.display = 'none';
+                    app.reset();
+                } else {
+                    throw new Error(finalJson.error);
+                }
+            }
+
+        } catch (e) {
+            alert("Kritischer Fehler: " + e.message);
+        } finally {
+            // Nur wenn wir wirklich fertig sind (nicht pausiert), resetten wir
+            if (!this.isPaused) {
+                this.isUploading = false;
+                this.updateControls();
+            }
+        }
     }
 };
 
 const app = {
     data: {}, config: [],
     init: async function() {
-        const res = await fetch('/api/config'); this.config = await res.json();
+        const res = await fetch('/immo/config'); this.config = await res.json();
         const raw = localStorage.getItem('immo_data');
         if(raw) { this.data = JSON.parse(raw); document.getElementById('global_csc_name').value = this.data.csc_name||''; if(this.data.immo_typ) { document.getElementById('immoSelector').value = this.data.immo_typ; this.render(); }}
         document.addEventListener('input', e => { if(e.target.id!='global_csc_name') this.data[e.target.name] = e.target.type=='checkbox'?e.target.checked:e.target.value; this.save(); });
@@ -38,8 +255,7 @@ const app = {
 
         this.config.forEach(sec => {
             const details = document.createElement('details');
-            // HIER: Das neue Feature "Standardmäßig ausgeklappt"
-            if(sec.is_expanded !== false) details.open = true; // Default true
+            if(sec.is_expanded !== false) details.open = true;
 
             const content = document.createElement('div'); content.style.padding = "20px";
             let hasFields = false;
@@ -76,7 +292,6 @@ const app = {
         });
     },
 
-    // --- DEIN ORIGINAL PDF CODE (WIEDERHERGESTELLT) ---
     generatePDF: async function(isEmptyTemplate) {
         const cscName = document.getElementById('global_csc_name').value;
         const currentType = document.getElementById('immoSelector').value;
@@ -110,7 +325,6 @@ const app = {
             for (const field of section.content) {
                 if (field.types && !field.types.includes(currentType)) continue;
 
-                // Header in Section
                 if (field.type === 'header') {
                     checkPage(); y+=3; doc.setFont("helvetica", "bold");
                     doc.text(field.label.toUpperCase(), 15, y);
@@ -145,8 +359,6 @@ const app = {
                 y += rowHeight + 6;
             }
         }
-
-        // Bilder Seiten (Code hier gekürzt, aber du hast ihn in deiner index.html)
 
         if(isEmptyTemplate) doc.save(`Druckvorlage.pdf`);
         else {
