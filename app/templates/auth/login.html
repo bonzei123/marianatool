@@ -19,7 +19,7 @@
                         {{ form.password.label(class="form-label fw-bold small text-muted") }}
                         {{ form.password(class="form-control", placeholder="••••••••") }}
                         <div class="text-end mt-1">
-                            <a href="{{ url_for('auth.reset_request') }}" class="small text-muted text-decoration-none">Passwort vergessen?</a>
+                            <a href="{{ url_for('auth.reset_request_view') }}" class="small text-muted text-decoration-none">Passwort vergessen?</a>
                         </div>
                     </div>
                     <div class="d-grid gap-2">
@@ -28,7 +28,7 @@
                 </form>
                 <div class="text-center mt-4">
                     <small class="text-muted">Noch kein Mitglied?
-                        <a href="{{ url_for('auth.register') }}" class="auth-link">Hier registrieren</a>
+                        <a href="{{ url_for('auth.register_view') }}" class="auth-link">Hier registrieren</a>
                     </small>
                 </div>
             </div>

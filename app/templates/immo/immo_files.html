@@ -20,7 +20,7 @@
         <div class="folder-name">{{ p.name }}</div>
         <div class="meta">{{ p.date }}</div>
         <div class="meta">{{ p.count }} Dateien | {{ p.size }} MB</div>
-        <a href="{{ url_for('admin.immo_view_project', project_name=p.name) }}" class="card-link"></a>
+        <a href="{{ url_for('projects.file_browser', project_name=p.name) }}" class="card-link"></a>
     </div>
     {% else %}
         <p style="color:#777; grid-column: 1/-1; text-align:center;">Keine Uploads vorhanden.</p>

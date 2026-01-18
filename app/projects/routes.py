@@ -1,0 +1,226 @@
+import os
+import json
+from datetime import datetime
+from flask import render_template, request, jsonify, current_app, send_from_directory, Blueprint
+from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+from app.extensions import db
+from app.models import ImmoSection, Inspection
+from app.decorators import permission_required
+from app.projects import bp
+
+
+# ==============================================================================
+# VIEW ROUTES (GET)
+# ==============================================================================
+
+@bp.route('/new', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def create_view():
+    """Zeigt das leere Erfassungsformular."""
+    # Template Pfad bleibt vorerst gleich, bis wir Templates verschieben
+    return render_template('immo/immo_form.html')
+
+
+@bp.route('/', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def overview():
+    """Liste der Projekte/Besichtigungen."""
+    if current_user.has_permission('view_users') or current_user.is_admin:
+        inspections = Inspection.query.order_by(Inspection.created_at.desc()).all()
+    else:
+        inspections = Inspection.query.filter_by(user_id=current_user.id).order_by(Inspection.created_at.desc()).all()
+
+    return render_template('immo/immo_overview.html', inspections=inspections)
+
+
+# --- EHEMALS ADMIN FILES ROUTEN ---
+
+@bp.route('/files', methods=['GET'])
+@login_required
+@permission_required('immo_files_access')
+def files_overview():
+    """Übersicht aller Projekt-Ordner (ehemals Admin)."""
+    projects = []
+    up_folder = current_app.config['UPLOAD_FOLDER']
+    if os.path.exists(up_folder):
+        items = os.listdir(up_folder)
+        items.sort(key=lambda x: os.path.getmtime(os.path.join(up_folder, x)), reverse=True)
+        for name in items:
+            path = os.path.join(up_folder, name)
+            if os.path.isdir(path):
+                files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+                size = sum(os.path.getsize(os.path.join(path, f)) for f in files) / (1024 * 1024)
+                projects.append({
+                    "name": name,
+                    "count": len(files),
+                    "size": round(size, 2),
+                    "date": datetime.fromtimestamp(os.path.getmtime(path)).strftime('%d.%m.%Y %H:%M')
+                })
+    return render_template('immo/immo_files.html', projects=projects)
+
+
+@bp.route('/files/<path:project_name>', methods=['GET'])
+@login_required
+@permission_required('immo_files_access')
+def file_browser(project_name):
+    """Inhalt eines spezifischen Projektordners anzeigen."""
+    safe_name = secure_filename(project_name)
+    target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], safe_name)
+    files = []
+    if os.path.exists(target_dir):
+        for f in os.listdir(target_dir):
+            fp = os.path.join(target_dir, f)
+            if os.path.isfile(fp):
+                is_img = f.lower().endswith(('.png', '.jpg', '.jpeg'))
+                is_vid = f.lower().endswith(('.mp4', '.mov'))
+                files.append({
+                    "name": f,
+                    "size": round(os.path.getsize(fp) / 1024 / 1024, 2),
+                    "is_img": is_img,
+                    "is_vid": is_vid
+                })
+    return render_template('immo/immo_project_view.html', project=safe_name, files=files)
+
+
+@bp.route('/download/<path:project>/<path:filename>', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def download_file(project, filename):
+    """Sicherer Download/Anzeige von Dateien."""
+    uploads = current_app.config['UPLOAD_FOLDER']
+    return send_from_directory(os.path.join(uploads, project), filename)
+
+
+# ==============================================================================
+# DATA / API ROUTES
+# ==============================================================================
+
+@bp.route('/config', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def get_form_config():
+    """Lädt die Formular-Struktur (JSON)."""
+    sections = ImmoSection.query.order_by(ImmoSection.order).all()
+    data = []
+    for sec in sections:
+        questions = []
+        for q in sec.questions:
+            questions.append({
+                "id": q.id, "label": q.label, "type": q.type, "width": q.width,
+                "tooltip": q.tooltip,
+                "options": json.loads(q.options_json) if q.options_json else [],
+                "types": json.loads(q.types_json) if q.types_json else []
+            })
+        data.append({"id": sec.id, "title": sec.title, "is_expanded": sec.is_expanded, "content": questions})
+    return jsonify(data)
+
+
+@bp.route('/upload/init', methods=['POST'])
+@login_required
+@permission_required('immo_user')
+def upload_init():
+    """Erstellt Ordner für Upload."""
+    data = request.json
+    folder_name = secure_filename(data.get('folder_name'))
+    target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(target_dir, exist_ok=True)
+    return jsonify({"success": True, "path": folder_name})
+
+
+@bp.route('/upload/chunk', methods=['POST'])
+@login_required
+@permission_required('immo_user')
+def upload_chunk():
+    """Verarbeitet Datei-Chunks."""
+    try:
+        file = request.files['file']
+        folder_name = secure_filename(request.form['folder'])
+        filename = secure_filename(request.form['filename'])
+        chunk_index = int(request.form['chunkIndex'])
+
+        target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+        mode = 'wb' if chunk_index == 0 else 'ab'
+
+        with open(os.path.join(target_dir, filename), mode) as f:
+            f.write(file.read())
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/submit', methods=['POST'])
+@login_required
+@permission_required('immo_user')
+def submit_inspection():
+    """Speichert die Besichtigung (DB + JSON)."""
+    try:
+        data = request.json
+        filename_pdf = secure_filename(data.get('filename'))
+        folder_name = secure_filename(data.get('folder'))
+        csc_name = data.get('csc_name', 'Unbekannt')
+        immo_type = data.get('immo_type', 'einzel')
+        form_responses = data.get('form_data', {})
+
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        full_folder_path = os.path.join(upload_folder, folder_name)
+
+        attached_files = []
+        if os.path.exists(full_folder_path):
+            attached_files = [f for f in os.listdir(full_folder_path) if
+                              os.path.isfile(os.path.join(full_folder_path, f))]
+
+        full_json_record = {
+            "meta": {"csc": csc_name, "type": immo_type, "date": datetime.utcnow().isoformat(),
+                     "uploaded_by": current_user.username},
+            "form_responses": form_responses,
+            "attachments": attached_files
+        }
+
+        # Pfad für die DB relativ zum Upload-Ordner
+        relative_path = os.path.join(folder_name, filename_pdf)
+
+        inspection = Inspection(
+            user_id=current_user.id,
+            csc_name=csc_name,
+            inspection_type=immo_type,
+            status=Inspection.STATUS_SUBMITTED,
+            pdf_path=relative_path,
+            data_json=json.dumps(full_json_record)
+        )
+        db.session.add(inspection)
+        db.session.commit()
+        return jsonify({"success": True, "id": inspection.id})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route('/status', methods=['POST'])
+@login_required
+def status_update():
+    """Status-Update (Ampel). Ehemals Admin, jetzt Workflow."""
+    # Check: Admin oder Permission 'immo_files_access' (aka Manager)
+    if not (current_user.is_admin or current_user.has_permission('immo_files_access')):
+        return jsonify({'success': False, 'error': 'Keine Berechtigung'}), 403
+
+    data = request.json
+    inspection = db.session.get(Inspection, data.get('id'))
+    if not inspection:
+        return jsonify({'success': False, 'error': 'Eintrag fehlt'}), 404
+
+    # Validierung der Status-Strings aus dem Model
+    valid_statuses = [
+        Inspection.STATUS_DRAFT, Inspection.STATUS_SUBMITTED,
+        Inspection.STATUS_REVIEW, Inspection.STATUS_DONE,
+        Inspection.STATUS_REJECTED
+    ]
+
+    if data.get('status') in valid_statuses:
+        inspection.status = data.get('status')
+        db.session.commit()
+        return jsonify({'success': True, 'new_label': inspection.status_label, 'new_color': inspection.status_color})
+
+    return jsonify({'success': False, 'error': 'Ungültiger Status'}), 400

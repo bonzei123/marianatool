@@ -18,7 +18,8 @@ async function init() {
     setPreviewState(showPreview);
 
     // 2. Config laden
-    const res = await fetch('/immo/config');
+    // ROUTE CHECK: OK (/projects/config existiert im neuen 'projects' Blueprint)
+    const res = await fetch('/projects/config');
     config = await res.json();
     renderEditor();
     renderPreview();
@@ -89,7 +90,7 @@ function renderQ(list, q) {
     const div = document.createElement('div');
     div.className = 'question-card';
 
-    // --- NEU: Hier setzen wir die Farbe beim Laden ---
+    // Farbe setzen
     if (['info', 'alert', 'header'].includes(q.type)) {
         div.classList.add('type-' + q.type);
     }
@@ -117,17 +118,10 @@ function renderQ(list, q) {
 
 function tog(el) { el.classList.toggle('active'); sync(); }
 
-// --- NEU: toggleOpt aktualisiert jetzt auch die Farbe sofort ---
 function toggleOpt(sel) {
-    // 1. Optionen-Feld ein/ausblenden
     const card = sel.closest('.question-card');
     card.querySelector('.q-opts').style.display = sel.value==='select'?'block':'none';
-
-    // 2. Farb-Klasse aktualisieren
-    // Erstmal alle Farb-Klassen löschen
     card.classList.remove('type-info', 'type-alert', 'type-header');
-
-    // Dann neue Klasse setzen, wenn es einer der speziellen Typen ist
     if (['info', 'alert', 'header'].includes(sel.value)) {
         card.classList.add('type-' + sel.value);
     }
@@ -168,7 +162,8 @@ function scrape() {
 
 async function saveConfig() {
     try {
-        const res = await fetch('/immo/admin/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(scrape()) });
+        // UPDATE: Route auf /formbuilder/save
+        const res = await fetch('/formbuilder/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(scrape()) });
         const result = await res.json();
         if(result.success) { alert("✅ Gespeichert!"); loadBackups(); }
         else { alert("❌ Fehler: " + result.error); }
@@ -176,12 +171,23 @@ async function saveConfig() {
 }
 
 async function loadBackups() {
-    const res = await fetch('/immo/admin/backups');
-    const list = await res.json();
-    const sel = document.getElementById('backupLoader');
-    sel.innerHTML = '<option value="">Wähle Sicherung...</option>';
-    list.forEach(b => { const opt = document.createElement('option'); opt.value = JSON.stringify(b.data); opt.innerText = b.name; sel.appendChild(opt); });
+    try {
+        // UPDATE: Route auf /formbuilder/backups
+        const res = await fetch('/formbuilder/backups');
+        if (!res.ok) throw new Error("Fehler beim Laden");
+
+        const list = await res.json();
+        const sel = document.getElementById('backupLoader');
+        sel.innerHTML = '<option value="">Wähle Sicherung...</option>';
+        list.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = JSON.stringify(b.data);
+            opt.innerText = b.name;
+            sel.appendChild(opt);
+        });
+    } catch(e) { console.error("Backup Load Error", e); }
 }
+
 function loadBackup(json) { if(json && confirm("Backup laden?")) { config = JSON.parse(json); renderEditor(); sync(); } }
 
 function renderPreview() {

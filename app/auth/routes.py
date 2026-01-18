@@ -1,91 +1,136 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, Blueprint
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
-from app.auth import bp
-from app.auth.forms import LoginForm, RegisterForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm
+from app.auth.forms import LoginForm, RegisterForm, RequestResetForm, ResetPasswordForm
 from app.models import User, Permission
 from app.extensions import db
 from app.utils import send_reset_email
+from app.auth import bp
 
-@bp.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated: return redirect(url_for("main.home"))
+
+# --- LOGIN ---
+
+@bp.route("/login", methods=["GET"])
+def login_view():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.home"))
+    form = LoginForm()
+    return render_template("auth/login.html", form=form)
+
+
+@bp.route("/login", methods=["POST"])
+def login_action():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.home"))
+
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=True)
+
+            # Dev-Helper: Falls User noch keine Rechte hat, alles geben (kann später raus)
             if not user.permissions and not user.is_admin:
                 user.permissions = Permission.query.all()
                 db.session.commit()
+
             return redirect(url_for('main.home'))
         else:
-            flash("Login fehlgeschlagen.", "danger")
+            flash("Login fehlgeschlagen. Bitte prüfen.", "danger")
+
+    # Bei Fehler: Template neu laden (mit Fehlermeldungen)
     return render_template("auth/login.html", form=form)
 
-@bp.route("/logout")
+
+# --- LOGOUT ---
+
+@bp.route("/logout", methods=["GET"])
 @login_required
 def logout():
     logout_user()
     flash('Ausgeloggt.', 'info')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.login_view'))  # Verweist auf die GET Methode
 
-@bp.route("/register", methods=["GET", "POST"])
-def register():
+
+# --- REGISTER ---
+
+@bp.route("/register", methods=["GET"])
+def register_view():
     if current_user.is_authenticated and not current_user.is_admin:
         return redirect(url_for('main.home'))
     form = RegisterForm()
+    return render_template("auth/register.html", form=form)
+
+
+@bp.route("/register", methods=["POST"])
+def register_action():
+    if current_user.is_authenticated and not current_user.is_admin:
+        return redirect(url_for('main.home'))
+
+    form = RegisterForm()
     if form.validate_on_submit():
         hashed_pw = generate_password_hash(form.password.data)
-        # Email mit speichern!
         new_user = User(username=form.username.data, email=form.email.data, password_hash=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
         flash('Account erstellt! Du kannst dich nun einloggen.', 'success')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login_view'))
+
     return render_template("auth/register.html", form=form)
 
-@bp.route("/profile", methods=['GET', 'POST'])
-@login_required
-def profile():
-    form = UpdateAccountForm()
-    if form.validate_on_submit():
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        db.session.commit()
-        flash('Dein Profil wurde aktualisiert!', 'success')
-        return redirect(url_for('auth.profile'))
-    elif request.method == 'GET':
-        form.username.data = current_user.username
-        form.email.data = current_user.email
-    return render_template('auth/profile.html', form=form)
 
-# --- PASSWORT VERGESSEN LOGIK ---
+# --- PASSWORD RESET ---
 
-@bp.route("/reset_password", methods=['GET', 'POST'])
-@login_required
-def reset_request():
+@bp.route("/reset_password", methods=['GET'])
+def reset_request_view():
+    # Kein login_required, sonst kann man Pwd nicht resetten wenn ausgeloggt
+    form = RequestResetForm()
+    return render_template('auth/reset_request.html', form=form)
+
+
+@bp.route("/reset_password", methods=['POST'])
+def reset_request_action():
     form = RequestResetForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        send_reset_email(user)
-        flash('Eine E-Mail mit Anweisungen wurde gesendet (siehe Server-Konsole).', 'info')
-        return redirect(url_for('auth.login'))
+        if user:
+            send_reset_email(user)
+        # Wir flashen immer success, um E-Mail Enumeration zu erschweren (Security Best Practice)
+        flash('Falls diese E-Mail existiert, wurde ein Reset-Link versendet.', 'info')
+        return redirect(url_for('auth.login_view'))
     return render_template('auth/reset_request.html', form=form)
 
-@bp.route("/reset_password/<token>", methods=['GET', 'POST'])
-def reset_token(token):
+
+@bp.route("/reset_password/<token>", methods=['GET'])
+def reset_token_view(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
+
     user = User.verify_reset_token(token)
     if not user:
         flash('Das Token ist ungültig oder abgelaufen.', 'warning')
-        return redirect(url_for('auth.reset_request'))
+        return redirect(url_for('auth.reset_request_view'))
+
+    form = ResetPasswordForm()
+    return render_template('auth/reset_token.html', form=form)
+
+
+@bp.route("/reset_password/<token>", methods=['POST'])
+def reset_token_action(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
+
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('Das Token ist ungültig oder abgelaufen.', 'warning')
+        return redirect(url_for('auth.reset_request_view'))
+
     form = ResetPasswordForm()
     if form.validate_on_submit():
         hashed_pw = generate_password_hash(form.password.data)
         user.password_hash = hashed_pw
         db.session.commit()
         flash('Dein Passwort wurde geändert! Du kannst dich nun einloggen.', 'success')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login_view'))
+
     return render_template('auth/reset_token.html', form=form)

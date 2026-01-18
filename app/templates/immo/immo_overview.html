@@ -4,8 +4,8 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📋 Besichtigungs-Übersicht</h2>
-        </div>
-    
+    </div>
+
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -25,10 +25,10 @@
                         <td>
                             {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100" 
-                                            type="button" 
-                                            id="statusDropdown{{ i.id }}" 
-                                            data-bs-toggle="dropdown" 
+                                    <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
+                                            type="button"
+                                            id="statusDropdown{{ i.id }}"
+                                            data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                         {{ i.status_label }}
                                     </button>
@@ -59,7 +59,7 @@
                         <td class="text-end">
                             {% set parts = i.pdf_path.replace('\\', '/').split('/') %}
                             {% if parts|length >= 2 %}
-                                <a href="{{ url_for('immo.uploaded_file', project=parts[0], filename=parts[1]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <a href="{{ url_for('projects.download_file', project=parts[0], filename=parts[1]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                 </a>
                             {% else %}
@@ -82,5 +82,4 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/immo_overview.js') }}"></script>
-    
 {% endblock %}

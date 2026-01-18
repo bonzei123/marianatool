@@ -5,7 +5,8 @@
 
 async function changeStatus(id, newStatus) {
     try {
-        const res = await fetch('/immo/status/update', {
+        // UPDATE: Route zeigt jetzt auf den 'projects' Blueprint
+        const res = await fetch('/projects/status', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ id: id, status: newStatus })
