@@ -1,139 +1,155 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>⚙️ Einstellungen</h2>
-    </div>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>⚙️ Einstellungen</h2>
+        </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white fw-bold">System Konfiguration</div>
-                <div class="card-body">
-                    <form method="POST"> <div class="mb-4">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white fw-bold">System Konfiguration</div>
+                    <div class="card-body">
+                        <form method="POST"> <div class="mb-4">
                             <label class="form-label fw-bold">Empfänger E-Mail für Berichte</label>
                             <input type="email" name="email_receiver" class="form-control" value="{{ email }}">
                             <div class="form-text">An diese Adresse werden PDF-Protokolle gesendet.</div>
                         </div>
 
-                        <div class="text-end">
-                            <button class="btn btn-primary fw-bold">Speichern</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-primary text-white fw-bold">Dashboard</div>
-                <div class="card-body text-center">
-                    <button class="btn btn-outline-primary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#tilesModal">
-                        <i class="bi bi-grid-3x3-gap me-2"></i> Kacheln bearbeiten
-                    </button>
+                            <div class="text-end">
+                                <button class="btn btn-primary fw-bold">Speichern</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-success text-white fw-bold">Design & Bilder</div>
-                <div class="card-body text-center">
-                    <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#bgModal">
-                        <i class="bi bi-images me-2"></i> Hintergründe
-                    </button>
-                </div>
-            </div>
+            <div class="col-lg-4">
 
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-info text-dark fw-bold">Rechte & Rollen</div>
-                <div class="card-body text-center">
-                    <button class="btn btn-outline-info w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#permsModal">
-                        <i class="bi bi-shield-lock me-2"></i> Texte anpassen
-                    </button>
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-primary text-white fw-bold">Dashboard</div>
+                    <div class="card-body text-center">
+                        <button class="btn btn-outline-primary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#tilesModal">
+                            <i class="bi bi-grid-3x3-gap me-2"></i> Kacheln bearbeiten
+                        </button>
+                    </div>
                 </div>
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-success text-white fw-bold">Design & Bilder</div>
+                    <div class="card-body text-center">
+                        <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#bgModal">
+                            <i class="bi bi-images me-2"></i> Hintergründe
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-info text-dark fw-bold">Rechte & Rollen</div>
+                    <div class="card-body text-center">
+                        <button class="btn btn-outline-info w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#permsModal">
+                            <i class="bi bi-shield-lock me-2"></i> Texte anpassen
+                        </button>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-warning text-dark fw-bold">Fragenkatalog</div>
+                    <div class="card-body text-center">
+                        <p class="small text-muted mb-2">
+                            Importiert die Datei <code>static/questions.json</code> in die Datenbank.
+                        </p>
+                        <form action="{{ url_for('admin.import_questions_route') }}" method="POST"
+                              onsubmit="return confirm('Möchtest du den Fragenkatalog wirklich neu einlesen? Änderungen an Titeln/Optionen werden überschrieben.');">
+                            <button class="btn btn-outline-warning text-dark w-100 fw-bold">
+                                <i class="bi bi-arrow-repeat me-2"></i> Katalog importieren
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<div class="modal fade" id="bgModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <form class="modal-content" action="{{ url_for('admin.save_backgrounds') }}" method="POST" enctype="multipart/form-data">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-images me-2"></i> Design Einstellungen</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
+    <div class="modal fade" id="bgModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" action="{{ url_for('admin.save_backgrounds') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-images me-2"></i> Design Einstellungen</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
 
-                <h6 class="fw-bold border-bottom pb-2 mb-3">Neues Bild hochladen</h6>
-                <div class="mb-4">
-                    <label class="form-label small text-muted">Datei auswählen (JPG, PNG, WEBP)</label>
-                    <div class="input-group">
-                        <input type="file" name="background_image" class="form-control">
-                        <button class="btn btn-outline-secondary" type="button" disabled>Upload bei Speichern</button>
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Neues Bild hochladen</h6>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted">Datei auswählen (JPG, PNG, WEBP)</label>
+                        <div class="input-group">
+                            <input type="file" name="background_image" class="form-control">
+                            <button class="btn btn-outline-secondary" type="button" disabled>Upload bei Speichern</button>
+                        </div>
+                        <div class="form-text">Bilder landen in <code>static/img/backgrounds</code> und stehen unten zur Auswahl.</div>
                     </div>
-                    <div class="form-text">Bilder landen in <code>static/img/backgrounds</code> und stehen unten zur Auswahl.</div>
-                </div>
 
-                <h6 class="fw-bold border-bottom pb-2 mb-3">Hintergrund je Berechtigung</h6>
-                <div class="alert alert-light border small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    User sehen das Bild der Berechtigung, die sie haben. Hat ein User mehrere Rechte, gewinnt das "höhere" (technisch: Sortierung nach ID).
-                </div>
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Hintergrund je Berechtigung</h6>
+                    <div class="alert alert-light border small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        User sehen das Bild der Berechtigung, die sie haben. Hat ein User mehrere Rechte, gewinnt das "höhere" (technisch: Sortierung nach ID).
+                    </div>
 
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle table-hover">
-                        <thead class="table-light">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle table-hover">
+                            <thead class="table-light">
                             <tr>
                                 <th>Berechtigung</th>
                                 <th>Zugewiesenes Bild</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for p in permissions %}
-                            <tr>
-                                <td>
-                                    <i class="bi {{ p.icon }}"></i> <strong>{{ p.name }}</strong>
-                                    <div class="small text-muted" style="font-size: 0.75rem;">{{ p.slug }}</div>
-                                </td>
-                                <td>
-                                    <select name="permission_{{ p.id }}_bg" class="form-select form-select-sm">
-                                        <option value="">-- Standard (Kein spezielles Bild) --</option>
-                                        {% for f in background_files %}
-                                        <option value="{{ f }}" {% if p.background_image == f %}selected{% endif %}>
-                                            {{ f }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td>
+                                        <i class="bi {{ p.icon }}"></i> <strong>{{ p.name }}</strong>
+                                        <div class="small text-muted" style="font-size: 0.75rem;">{{ p.slug }}</div>
+                                    </td>
+                                    <td>
+                                        <select name="permission_{{ p.id }}_bg" class="form-select form-select-sm">
+                                            <option value="">-- Standard (Kein spezielles Bild) --</option>
+                                            {% for f in background_files %}
+                                                <option value="{{ f }}" {% if p.background_image == f %}selected{% endif %}>
+                                                    {{ f }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
-
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                <button type="submit" class="btn btn-success fw-bold">Design speichern</button>
-            </div>
-        </form>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success fw-bold">Design speichern</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
 
-<div class="modal fade" id="tilesModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <form class="modal-content" action="{{ url_for('admin.save_tiles') }}" method="POST">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i> Dashboard Kacheln konfigurieren</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 align-middle">
-                        <thead class="bg-light sticky-top">
+    <div class="modal fade" id="tilesModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <form class="modal-content" action="{{ url_for('admin.save_tiles') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i> Dashboard Kacheln konfigurieren</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0 align-middle">
+                            <thead class="bg-light sticky-top">
                             <tr>
                                 <th style="width: 80px;">Pos.</th>
                                 <th>Titel</th>
@@ -142,54 +158,54 @@
                                 <th>Farbe</th>
                                 <th>Recht</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for tile in tiles %}
-                            {% set prefix = 'tile_' ~ tile.id ~ '_' %}
-                            <tr>
-                                <td><input type="number" name="{{ prefix }}order" value="{{ tile.order }}" class="form-control form-control-sm text-center"></td>
-                                <td><input type="text" name="{{ prefix }}title" value="{{ tile.title }}" class="form-control form-control-sm fw-bold"></td>
-                                <td><input type="text" name="{{ prefix }}route" value="{{ tile.route_name }}" class="form-control form-control-sm text-muted font-monospace"></td>
-                                <td>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text"><i class="bi {{ tile.icon }}"></i></span>
-                                        <input type="text" name="{{ prefix }}icon" value="{{ tile.icon }}" class="form-control">
-                                    </div>
-                                </td>
-                                <td><input type="color" name="{{ prefix }}color" value="{{ tile.color_hex }}" class="form-control form-control-sm form-control-color w-100"></td>
-                                <td>
-                                    <select name="{{ prefix }}perm" class="form-select form-select-sm">
-                                        <option value="None" class="text-success">-- Öffentlich --</option>
-                                        {% for p in permissions %}
-                                        <option value="{{ p.id }}" {% if tile.required_permission_id == p.id %}selected{% endif %}>{{ p.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                            </tr>
+                                {% set prefix = 'tile_' ~ tile.id ~ '_' %}
+                                <tr>
+                                    <td><input type="number" name="{{ prefix }}order" value="{{ tile.order }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="text" name="{{ prefix }}title" value="{{ tile.title }}" class="form-control form-control-sm fw-bold"></td>
+                                    <td><input type="text" name="{{ prefix }}route" value="{{ tile.route_name }}" class="form-control form-control-sm text-muted font-monospace"></td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text"><i class="bi {{ tile.icon }}"></i></span>
+                                            <input type="text" name="{{ prefix }}icon" value="{{ tile.icon }}" class="form-control">
+                                        </div>
+                                    </td>
+                                    <td><input type="color" name="{{ prefix }}color" value="{{ tile.color_hex }}" class="form-control form-control-sm form-control-color w-100"></td>
+                                    <td>
+                                        <select name="{{ prefix }}perm" class="form-select form-select-sm">
+                                            <option value="None" class="text-success">-- Öffentlich --</option>
+                                            {% for p in permissions %}
+                                                <option value="{{ p.id }}" {% if tile.required_permission_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                <button type="submit" class="btn btn-primary fw-bold">Kacheln speichern</button>
-            </div>
-        </form>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Kacheln speichern</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<div class="modal fade" id="permsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <form class="modal-content" action="{{ url_for('admin.save_permissions') }}" method="POST">
-            <div class="modal-header bg-info text-dark">
-                <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i> Rechte Texte anpassen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 align-middle">
-                        <thead class="bg-light sticky-top">
+    <div class="modal fade" id="permsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <form class="modal-content" action="{{ url_for('admin.save_permissions') }}" method="POST">
+                <div class="modal-header bg-info text-dark">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i> Rechte Texte anpassen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0 align-middle">
+                            <thead class="bg-light sticky-top">
                             <tr>
                                 <th style="width: 50px;">ID</th>
                                 <th>Slug (Fix)</th>
@@ -197,33 +213,33 @@
                                 <th>Beschreibung</th>
                                 <th>Icon</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             {% for p in permissions %}
-                            {% set prefix = 'perm_' ~ p.id ~ '_' %}
-                            <tr>
-                                <td class="text-center text-muted">{{ p.id }}</td>
-                                <td><input type="text" value="{{ p.slug }}" class="form-control form-control-sm font-monospace" disabled readonly style="background-color: #eee;"></td>
-                                <td><input type="text" name="{{ prefix }}name" value="{{ p.name }}" class="form-control form-control-sm fw-bold"></td>
-                                <td><input type="text" name="{{ prefix }}description" value="{{ p.description }}" class="form-control form-control-sm"></td>
-                                <td>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text"><i class="bi {{ p.icon }}"></i></span>
-                                        <input type="text" name="{{ prefix }}icon" value="{{ p.icon }}" class="form-control">
-                                    </div>
-                                </td>
-                            </tr>
+                                {% set prefix = 'perm_' ~ p.id ~ '_' %}
+                                <tr>
+                                    <td class="text-center text-muted">{{ p.id }}</td>
+                                    <td><input type="text" value="{{ p.slug }}" class="form-control form-control-sm font-monospace" disabled readonly style="background-color: #eee;"></td>
+                                    <td><input type="text" name="{{ prefix }}name" value="{{ p.name }}" class="form-control form-control-sm fw-bold"></td>
+                                    <td><input type="text" name="{{ prefix }}description" value="{{ p.description }}" class="form-control form-control-sm"></td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text"><i class="bi {{ p.icon }}"></i></span>
+                                            <input type="text" name="{{ prefix }}icon" value="{{ p.icon }}" class="form-control">
+                                        </div>
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                <button type="submit" class="btn btn-info fw-bold">Texte speichern</button>
-            </div>
-        </form>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-info fw-bold">Texte speichern</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
 {% endblock %}

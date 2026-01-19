@@ -102,4 +102,20 @@ def create_app(config_class=Config):
     from app.commands import cmd_bp
     app.register_blueprint(cmd_bp)
 
+    import click
+    @app.cli.command("import-questions")
+    def import_questions_command():
+        """Importiert Fragen aus static/questions.json in die Datenbank."""
+        # Wir müssen den Import hier machen, um Zirkelbezüge zu vermeiden
+        # oder wir importieren die Funktion aus admin.routes
+        from app.admin.routes import perform_question_import
+
+        click.echo("Starte Import...")
+        success, msg = perform_question_import()
+
+        if success:
+            click.secho(f"SUCCESS: {msg}", fg="green")
+        else:
+            click.secho(f"ERROR: {msg}", fg="red")
+
     return app
