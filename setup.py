@@ -59,14 +59,71 @@ def seed():
         # ---------------------------------------------------------
         # (Titel, Route, Icon, Color, Order, Required Permission Slug)
         tiles_data = [
-            ("Neue Besichtigung", "projects.create_view", "bi-plus-circle-dotted", "#2ecc71", 1, "immo_user"),
-            ("Meine Übersicht", "projects.overview", "bi-list-ul", "#3498db", 2, "immo_user"),
-            ("Datei Browser", "projects.files_overview", "bi-folder2-open", "#e67e22", 3, "immo_files_access"),
-            ("Formular Editor", "formbuilder.builder_view", "bi-ui-checks", "#34495e", 4, "immo_admin"),
-            ("User Verwaltung", "user.list_users", "bi-people-fill", "#e74c3c", 5, "view_users"),
-            ("Einstellungen", "admin.global_settings_view", "bi-sliders", "#95a5a6", 6, "view_settings"),
-            ("Projekt Roadmap", "roadmap.view_roadmap", "bi-signpost-split", "#9b59b6", 7, "roadmap_access"),
-        ]
+    (
+        "Neue Besichtigung", 
+        "Starten Sie hier die Erfassung einer neuen Immobilie.", 
+        "projects.create_view", 
+        "bi-plus-circle-dotted", 
+        "#2ecc71", 
+        1, 
+        "immo_user"
+    ),
+    (
+        "Meine Übersicht", 
+        "Status und Details Ihrer laufenden Projekte prüfen.", 
+        "projects.overview", 
+        "bi-list-ul", 
+        "#3498db", 
+        2, 
+        "immo_user"
+    ),
+    (
+        "Datei Browser", 
+        "Zugriff auf alle Projektordner und Uploads.", 
+        "projects.files_overview", 
+        "bi-folder2-open", 
+        "#e67e22", 
+        3, 
+        "immo_files_access"
+    ),
+    (
+        "Formular Editor", 
+        "Fragenkatalog und Formularstruktur anpassen.", 
+        "formbuilder.builder_view", 
+        "bi-ui-checks", 
+        "#34495e", 
+        4, 
+        "immo_admin"
+    ),
+    (
+        "User Verwaltung", 
+        "Benutzer, Rollen und Berechtigungen steuern.", 
+        "user.list_users", 
+        "bi-people-fill", 
+        "#e74c3c", 
+        5, 
+        "view_users"
+    ),
+    (
+        "Einstellungen", 
+        "Design, E-Mail und System-Konfiguration.", 
+        "admin.global_settings_view", 
+        "bi-sliders", 
+        "#95a5a6", 
+        6, 
+        "view_settings"
+    ),
+    (
+        "Projekt Roadmap", 
+        "Aktueller Entwicklungsstand und geplante Features.", 
+        "roadmap.view_roadmap", 
+        "bi-signpost-split", 
+        "#9b59b6", 
+        7, 
+        "roadmap_access"
+    ),
+]
+
 
         print("... Erstelle Kacheln")
         # Alte Kacheln löschen, um Duplikate zu vermeiden?
