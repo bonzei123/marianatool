@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 from flask import render_template, redirect, url_for, request, flash, current_app, Blueprint
 from flask_login import login_required
 from app.extensions import db
-from app.models import Permission, ImmoSetting, DashboardTile, ImmoQuestion
+from app.models import Permission, ImmoSetting, DashboardTile, ImmoQuestion, ImmoSection
 from app.decorators import permission_required
 from app.admin import bp
 
