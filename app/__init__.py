@@ -16,6 +16,7 @@ def create_app(config_class=Config):
     # Extensions init
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = 'auth.login_view'
     migrate.init_app(app, db, render_as_batch=True)
     mail.init_app(app)
 
