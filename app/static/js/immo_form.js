@@ -5,13 +5,16 @@ const uploader = {
     folderName: "",
 
     // Initialisiert das Modal und die Queue
-    initModal: function(blob, name) {
+    initModal: function(pdfBlob, pdfName) {
         this.queue = [];
         this.isPaused = false;
         this.isUploading = false;
+        this.folderName = "";
 
-        // 1. PDF hinzufügen
-        this.addItemToQueue(new File([blob], name, {type:"application/pdf"}));
+        // 1. PDF hinzufügen (falls vorhanden)
+        if (pdfBlob && pdfName) {
+            this.addItemToQueue(new File([pdfBlob], pdfName, {type:"application/pdf"}));
+        }
 
         // 2. Anhänge hinzufügen
         document.querySelectorAll('input[type="file"]').forEach(i => {
@@ -37,6 +40,17 @@ const uploader = {
 
     renderList: function() {
         const list = document.getElementById('uploadList');
+
+        if (this.queue.length === 0) {
+            list.innerHTML = `
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Keine Dateien zum Hochladen.<br>
+                    Klicke auf <strong>"Speichern & Beenden"</strong>, um die Daten zu übertragen.
+                </div>
+            `;
+            return;
+        }
+
         const totalSize = this.queue.reduce((acc, item) => acc + item.file.size, 0);
         const totalLoaded = this.queue.reduce((acc, item) => acc + (item.progress / 100 * item.file.size), 0);
         const totalPercent = totalSize > 0 ? Math.round((totalLoaded / totalSize) * 100) : 0;
@@ -89,15 +103,22 @@ const uploader = {
 
         if (!btnStart || !btnPause) return;
 
+        if (this.queue.length === 0) {
+            btnStart.innerText = "Speichern & Beenden";
+            btnStart.className = "btn btn-success fw-bold";
+        } else {
+            btnStart.innerText = this.queue.some(i => i.uploadedChunks > 0) ? "Fortsetzen" : "Starten";
+            btnStart.className = "btn btn-primary fw-bold";
+        }
+
         if (this.isUploading) {
             btnStart.style.display = 'none';
             btnPause.style.display = 'inline-block';
             btnPause.innerText = this.isPaused ? "▶️ Fortsetzen" : "⏸️ Pause";
             btnPause.className = this.isPaused ? "btn btn-warning" : "btn btn-secondary";
         } else {
-            const hasPending = this.queue.some(i => i.status !== 'done');
-            btnStart.style.display = hasPending ? 'inline-block' : 'none';
-            btnStart.innerText = this.queue.some(i => i.uploadedChunks > 0) ? "Fortsetzen" : "Starten";
+            const isDone = this.queue.length > 0 && this.queue.every(i => i.status === 'done');
+            btnStart.style.display = isDone ? 'none' : 'inline-block';
             btnPause.style.display = 'none';
         }
     },
@@ -116,14 +137,22 @@ const uploader = {
         this.updateControls();
 
         try {
+            const cscName = document.getElementById('global_csc_name').value || "Unbekannt";
+
             // 1. Ordner Init
             if (!this.folderName) {
-                const baseName = this.queue[0].file.name.replace('.pdf', '');
-                // ROUTE CHECK: OK
+                let baseName = "";
+                if (this.queue.length > 0) {
+                    baseName = this.queue[0].file.name.replace(/\.[^/.]+$/, "");
+                } else {
+                    baseName = cscName.replace(/[^a-zA-Z0-9]/g, "_");
+                }
+                const folderPayload = { folder_name: baseName + "_" + Date.now() };
+
                 const initRes = await fetch('/projects/upload/init', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ folder_name: baseName + "_" + Date.now() })
+                    body: JSON.stringify(folderPayload)
                 });
                 const initJson = await initRes.json();
                 if (!initJson.success) throw new Error("Ordner Init fehlgeschlagen");
@@ -159,7 +188,6 @@ const uploader = {
                     fd.append('totalChunks', item.totalChunks);
 
                     try {
-                        // ROUTE CHECK: OK
                         const res = await fetch('/projects/upload/chunk', { method: 'POST', body: fd });
                         if (!res.ok) throw new Error("Netzwerkfehler");
 
@@ -182,16 +210,14 @@ const uploader = {
             }
 
             // 3. Abschluss
-            if (this.queue.every(i => i.status === 'done')) {
-                const cscName = document.getElementById('global_csc_name').value;
+            if (this.queue.length === 0 || this.queue.every(i => i.status === 'done')) {
                 const immoType = document.getElementById('immoSelector').value;
 
-                // WICHTIG: UPDATE URL auf /submit
                 const finalRes = await fetch('/projects/submit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        filename: this.queue[0].file.name,
+                        filename: "",
                         folder: this.folderName,
                         csc_name: cscName,
                         immo_type: immoType,
@@ -200,10 +226,19 @@ const uploader = {
                 });
 
                 const finalJson = await finalRes.json();
+
+                // UPDATE: Weiterleitung zur Detailseite
                 if (finalJson.success) {
-                    alert("✅ Upload erfolgreich!");
-                    document.getElementById('uploadModal').style.display = 'none';
-                    app.reset();
+                    const btn = document.getElementById('startUploadBtn');
+                    btn.className = "btn btn-success";
+                    btn.innerText = "✅ Erfolgreich! Weiterleitung...";
+
+                    setTimeout(() => {
+                        // LocalStorage aufräumen
+                        localStorage.removeItem('project_data');
+                        // Weiterleiten zur ID aus der Response
+                        window.location.href = `/projects/${finalJson.id}/details`;
+                    }, 1000);
                 } else {
                     throw new Error(finalJson.error);
                 }
@@ -211,6 +246,8 @@ const uploader = {
 
         } catch (e) {
             alert("Fehler: " + e.message);
+            this.isUploading = false;
+            this.updateControls();
         } finally {
             if (!this.isPaused) {
                 this.isUploading = false;
@@ -223,11 +260,9 @@ const uploader = {
 const app = {
     data: {}, config: [],
     init: async function() {
-        // ROUTE CHECK: OK
         const res = await fetch('/projects/config');
         this.config = await res.json();
 
-        // Key umbenannt auf project_data
         const raw = localStorage.getItem('project_data');
         if(raw) {
             this.data = JSON.parse(raw);
@@ -297,80 +332,12 @@ const app = {
         });
     },
 
-    generatePDF: async function(isEmptyTemplate) {
+    submitData: async function() {
         const cscName = document.getElementById('global_csc_name').value;
         const currentType = document.getElementById('immoSelector').value;
+        if (!cscName || !currentType) return alert("Bitte CSC Name und Typ angeben!");
 
-        if (!isEmptyTemplate) {
-            if (!cscName) return alert("Bitte CSC Name eingeben!");
-            if (!currentType) return alert("Bitte Typ wählen!");
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Header Grün
-        doc.setFillColor(39, 174, 96); doc.rect(0, 0, 210, 20, 'F');
-        doc.setTextColor(255); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-        doc.text(isEmptyTemplate ? "DRUCKVORLAGE" : "PROTOKOLL: " + currentType.toUpperCase(), 105, 13, null, null, "center");
-
-        doc.setTextColor(0); doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        if(!isEmptyTemplate) doc.text(`CSC: ${cscName} | ${new Date().toLocaleDateString()}`, 15, 30);
-
-        let y = 40;
-        const checkPage = () => { if(y > 280) { doc.addPage(); y=20; } };
-
-        for (const section of this.config) {
-            checkPage(); y += 5;
-            // Sektions-Balken Grau
-            doc.setFillColor(230); doc.rect(15, y-5, 180, 7, 'F');
-            doc.setFont("helvetica", "bold"); doc.text(section.title, 17, y); y += 10;
-            doc.setFont("helvetica", "normal");
-
-            for (const field of section.content) {
-                if (field.types && !field.types.includes(currentType)) continue;
-
-                if (field.type === 'header') {
-                    checkPage(); y+=3; doc.setFont("helvetica", "bold");
-                    doc.text(field.label.toUpperCase(), 15, y);
-                    doc.setTextColor(0); doc.setFont("helvetica", "normal"); y+=6; continue;
-                }
-                if (['alert','info','file'].includes(field.type)) continue;
-
-                checkPage();
-                const col1Width = 65; const col2Width = 110; const startX1 = 15; const startX2 = 85;
-
-                doc.setFont("helvetica", "bold");
-                const labelLines = doc.splitTextToSize(field.label, col1Width);
-                doc.text(labelLines, startX1, y);
-
-                doc.setFont("helvetica", "normal");
-                let valText = "";
-                if (isEmptyTemplate) {
-                    if (field.type === 'select') valText = "[  ] " + field.options.join("  [  ] ");
-                    else if (field.type === 'checkbox') valText = "[  ] Ja    [  ] Nein";
-                    else valText = "__________________________________";
-                } else {
-                    let raw = this.data[field.id];
-                    if (raw === true) valText = "[x] Ja"; else if (raw === false) valText = "[ ] Nein"; else valText = raw || "-";
-                }
-
-                const valLines = doc.splitTextToSize(String(valText), col2Width);
-                const linesCount = Math.max(labelLines.length, valLines.length);
-                const rowHeight = linesCount * 5;
-
-                if (y + rowHeight > 280) { doc.addPage(); y=20; doc.text(labelLines, startX1, y); }
-                doc.text(valLines, startX2, y);
-                y += rowHeight + 6;
-            }
-        }
-
-        if(isEmptyTemplate) doc.save(`Druckvorlage.pdf`);
-        else {
-            const blob = doc.output('blob');
-            // Name für das Backend
-            uploader.initModal(blob, `Protokoll_${cscName}.pdf`);
-        }
+        uploader.initModal(null, null);
     }
 };
 app.init();

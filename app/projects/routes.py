@@ -1,13 +1,14 @@
 import os
 import json
 from datetime import datetime
-from flask import render_template, request, jsonify, current_app, send_from_directory, Blueprint
+from flask import render_template, request, jsonify, current_app, send_from_directory, Blueprint, flash, redirect
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
-from app.models import ImmoSection, Inspection, InspectionLog
+from app.models import ImmoSection, Inspection, InspectionLog, ImmoQuestion
 from app.decorators import permission_required
 from app.projects import bp
+from app.pdf_generator import PdfGenerator
 
 
 # ==============================================================================
@@ -155,10 +156,10 @@ def upload_chunk():
 @login_required
 @permission_required('immo_user')
 def submit_inspection():
-    """Speichert die Besichtigung (DB + JSON)."""
+    """Speichert die Besichtigung (DB + JSON). KEIN PDF UPLOAD MEHR ERFORDERLICH."""
     try:
         data = request.json
-        filename_pdf = secure_filename(data.get('filename'))
+        # filename_pdf wird jetzt ignoriert oder ist null
         folder_name = secure_filename(data.get('folder'))
         csc_name = data.get('csc_name', 'Unbekannt')
         immo_type = data.get('immo_type', 'einzel')
@@ -179,23 +180,73 @@ def submit_inspection():
             "attachments": attached_files
         }
 
-        # Pfad für die DB relativ zum Upload-Ordner
-        relative_path = os.path.join(folder_name, filename_pdf)
+        # Wir setzen pdf_path vorerst leer, es wird beim ersten Klick generiert
+        # Oder wir setzen einen Platzhalter-Ordnerpfad
 
         inspection = Inspection(
             user_id=current_user.id,
             csc_name=csc_name,
             inspection_type=immo_type,
             status=Inspection.STATUS_SUBMITTED,
-            pdf_path=relative_path,
+            pdf_path=os.path.join(folder_name, ""),  # Nur Ordner merken erstmal (Trick)
             data_json=json.dumps(full_json_record)
         )
         db.session.add(inspection)
         db.session.commit()
+
+        # OPTIONAL: PDF Direkt generieren lassen (Server-Side)
+        # Damit es direkt da ist:
+        try:
+            # Config laden
+            sections = ImmoSection.query.order_by(ImmoSection.order).all()
+            gen = PdfGenerator(sections, inspection, current_app.config['UPLOAD_FOLDER'])
+            rel_path = gen.create()
+            inspection.pdf_path = rel_path
+            db.session.commit()
+        except Exception as e:
+            print(f"Auto-PDF Error: {e}")
+
         return jsonify({"success": True, "id": inspection.id})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route('/<int:inspection_id>/generate_pdf', methods=['GET'])
+@login_required
+def generate_and_download_pdf(inspection_id):
+    """
+    Generiert das PDF aus den DB-Daten neu, speichert es und sendet es an den User.
+    """
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection:
+        return render_template('errors/404.html'), 404
+
+    if not (current_user.is_admin or current_user.has_permission(
+            'immo_files_access') or inspection.user_id == current_user.id):
+        return render_template('errors/403.html'), 403
+
+    try:
+        # 1. Config laden (inklusive Questions)
+        sections = ImmoSection.query.order_by(ImmoSection.order).all()
+
+        # 2. Generator aufrufen
+        gen = PdfGenerator(sections, inspection, current_app.config['UPLOAD_FOLDER'])
+        rel_path = gen.create()  # Gibt z.B. "Ordner/File.pdf" zurück
+
+        # 3. Pfad in DB aktualisieren
+        inspection.pdf_path = rel_path
+        db.session.commit()
+
+        # 4. Datei senden
+        folder, filename = os.path.split(rel_path)
+        return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], folder), filename,
+                                   as_attachment=True)
+
+    except Exception as e:
+        current_app.logger.error(f"PDF Gen Error: {e}")
+        flash(f"Fehler bei PDF Generierung: {e}", "danger")
+        return redirect(url_for('projects.overview'))
 
 
 @bp.route('/status', methods=['POST'])
