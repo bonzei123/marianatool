@@ -99,4 +99,7 @@ def create_app(config_class=Config):
         roadmap = db.session.get(SiteContent, 'roadmap')
         return dict(roadmap_meta=roadmap, current_background_image=current_bg)
 
+    from app.commands import seed_db_command
+    app.cli.add_command(seed_db_command)
+
     return app
