@@ -9,12 +9,32 @@ document.addEventListener('DOMContentLoaded', function() {
         editModalInstance = new bootstrap.Modal(editModalEl);
     }
 
-    // URLs aus dem Config-Div lesen (NICHT schneiden, wir ersetzen später die 0)
+    // URLs aus dem Config-Div lesen
     const configDiv = document.getElementById('js-config');
-    // Wir speichern die Templates mit der "0" drin
     const updateUrlTemplate = configDiv.dataset.updateUrl;
     const deleteUrlTemplate = configDiv.dataset.deleteUrl;
     const resetUrlTemplate = configDiv.dataset.resetUrl;
+
+    // --- NEU: UX - Ganze Permission-Box klickbar machen ---
+    document.querySelectorAll('.permission-item').forEach(item => {
+        item.style.cursor = 'pointer'; // Hand-Cursor anzeigen
+
+        item.addEventListener('click', function(e) {
+            const chk = this.querySelector('input[type="checkbox"]');
+            if (!chk) return;
+
+            // 1. Wenn der User direkt das kleine Kästchen trifft:
+            // Lassen wir den Browser machen (sonst verhindern wir den Klick darauf).
+            if (e.target === chk) return;
+
+            // 2. Wenn der User auf Text, Icon, Label oder Hintergrund klickt:
+            // Verhindern wir, dass das Label den Klick weiterleitet (würde sonst doppelt feuern)
+            e.preventDefault();
+
+            // Und schalten den Haken manuell um
+            chk.checked = !chk.checked;
+        });
+    });
 
     // --- FUNKTION: Modal öffnen ---
     window.openEditModal = function(row) {
@@ -27,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const permissions = permissionsRaw ? permissionsRaw.split(',').map(Number) : [];
 
         // B. URLs generieren (Die "0" durch echte ID ersetzen)
-        // WICHTIG: Das behebt den "...updat1" Fehler
         const realUpdateUrl = updateUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realDeleteUrl = deleteUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realResetUrl = resetUrlTemplate.replace('/0/', `/${currentUserId}/`);
@@ -35,8 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // C. Form Action setzen
         document.getElementById('editForm').action = realUpdateUrl;
 
-        // D. Delete Button und Reset Button mit korrekten URLs versorgen
-        // Wir speichern die URL direkt am Button, damit die Funktionen sie nutzen können
+        // D. Buttons konfigurieren
         const delBtn = document.getElementById('delBtn');
         delBtn.dataset.url = realDeleteUrl;
         delBtn.onclick = function() { deleteUser(name); };
@@ -44,16 +62,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const resetBtn = document.querySelector('button[onclick="sendResetMail()"]');
         if(resetBtn) resetBtn.dataset.url = realResetUrl;
 
-
         // E. Felder befüllen
         document.getElementById('editTitle').innerText = "Bearbeiten: " + name;
         document.getElementById('editUser').value = name;
         document.getElementById('editEmail').value = email || "";
         document.getElementById('editAdmin').checked = isAdmin;
 
-        // F. Checkboxen setzen
-        document.querySelectorAll('.edit-srv').forEach(cb => {
-            cb.checked = permissions.includes(parseInt(cb.value));
+        // F. Checkboxen setzen (zuerst alle resetten, dann setzen)
+        document.querySelectorAll('#editModal .edit-srv').forEach(cb => cb.checked = false);
+        permissions.forEach(permId => {
+            // Suche Checkbox im Edit-Modal via Value (da IDs dynamisch sein können)
+            const chk = document.querySelector(`#editModal input[value="${permId}"]`);
+            if (chk) chk.checked = true;
         });
 
         // G. Anzeigen
@@ -75,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function deleteUser(username) {
     const btn = document.getElementById('delBtn');
-    const url = btn.dataset.url; // URL vom Button holen
+    const url = btn.dataset.url;
 
     if (!url || !confirm(`User "${username}" wirklich löschen?`)) return;
 
@@ -84,8 +104,6 @@ async function deleteUser(username) {
         btn.disabled = true;
         btn.innerHTML = "Lösche...";
 
-        // Da Delete im Backend ein Redirect macht, nutzen wir hier Submit oder Fetch mit Reload
-        // Fetch ist sauberer, wenn wir Errors fangen wollen
         const res = await fetch(url, { method: 'POST' });
 
         if (res.ok || res.redirected) {
@@ -103,7 +121,7 @@ async function deleteUser(username) {
 
 async function sendResetMail() {
     const btn = document.querySelector('button[onclick="sendResetMail()"]');
-    const url = btn.dataset.url; // URL vom Button holen
+    const url = btn.dataset.url;
 
     if (!url || !confirm("Passwort-Reset senden?")) return;
 
@@ -116,7 +134,6 @@ async function sendResetMail() {
         const data = await res.json();
 
         if (data.success) {
-            // Button kurz grün machen
             btn.className = "btn btn-success w-100 fw-bold";
             btn.innerHTML = "✅ Gesendet!";
             setTimeout(() => {
