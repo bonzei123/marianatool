@@ -14,7 +14,7 @@ def seed():
         db.create_all()
 
         # ---------------------------------------------------------
-        # 2. Permissions anlegen
+        # 2. Permissions anlegen oder aktualisieren
         # ---------------------------------------------------------
         permissions_data = [
             # ID, Slug, Name, Description, Icon
@@ -31,8 +31,14 @@ def seed():
         for p_id, slug, name, desc, icon in permissions_data:
             perm = db.session.get(Permission, p_id)
             if not perm:
-                perm = Permission(id=p_id, slug=slug, name=name, description=desc, icon=icon)
+                perm = Permission(id=p_id)
                 db.session.add(perm)
+
+            # Werte setzen / aktualisieren (auch bei bestehenden)
+            perm.slug = slug
+            perm.name = name
+            perm.description = desc
+            perm.icon = icon
 
         db.session.commit()
 
@@ -47,107 +53,57 @@ def seed():
                 password_hash=generate_password_hash('passwort'),
                 is_admin=True
             )
-            # Dem Admin alle Rechte geben (optional, da is_admin=True meist eh alles darf)
-            # Aber für die Anzeige gut:
+            # Dem Admin alle Rechte geben
             for p in Permission.query.all():
                 admin.permissions.append(p)
             db.session.add(admin)
             db.session.commit()
 
         # ---------------------------------------------------------
-        # 4. Dashboard Kacheln anlegen
+        # 4. Dashboard Kacheln anlegen oder aktualisieren
         # ---------------------------------------------------------
-        # (Titel, Route, Icon, Color, Order, Required Permission Slug)
+        # (Titel, Description, Route, Icon, Color, Order, Required Permission Slug)
         tiles_data = [
-    (
-        "Neue Besichtigung", 
-        "Starten Sie hier die Erfassung einer neuen Immobilie.", 
-        "projects.create_view", 
-        "bi-plus-circle-dotted", 
-        "#2ecc71", 
-        1, 
-        "immo_user"
-    ),
-    (
-        "Meine Übersicht", 
-        "Status und Details Ihrer laufenden Projekte prüfen.", 
-        "projects.overview", 
-        "bi-list-ul", 
-        "#3498db", 
-        2, 
-        "immo_user"
-    ),
-    (
-        "Datei Browser", 
-        "Zugriff auf alle Projektordner und Uploads.", 
-        "projects.files_overview", 
-        "bi-folder2-open", 
-        "#e67e22", 
-        3, 
-        "immo_files_access"
-    ),
-    (
-        "Formular Editor", 
-        "Fragenkatalog und Formularstruktur anpassen.", 
-        "formbuilder.builder_view", 
-        "bi-ui-checks", 
-        "#34495e", 
-        4, 
-        "immo_admin"
-    ),
-    (
-        "User Verwaltung", 
-        "Benutzer, Rollen und Berechtigungen steuern.", 
-        "user.list_users", 
-        "bi-people-fill", 
-        "#e74c3c", 
-        5, 
-        "view_users"
-    ),
-    (
-        "Einstellungen", 
-        "Design, E-Mail und System-Konfiguration.", 
-        "admin.global_settings_view", 
-        "bi-sliders", 
-        "#95a5a6", 
-        6, 
-        "view_settings"
-    ),
-    (
-        "Projekt Roadmap", 
-        "Aktueller Entwicklungsstand und geplante Features.", 
-        "roadmap.view_roadmap", 
-        "bi-signpost-split", 
-        "#9b59b6", 
-        7, 
-        "roadmap_access"
-    ),
-]
+            ("Neue Besichtigung", "Starten Sie hier die Erfassung einer neuen Immobilie.", "projects.create_view",
+             "bi-plus-circle-dotted", "#2ecc71", 1, "immo_user"),
+            (
+            "Meine Übersicht", "Status und Details Ihrer laufenden Projekte prüfen.", "projects.overview", "bi-list-ul",
+            "#3498db", 2, "immo_user"),
+            ("Datei Browser", "Zugriff auf alle Projektordner und Uploads.", "projects.files_overview",
+             "bi-folder2-open", "#e67e22", 3, "immo_files_access"),
+            ("Formular Editor", "Fragenkatalog und Formularstruktur anpassen.", "formbuilder.builder_view",
+             "bi-ui-checks", "#34495e", 4, "immo_admin"),
+            ("User Verwaltung", "Benutzer, Rollen und Berechtigungen steuern.", "user.list_users", "bi-people-fill",
+             "#e74c3c", 5, "view_users"),
+            ("Einstellungen", "Design, E-Mail und System-Konfiguration.", "admin.global_settings_view", "bi-sliders",
+             "#95a5a6", 6, "view_settings"),
+            ("Projekt Roadmap", "Aktueller Entwicklungsstand und geplante Features.", "roadmap.view_roadmap",
+             "bi-signpost-split", "#9b59b6", 7, "roadmap_access"),
+        ]
 
+        print("... Erstelle/Aktualisiere Dashboard Kacheln")
 
-        print("... Erstelle Kacheln")
-        # Alte Kacheln löschen, um Duplikate zu vermeiden?
-        # Besser: Checken ob Route existiert.
+        for title, desc, route, icon, color, order, perm_slug in tiles_data:
+            # Permission Objekt suchen
+            perm = Permission.query.filter_by(slug=perm_slug).first()
 
-        # Da DB leer ist, einfach rein damit:
-        for title, route, icon, color, order, perm_slug in tiles_data:
-            # Check ob Kachel mit dieser Route schon existiert
-            exists = DashboardTile.query.filter_by(route_name=route).first()
-            if not exists:
-                # Permission Objekt holen
-                perm = Permission.query.filter_by(slug=perm_slug).first()
-                tile = DashboardTile(
-                    title=title,
-                    route_name=route,
-                    icon=icon,
-                    color_hex=color,
-                    order=order,
-                    required_permission=perm  # Verknüpfung!
-                )
+            # Prüfen ob Tile existiert (anhand der Route)
+            tile = DashboardTile.query.filter_by(route_name=route).first()
+
+            if not tile:
+                tile = DashboardTile(route_name=route)
                 db.session.add(tile)
 
+            # Attribute aktualisieren (damit Änderungen in der Liste übernommen werden)
+            tile.title = title
+            tile.description = desc  # <--- Hier fehlte vorher die Zuweisung
+            tile.icon = icon
+            tile.color_hex = color
+            tile.order = order
+            tile.required_permission = perm
+
         db.session.commit()
-        print("✅ Fertig! Datenbank wurde befüllt.")
+        print("✅ Fertig! Datenbank wurde befüllt und aktualisiert.")
 
 
 if __name__ == "__main__":
