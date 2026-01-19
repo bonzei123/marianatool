@@ -2,24 +2,17 @@
 
 {% block content %}
     <style>
-        /* Styles vom Formular-Generator */
+        /* Styles vom Formular-Generator (unverändert) */
         .field-wrapper { display: inline-block; vertical-align: top; padding: 10px; box-sizing: border-box; }
         .w-half { width: 50%; }
         .w-full { width: 100%; }
         .field-wrapper label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color:#555; }
-        .field-wrapper input[type="text"],
-        .field-wrapper input[type="number"],
-        .field-wrapper input[type="date"],
-        .field-wrapper select,
-        .field-wrapper textarea {
+        .field-wrapper input, .field-wrapper select, .field-wrapper textarea {
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
         }
-
-        /* Responsive Fix für Mobile */
-        @media(max-width: 768px) {
-            .w-half { width: 100%; }
-        }
+        @media(max-width: 768px) { .w-half { width: 100%; } }
     </style>
+
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
             <div>
@@ -31,7 +24,7 @@
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <a href="{{ url_for('projects.generate_and_download_pdf', inspection_id=inspection.id) }}" class="btn btn-outline-danger" target="_blank">
-                    <i class="bi bi-file-pdf"></i> PDF Generieren
+                    <i class="bi bi-file-pdf"></i> PDF
                 </a>
                 <a href="{{ url_for('projects.overview') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Zurück
@@ -39,9 +32,7 @@
 
                 {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
                     <div class="dropdown">
-                        <button class="btn btn-{{ inspection.status_color }} dropdown-toggle fw-bold"
-                                type="button"
-                                data-bs-toggle="dropdown">
+                        <button class="btn btn-{{ inspection.status_color }} dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
                             {{ inspection.status_label }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
@@ -60,20 +51,14 @@
         </div>
 
         <ul class="nav nav-tabs nav-tabs-bordered mb-4" id="projectTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta" type="button">
-                    <i class="bi bi-clipboard-data me-2"></i> Metadaten
-                </button>
+            <li class="nav-item">
+                <button class="nav-link active" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta"><i class="bi bi-clipboard-data me-2"></i> Informationen</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button">
-                    <i class="bi bi-pencil-square me-2"></i> Formular
-                </button>
+            <li class="nav-item">
+                <button class="nav-link" id="form-tab" data-bs-toggle="tab" data-bs-target="#form"><i class="bi bi-pencil-square me-2"></i> Formular</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button">
-                    <i class="bi bi-folder2-open me-2"></i> Dateien <span class="badge bg-secondary ms-1">{{ files|length }}</span>
-                </button>
+            <li class="nav-item">
+                <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files"><i class="bi bi-folder2-open me-2"></i> Dateien <span class="badge bg-secondary ms-1">{{ files|length }}</span></button>
             </li>
         </ul>
 
@@ -86,36 +71,34 @@
                             <div class="card-header bg-light fw-bold">Projekt Details</div>
                             <div class="card-body">
                                 <div class="row mb-3">
-                                    <label class="col-sm-4 text-muted">Projekt Name (CSC)</label>
-                                    <div class="col-sm-8 fw-bold">{{ inspection.csc_name }}</div>
+                                    <label class="col-sm-5 text-muted">Projekt Name (CSC)</label>
+                                    <div class="col-sm-7 fw-bold">{{ inspection.csc_name }}</div>
                                 </div>
                                 <div class="row mb-3">
-                                    <label class="col-sm-4 text-muted">Erfasst von</label>
-                                    <div class="col-sm-8">
+                                    <label class="col-sm-5 text-muted">Erfasst von</label>
+                                    <div class="col-sm-7">
                                         <div class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:24px; height:24px; font-size:0.7rem;">
-                                                {{ inspection.user.username[0]|upper }}
-                                            </div>
+                                            <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:24px; height:24px; font-size:0.7rem;">{{ inspection.user.username[0]|upper }}</div>
                                             {{ inspection.user.username }}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
-                                    <label class="col-sm-4 text-muted">Typ</label>
-                                    <div class="col-sm-8"><span class="badge bg-light text-dark border">{{ inspection.inspection_type }}</span></div>
+                                    <label class="col-sm-5 text-muted">Immobilien Typ</label>
+                                    <div class="col-sm-7"><span class="badge bg-light text-dark border">{{ inspection.inspection_type }}</span></div>
                                 </div>
 
                                 <hr>
-                                <h6 class="text-primary mb-3">Daten aus Formular</h6>
+                                <h6 class="text-primary mb-3">Wichtige Eckdaten</h6>
 
-                                <div class="row mb-2">
-                                    <label class="col-sm-4 text-muted">Zusatzinfo 1</label>
-                                    <div class="col-sm-8">{{ form_responses.get('verein_name', '-') }}</div>
+                                {% for item in meta_fields %}
+                                <div class="row mb-2 border-bottom pb-2">
+                                    <label class="col-sm-5 text-muted">{{ item.label }}</label>
+                                    <div class="col-sm-7 fw-bold text-dark">{{ item.value if item.value else '-' }}</div>
                                 </div>
-                                <div class="row mb-2">
-                                    <label class="col-sm-4 text-muted">Zusatzinfo 2</label>
-                                    <div class="col-sm-8">{{ form_responses.get('strasse', '-') }}</div>
-                                </div>
+                                {% else %}
+                                <div class="text-muted small fst-italic">Keine Metadaten definiert.</div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -147,19 +130,11 @@
                 <div class="d-flex align-items-center justify-content-between alert alert-light border mb-4">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-pencil-square fs-4 text-primary me-3"></i>
-                        <div>
-                            <strong>Bearbeitungsmodus</strong><br>
-                            <small class="text-muted">Änderungen werden im Log gespeichert.</small>
-                        </div>
+                        <div><strong>Bearbeitungsmodus</strong><br><small class="text-muted">Änderungen werden im Log gespeichert.</small></div>
                     </div>
-                    <button class="btn btn-primary fw-bold" onclick="saveFormData()">
-                        <i class="bi bi-save me-2"></i> Speichern
-                    </button>
+                    <button class="btn btn-primary fw-bold" onclick="saveFormData()"><i class="bi bi-save me-2"></i> Speichern</button>
                 </div>
-
-                <div id="formContainer" class="pb-5">
-                    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-                </div>
+                <div id="formContainer" class="pb-5"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>
             </div>
 
             <div class="tab-pane fade" id="files" role="tabpanel">
@@ -171,23 +146,16 @@
                                 <a href="{{ file_url }}" target="_blank" class="card-body text-center d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark p-3">
                                     {% if file.is_img %}
                                         <img src="{{ file_url }}" class="mb-2 rounded shadow-sm" style="max-height: 80px; max-width: 100%; object-fit: cover;">
-                                    {% elif file.is_vid %}
-                                        <i class="bi bi-camera-video-fill fs-1 text-secondary mb-2"></i>
-                                    {% elif file.name.lower().endswith('.pdf') %}
-                                        <i class="bi bi-file-earmark-pdf-fill fs-1 text-danger mb-2"></i>
-                                    {% else %}
-                                        <i class="bi bi-file-earmark-fill fs-1 text-secondary mb-2"></i>
-                                    {% endif %}
+                                    {% elif file.is_vid %}<i class="bi bi-camera-video-fill fs-1 text-secondary mb-2"></i>
+                                    {% elif file.name.lower().endswith('.pdf') %}<i class="bi bi-file-earmark-pdf-fill fs-1 text-danger mb-2"></i>
+                                    {% else %}<i class="bi bi-file-earmark-fill fs-1 text-secondary mb-2"></i>{% endif %}
                                     <div class="small text-truncate w-100 fw-bold">{{ file.name }}</div>
                                     <div class="text-muted" style="font-size: 0.7rem;">{{ file.size }} MB</div>
                                 </a>
                             </div>
                         </div>
                     {% else %}
-                        <div class="col-12 text-center text-muted py-5">
-                            <i class="bi bi-folder-x fs-1 d-block mb-3 opacity-50"></i>
-                            Keine Dateien gefunden.
-                        </div>
+                        <div class="col-12 text-center text-muted py-5"><i class="bi bi-folder-x fs-1 d-block mb-3 opacity-50"></i>Keine Dateien gefunden.</div>
                     {% endfor %}
                 </div>
             </div>
@@ -199,6 +167,5 @@
         const inspectionId = {{ inspection.id }};
         const formConfigUrl = "{{ url_for('projects.get_form_config') }}";
     </script>
-
     <script src="{{ url_for('static', filename='js/immo_details.js') }}"></script>
 {% endblock %}

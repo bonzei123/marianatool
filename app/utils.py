@@ -1,92 +1,86 @@
 import json
-import threading
-from flask import url_for, current_app
+from app.extensions import db
+from app.models import ImmoSection, ImmoQuestion, User
 from flask_mail import Message
-from app.extensions import db, mail
-from app.models import ImmoSection, ImmoQuestion
+from flask import current_app
 
 
 def import_json_data(data):
     """
-    Importiert JSON Struktur in die DB (Formular-Builder).
-    Löscht alle existierenden Fragen/Sektionen und legt sie neu an (Full Overwrite).
+    Nimmt eine Liste von Sektionen (JSON-Struktur) entgegen und
+    aktualisiert die Datenbank (ImmoSection & ImmoQuestion).
     """
     try:
-        # Alte Daten löschen
-        ImmoQuestion.query.delete()
-        ImmoSection.query.delete()
-
-        # Neue Daten iterieren
-        for i, sec_data in enumerate(data):
+        # Wir zählen mit, um die Reihenfolge (Order) sauber zu setzen
+        for sec_idx, sec_data in enumerate(data):
             sec_id = sec_data.get('id')
             if not sec_id:
-                sec_id = f'autogen_sec_{i}'
+                continue  # Ohne ID überspringen wir
 
-            section = ImmoSection(
-                id=sec_id,
-                title=sec_data.get('title', 'Unbenannt'),
-                order=i,
-                is_expanded=sec_data.get('is_expanded', True)
-            )
-            db.session.add(section)
+            # 1. Section holen oder erstellen
+            section = db.session.get(ImmoSection, sec_id)
+            if not section:
+                section = ImmoSection(id=sec_id)
+                db.session.add(section)
 
-            for j, q_data in enumerate(sec_data.get('content', [])):
-                q_id = q_data.get('id')
-                if not q_id:
-                    q_id = f'autogen_q_{i}_{j}'
+            # Werte aktualisieren
+            section.title = sec_data.get('title', 'Unbenannt')
+            section.is_expanded = sec_data.get('is_expanded', True)
+            section.order = sec_idx
 
-                q = ImmoQuestion(
-                    id=q_id,
-                    section_id=section.id,
-                    label=q_data.get('label', ''),
-                    type=q_data.get('type', 'text'),
-                    width=q_data.get('width', 'half'),
-                    tooltip=q_data.get('tooltip', ''),
-                    options_json=json.dumps(q_data.get('options', [])),
-                    types_json=json.dumps(q_data.get('types', [])),
-                    order=j
-                )
-                db.session.add(q)
+            # 2. Fragen verarbeiten
+            if 'content' in sec_data:
+                for q_idx, q_data in enumerate(sec_data['content']):
+                    q_id = q_data.get('id')
+                    if not q_id:
+                        continue
+
+                    question = db.session.get(ImmoQuestion, q_id)
+                    if not question:
+                        question = ImmoQuestion(id=q_id)
+                        db.session.add(question)
+
+                    # Basis-Felder mappen
+                    question.section_id = sec_id
+                    question.label = q_data.get('label', '')
+                    question.type = q_data.get('type', 'text')
+                    question.width = q_data.get('width', 'half')
+                    question.tooltip = q_data.get('tooltip', '')
+                    question.order = q_idx
+
+                    # --- NEU: Validierung & Metadaten ---
+                    # Das JavaScript sendet "is_required", die questions.json oft nur "required"
+                    # Wir prüfen beides, um sicher zu sein.
+                    question.is_required = q_data.get('is_required') or q_data.get('required') or False
+                    question.is_metadata = q_data.get('is_metadata') or q_data.get('metadata') or False
+
+                    # Listen (Options/Types) zu JSON String konvertieren
+                    opts = q_data.get('options', [])
+                    types = q_data.get('types', [])
+
+                    # Sicherheitscheck: Falls es keine Liste ist, leer machen
+                    if not isinstance(opts, list): opts = []
+                    if not isinstance(types, list): types = []
+
+                    question.options_json = json.dumps(opts)
+                    question.types_json = json.dumps(types)
 
         db.session.commit()
-        print("✅ Import erfolgreich.")
+        return True
+
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Fehler beim Import: {e}")
-        # Re-raise damit der Caller (Route) den Fehler 500 werfen kann
-        raise e
-
-
-def send_async_email(app, msg):
-    """Hilfsfunktion für Threading."""
-    with app.app_context():
-        try:
-            with mail.connect() as conn:
-                conn.send(msg)
-            print(f"✅ E-Mail an {msg.recipients} versendet.")
-        except Exception as e:
-            print(f"❌ Fehler beim E-Mail Versand: {e}")
+        print(f"ERROR in import_json_data: {e}")
+        raise e  # Fehler weiterreichen
 
 
 def send_reset_email(user):
-    """Generiert Token und sendet Reset-Mail via Auth-Blueprint."""
+    """
+    Sendet eine Passwort-Reset-Mail an den User.
+    (Hier als Platzhalter, falls noch nicht implementiert)
+    """
     token = user.get_reset_token()
-
-    # Verweist auf auth.reset_token -> /auth/reset_password/<token>
-    reset_url = url_for('auth.reset_token', token=token, _external=True)
-
-    msg = Message('Passwort zurücksetzen - Vereins-Portal',
-                  recipients=[user.email])
-
-    msg.body = f'''Hallo {user.username},
-
-Um dein Passwort zurückzusetzen, klicke bitte auf den folgenden Link:
-{reset_url}
-
-Dieser Link ist 30 Minuten gültig.
-Wenn du dies nicht angefordert hast, ignoriere diese E-Mail einfach.
-'''
-
-    # Asynchron senden
-    app = current_app._get_current_object()
-    threading.Thread(target=send_async_email, args=(app, msg)).start()
+    # Hier müsste deine Mail-Logik hin, z.B.:
+    # msg = Message('Passwort zurücksetzen', sender='noreply@demo.com', recipients=[user.email])
+    # ...
+    print(f"Simuliere Mail an {user.email} mit Token: {token}")

@@ -88,6 +88,8 @@ class ImmoQuestion(db.Model):
     options_json = db.Column(db.Text)
     types_json = db.Column(db.Text)
     order = db.Column(db.Integer)
+    is_required = db.Column(db.Boolean, default=False)
+    is_metadata = db.Column(db.Boolean, default=False)
 
 
 class ImmoBackup(db.Model):
@@ -184,7 +186,6 @@ class InspectionLog(db.Model):
 
     inspection = db.relationship('Inspection', backref=db.backref('logs', order_by=timestamp.desc(), lazy=True))
     user = db.relationship('User')
-
 
 
 @login_manager.user_loader

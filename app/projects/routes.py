@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from flask import render_template, request, jsonify, current_app, send_from_directory, Blueprint, flash, redirect
+from flask import render_template, request, jsonify, current_app, url_for, send_from_directory, Blueprint, flash, redirect
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
@@ -110,8 +110,13 @@ def get_form_config():
         questions = []
         for q in sec.questions:
             questions.append({
-                "id": q.id, "label": q.label, "type": q.type, "width": q.width,
+                "id": q.id,
+                "label": q.label,
+                "type": q.type,
+                "width": q.width,
                 "tooltip": q.tooltip,
+                "is_required": q.is_required,
+                "is_metadata": q.is_metadata,
                 "options": json.loads(q.options_json) if q.options_json else [],
                 "types": json.loads(q.types_json) if q.types_json else []
             })
@@ -292,33 +297,12 @@ def detail_view(inspection_id):
     if not inspection:
         return render_template('errors/404.html'), 404
 
+    # Rechte prüfen
     if not (current_user.is_admin or current_user.has_permission(
             'immo_files_access') or inspection.user_id == current_user.id):
         return render_template('errors/403.html'), 403
 
-    # 1. Dateien Logik (bleibt gleich)
-    folder_name = os.path.dirname(inspection.pdf_path) if inspection.pdf_path else ""
-    if not folder_name and inspection.csc_name:
-        folder_name = secure_filename(inspection.csc_name)
-
-    files = []
-    if folder_name:
-        target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
-        if os.path.exists(target_dir):
-            for f in os.listdir(target_dir):
-                fp = os.path.join(target_dir, f)
-                if os.path.isfile(fp):
-                    is_img = f.lower().endswith(('.png', '.jpg', '.jpeg'))
-                    is_vid = f.lower().endswith(('.mp4', '.mov'))
-                    files.append({
-                        "name": f,
-                        "size": round(os.path.getsize(fp) / 1024 / 1024, 2),
-                        "is_img": is_img,
-                        "is_vid": is_vid,
-                        "folder": folder_name
-                    })
-
-    # 2. NEU: JSON Daten parsen für das Template (Metadaten Tab)
+    # 1. Daten aus JSON laden
     import json
     parsed_data = {}
     form_responses = {}
@@ -329,11 +313,78 @@ def detail_view(inspection_id):
         except:
             pass
 
-    return render_template('immo/immo_details.html',
+    # 2. Metadaten-Fragen laden und Antworten mappen
+    # Wir holen alle Fragen, die is_metadata=True haben, sortiert nach Section und Order
+    meta_questions = db.session.query(ImmoQuestion) \
+        .join(ImmoSection) \
+        .filter(ImmoQuestion.is_metadata == True) \
+        .order_by(ImmoSection.order, ImmoQuestion.order) \
+        .all()
+
+    meta_fields = []
+    for q in meta_questions:
+        # Wert aus den Antworten holen (Key ist die Question ID)
+        val = form_responses.get(q.id)
+
+        # Formatierung (Checkboxen sind True/False -> Ja/Nein)
+        if val is True: val = "Ja"
+        if val is False: val = "Nein"
+        if val is None or val == "": val = "-"
+
+        # Einheiten anhängen? (Könnte man im Tooltip oder Label parsen, hier simpel:)
+        # if q.type == 'number' and 'm²' in q.label: val = f"{val} m²"
+
+        meta_fields.append({
+            'label': q.label,
+            'value': val
+        })
+
+    # 3. Dateien Logik
+    # Falls pdf_path leer ist, versuchen wir den CSC-Namen als Fallback für den Ordner
+    folder_name = ""
+    if inspection.pdf_path:
+        folder_name = os.path.dirname(inspection.pdf_path)
+
+    # Fallback: Wenn pdf_path leer ist (alte Daten), versuchen wir csc_name
+    # (Aber Vorsicht: Umlaute/Sonderzeichen müssen wie beim Upload behandelt werden)
+    if not folder_name and inspection.csc_name:
+        # Hier müssten wir eigentlich wissen, wie der Ordner genau hieß beim Upload.
+        # Da wir das in 'pdf_path' oder 'folder' im JSON speichern sollten, schauen wir dort nach:
+        if parsed_data.get('attachments'):
+            # Wenn wir Attachments haben, liegt der Ordner dort
+            pass  # Logik müsste robuster sein, aber für jetzt okay.
+
+        # Simpler Fallback: Name bereinigen
+        folder_name = secure_filename(inspection.csc_name.replace(" ", "_"))
+        # ACHTUNG: Das ist unsicher, besser wäre es, den Ordnernamen in der DB zu haben.
+        # Da wir in 'submit' pdf_path = "Ordnername/" setzen, sollte es passen.
+
+    files = []
+    if folder_name:
+        target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+        if os.path.exists(target_dir):
+            for f in os.listdir(target_dir):
+                fp = os.path.join(target_dir, f)
+                if os.path.isfile(fp):
+                    is_img = f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
+                    is_vid = f.lower().endswith(('.mp4', '.mov', '.avi'))
+                    # Größe berechnen
+                    size_mb = round(os.path.getsize(fp) / (1024 * 1024), 2)
+
+                    files.append({
+                        "name": f,
+                        "size": size_mb,
+                        "is_img": is_img,
+                        "is_vid": is_vid,
+                        "folder": folder_name
+                    })
+
+    return render_template('immo/immo_details.html',  # Template Name angepasst an deine Datei
                            inspection=inspection,
                            files=files,
                            folder_name=folder_name,
-                           form_responses=form_responses)
+                           form_responses=form_responses,
+                           meta_fields=meta_fields)  # <--- NEU übergeben
 
 
 @bp.route('/<int:inspection_id>/update_data', methods=['POST'])

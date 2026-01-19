@@ -4,19 +4,16 @@ const uploader = {
     isPaused: false,
     folderName: "",
 
-    // Initialisiert das Modal und die Queue
     initModal: function(pdfBlob, pdfName) {
         this.queue = [];
         this.isPaused = false;
         this.isUploading = false;
         this.folderName = "";
 
-        // 1. PDF hinzufügen (falls vorhanden)
         if (pdfBlob && pdfName) {
             this.addItemToQueue(new File([pdfBlob], pdfName, {type:"application/pdf"}));
         }
 
-        // 2. Anhänge hinzufügen
         document.querySelectorAll('input[type="file"]').forEach(i => {
             if(i.files.length) {
                 Array.from(i.files).forEach(f => this.addItemToQueue(f));
@@ -34,7 +31,7 @@ const uploader = {
             status: 'pending',
             progress: 0,
             uploadedChunks: 0,
-            totalChunks: Math.ceil(file.size / (1024 * 1024)) // 1MB Chunks
+            totalChunks: Math.ceil(file.size / (1024 * 1024))
         });
     },
 
@@ -139,7 +136,6 @@ const uploader = {
         try {
             const cscName = document.getElementById('global_csc_name').value || "Unbekannt";
 
-            // 1. Ordner Init
             if (!this.folderName) {
                 let baseName = "";
                 if (this.queue.length > 0) {
@@ -159,14 +155,11 @@ const uploader = {
                 this.folderName = initJson.path;
             }
 
-            // 2. Queue abarbeiten
             for (const item of this.queue) {
                 if (item.status === 'done') continue;
-
                 item.status = 'uploading';
                 this.renderList();
-
-                const chunkSize = 1024 * 1024; // 1MB
+                const chunkSize = 1024 * 1024;
 
                 for (let i = item.uploadedChunks; i < item.totalChunks; i++) {
                     if (this.isPaused) {
@@ -175,7 +168,6 @@ const uploader = {
                         this.updateControls();
                         return;
                     }
-
                     const start = i * chunkSize;
                     const end = Math.min(start + chunkSize, item.file.size);
                     const chunk = item.file.slice(start, end);
@@ -190,11 +182,9 @@ const uploader = {
                     try {
                         const res = await fetch('/projects/upload/chunk', { method: 'POST', body: fd });
                         if (!res.ok) throw new Error("Netzwerkfehler");
-
                         item.uploadedChunks = i + 1;
                         item.progress = Math.round((item.uploadedChunks / item.totalChunks) * 100);
                         this.renderList();
-
                     } catch (err) {
                         console.error(err);
                         item.status = 'error';
@@ -209,10 +199,8 @@ const uploader = {
                 this.renderList();
             }
 
-            // 3. Abschluss
             if (this.queue.length === 0 || this.queue.every(i => i.status === 'done')) {
                 const immoType = document.getElementById('immoSelector').value;
-
                 const finalRes = await fetch('/projects/submit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -224,26 +212,19 @@ const uploader = {
                         form_data: app.data
                     })
                 });
-
                 const finalJson = await finalRes.json();
-
-                // UPDATE: Weiterleitung zur Detailseite
                 if (finalJson.success) {
                     const btn = document.getElementById('startUploadBtn');
                     btn.className = "btn btn-success";
                     btn.innerText = "✅ Erfolgreich! Weiterleitung...";
-
                     setTimeout(() => {
-                        // LocalStorage aufräumen
                         localStorage.removeItem('project_data');
-                        // Weiterleiten zur ID aus der Response
                         window.location.href = `/projects/${finalJson.id}/details`;
                     }, 1000);
                 } else {
                     throw new Error(finalJson.error);
                 }
             }
-
         } catch (e) {
             alert("Fehler: " + e.message);
             this.isUploading = false;
@@ -259,7 +240,9 @@ const uploader = {
 
 const app = {
     data: {}, config: [],
+
     init: async function() {
+        // Daten holen
         const res = await fetch('/projects/config');
         this.config = await res.json();
 
@@ -272,20 +255,32 @@ const app = {
                 this.render();
             }
         }
+
+        // Live-Saving bei Eingabe
         document.addEventListener('input', e => {
-            if(e.target.id!='global_csc_name')
-                this.data[e.target.name] = e.target.type=='checkbox'?e.target.checked:e.target.value;
+            if(e.target.id != 'global_csc_name') {
+                this.data[e.target.name] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+
+                // NEU: Wenn ein Feld ausgefüllt wird, Fehler-Klasse entfernen
+                if(e.target.classList.contains('is-invalid') && e.target.value.trim() !== '') {
+                    e.target.classList.remove('is-invalid');
+                }
+            }
             this.save();
         });
     },
+
     save: function() {
         this.data.csc_name = document.getElementById('global_csc_name').value;
         this.data.immo_typ = document.getElementById('immoSelector').value;
         localStorage.setItem('project_data', JSON.stringify(this.data));
     },
+
     reset: function() {
-        localStorage.removeItem('project_data');
-        location.reload();
+        if(confirm("Möchten Sie wirklich alle Eingaben löschen?")) {
+            localStorage.removeItem('project_data');
+            location.reload();
+        }
     },
 
     render: function() {
@@ -301,24 +296,46 @@ const app = {
             let hasFields = false;
 
             sec.content.forEach(field => {
+                // Filter nach Immo-Typ
                 if(field.types && !field.types.includes(type)) return;
                 hasFields = true;
 
-                const wrap = document.createElement('div'); wrap.className = `field-wrapper w-${field.width||'half'}`;
+                const wrap = document.createElement('div');
+                wrap.className = `field-wrapper w-${field.width||'half'}`;
                 const val = this.data[field.id] || '';
 
+                // NEU: Required Sternchen
+                const reqMark = field.is_required ? ' <span class="text-danger fw-bold">*</span>' : '';
+
                 if(field.type === 'header') {
-                    wrap.className = 'w-full'; wrap.innerHTML = `<h4 style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;">${field.label}</h4>`;
+                    wrap.className = 'w-full';
+                    wrap.innerHTML = `<h4 style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;">${field.label}</h4>`;
+
                 } else if(field.type === 'info' || field.type === 'alert') {
-                    wrap.className = 'w-full alert ' + (field.type=='alert'?'alert-danger':'alert-info'); wrap.innerText = field.label;
+                    wrap.className = 'w-full alert ' + (field.type=='alert'?'alert-danger':'alert-info');
+                    wrap.innerText = field.label;
+
                 } else if(field.type === 'text' || field.type === 'number' || field.type === 'date') {
-                    wrap.innerHTML = `<label>${field.label} ${field.tooltip?`(${field.tooltip})`:''}</label><input type="${field.type}" name="${field.id}" value="${val}">`;
+                    wrap.innerHTML = `<label>${field.label} ${field.tooltip?`(${field.tooltip})`:''}${reqMark}</label>
+                                      <input type="${field.type}" name="${field.id}" value="${val}">`;
+
                 } else if(field.type === 'select') {
-                    wrap.innerHTML = `<label>${field.label}</label><select name="${field.id}"><option value="">Wählen...</option>${field.options.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;
+                    wrap.innerHTML = `<label>${field.label}${reqMark}</label>
+                                      <select name="${field.id}">
+                                          <option value="">Wählen...</option>
+                                          ${field.options.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}
+                                      </select>`;
+
                 } else if(field.type === 'checkbox') {
-                    wrap.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px;"><input type="checkbox" name="${field.id}" ${val?'checked':''} style="width:20px; height:20px;"> ${field.label}</label>`;
+                    wrap.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px;">
+                                        <input type="checkbox" name="${field.id}" ${val?'checked':''} style="width:20px; height:20px;"> 
+                                        ${field.label}${reqMark}
+                                      </label>`;
+
                 } else if(field.type === 'textarea') {
-                    wrap.innerHTML = `<label>${field.label}</label><textarea name="${field.id}" rows="4">${val}</textarea>`;
+                    wrap.innerHTML = `<label>${field.label}${reqMark}</label>
+                                      <textarea name="${field.id}" rows="4">${val}</textarea>`;
+
                 } else if(field.type === 'file') {
                     wrap.innerHTML = `<label>${field.label}</label><input type="file" name="${field.id}" multiple>`;
                 }
@@ -327,16 +344,88 @@ const app = {
 
             if(hasFields) {
                 details.innerHTML = `<summary>${sec.title}</summary>`;
-                details.appendChild(content); container.appendChild(details);
+                details.appendChild(content);
+                container.appendChild(details);
             }
         });
     },
 
-    submitData: async function() {
-        const cscName = document.getElementById('global_csc_name').value;
+    // NEU: Validierungsfunktion
+    validate: function() {
+        const cscName = document.getElementById('global_csc_name');
         const currentType = document.getElementById('immoSelector').value;
-        if (!cscName || !currentType) return alert("Bitte CSC Name und Typ angeben!");
+        let isValid = true;
+        let firstErrorElement = null;
 
+        // 1. Basis-Check
+        if (!cscName.value.trim()) {
+            cscName.classList.add('is-invalid');
+            if(!firstErrorElement) firstErrorElement = cscName;
+            isValid = false;
+        } else {
+            cscName.classList.remove('is-invalid');
+        }
+
+        if (!currentType) {
+            document.getElementById('immoSelector').classList.add('is-invalid');
+            isValid = false;
+        } else {
+            document.getElementById('immoSelector').classList.remove('is-invalid');
+        }
+
+        // 2. Felder Check
+        this.config.forEach(sec => {
+            sec.content.forEach(field => {
+                // Nur Felder prüfen, die sichtbar sind (Typ-Filter) UND Required sind
+                if(field.types && !field.types.includes(currentType)) return;
+                if(!field.is_required) return;
+
+                const el = document.querySelector(`[name="${field.id}"]`);
+                if(!el) return;
+
+                // Wert prüfen
+                let isFieldValid = true;
+
+                if (field.type === 'checkbox') {
+                    // Bei Checkbox (z.B. "Ich stimme zu") muss sie checked sein
+                    if (!el.checked) isFieldValid = false;
+                } else {
+                    // Text, Select, Number etc.
+                    if (!el.value || el.value.trim() === "") isFieldValid = false;
+                }
+
+                if (!isFieldValid) {
+                    el.classList.add('is-invalid'); // Nutzt Bootstrap Klasse (roter Rahmen)
+
+                    // Bei Checkboxen den Container färben (optional)
+                    if(field.type === 'checkbox') el.parentElement.style.border = "1px solid red";
+
+                    isValid = false;
+                    if(!firstErrorElement) firstErrorElement = el;
+                } else {
+                    el.classList.remove('is-invalid');
+                    if(field.type === 'checkbox') el.parentElement.style.border = "1px solid #eee";
+                }
+            });
+        });
+
+        if (!isValid && firstErrorElement) {
+            // Zum ersten Fehler scrollen
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            alert("⚠️ Bitte füllen Sie alle Pflichtfelder aus (rot markiert)!");
+            // Details öffnen, falls Fehler in zugeklapptem Bereich
+            const parentDetails = firstErrorElement.closest('details');
+            if(parentDetails) parentDetails.open = true;
+        }
+
+        return isValid;
+    },
+
+    submitData: async function() {
+        // Erst Validieren
+        if (!this.validate()) return;
+
+        // Dann Upload
         uploader.initModal(null, null);
     }
 };

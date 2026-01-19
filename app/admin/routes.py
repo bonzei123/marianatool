@@ -213,6 +213,8 @@ def perform_question_import():
                     question.width = q_data.get('width', 'full')
                     question.tooltip = q_data.get('tooltip', '')
                     question.order = q_idx
+                    question.is_required = q_data.get('required', False)
+                    question.is_metadata = q_data.get('metadata', False)
 
                     # JSON Listen konvertieren
                     # options -> options_json
