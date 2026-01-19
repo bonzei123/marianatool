@@ -1,6 +1,9 @@
 let config = [];
 let currentSimType = 'einzel';
 
+// NEU: Merkt sich rein optisch, welche Sektionen im EDITOR (links) zugeklappt sind
+const editorCollapsedState = {};
+
 // Helper für wirklich einzigartige IDs
 function generateUniqueId(prefix) {
     return prefix + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -57,30 +60,68 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('mouseup', e => { if(isResizing) { isResizing = false; resizer.classList.remove('resizing'); document.body.style.cursor = 'default'; } });
 
+// --- NEU: EDITOR SECTION TOGGLE ---
+function toggleEditorSection(secId) {
+    // Status umkehren
+    editorCollapsedState[secId] = !editorCollapsedState[secId];
+    // Nur Editor neu rendern, Vorschau bleibt wie sie ist
+    renderEditor();
+}
+
 // --- RENDER EDITOR ---
 function renderEditor() {
-    const con = document.getElementById('editorContainer'); con.innerHTML = '';
+    const con = document.getElementById('editorContainer');
+
+    // Wir merken uns die Scroll-Position, damit es nicht springt
+    const scrollTop = editorPane.scrollTop;
+    con.innerHTML = '';
+
     config.forEach(sec => {
         const secDiv = document.createElement('div'); secDiv.className = 'section-card';
         if(!sec.id) sec.id = generateUniqueId('s');
 
+        // Prüfen ob minimiert
+        const isMinimized = editorCollapsedState[sec.id] === true;
+        if(isMinimized) secDiv.classList.add('minimized');
+
+        // Icon für den Toggle
+        const toggleIcon = isMinimized ? '▶' : '▼';
+
         secDiv.innerHTML = `
                 <div class="section-header">
                     <span class="drag-handle">☰</span>
+                    
+                    <button class="btn-collapse me-2" onclick="toggleEditorSection('${sec.id}')" title="Im Editor einklappen">${toggleIcon}</button>
+
                     <div style="flex:1"><input class="form-control fw-bold sec-title" value="${sec.title}" oninput="sync()"></div>
-                    <div class="form-check form-switch ms-4"><input class="form-check-input sec-expand" type="checkbox" ${sec.is_expanded!==false?'checked':''} onchange="sync()"><label class="small text-muted">Ausgeklappt</label></div>
+                    
+                    <div class="form-check form-switch ms-4" title="Standardmäßig ausgeklappt beim User?">
+                        <input class="form-check-input sec-expand" type="checkbox" ${sec.is_expanded!==false?'checked':''} onchange="sync()">
+                        <label class="small text-muted">Auto-Open</label>
+                    </div>
+                    
                     <button class="btn btn-sm text-danger ms-3" onclick="removeEl(this)">🗑️</button>
                     <input type="hidden" class="sec-id" value="${sec.id}">
                 </div>
+                
                 <div class="q-list"></div>
-                <div class="p-2"><button class="btn btn-sm btn-light w-100 border" onclick="addQ(this)">+ Frage hinzufügen</button></div>
+                <div class="p-2 card-footer-actions"><button class="btn btn-sm btn-light w-100 border" onclick="addQ(this)">+ Frage hinzufügen</button></div>
             `;
         con.appendChild(secDiv);
+
+        // Fragen nur rendern, wenn nicht minimiert (Performance!)
         const list = secDiv.querySelector('.q-list');
+        // Wir rendern die Fragen trotzdem ins DOM, damit Sortable und Scrape funktionieren,
+        // aber sie sind per CSS unsichtbar.
         sec.content.forEach(q => renderQ(list, q));
+
         new Sortable(list, { group:'q', handle:'.drag-handle', animation:150, onEnd:sync });
     });
+
     new Sortable(con, { handle:'.section-header', animation:150, onEnd:sync });
+
+    // Scrollposition wiederherstellen
+    editorPane.scrollTop = scrollTop;
 }
 
 function renderQ(list, q) {
@@ -94,7 +135,6 @@ function renderQ(list, q) {
     const types = q.types || ['einzel','cluster','ausgabe'];
     if(!q.id) q.id = generateUniqueId('q');
 
-    // NEU: Flags für Required und Metadata
     const isRequired = q.is_required ? 'checked' : '';
     const isMetadata = q.is_metadata ? 'checked' : '';
 
@@ -144,6 +184,8 @@ function addSection() { config.push({id: generateUniqueId('s'), title:'Neu', con
 function addQ(btn) { renderQ(btn.parentElement.previousElementSibling, {id: generateUniqueId('q'), label:'', type:'text'}); sync(); }
 
 function scrape() {
+    // Hier hat sich nichts geändert, außer dass wir auch minimierte Sektionen scrapen können,
+    // da sie im DOM sind (nur hidden).
     const data = [];
     document.querySelectorAll('.section-card').forEach(s => {
         const qs = [];
@@ -163,7 +205,6 @@ function scrape() {
                 type: q.querySelector('.q-type').value,
                 width: q.querySelector('.q-width').value,
                 tooltip: q.querySelector('.q-tooltip').value,
-                // NEU: Flags auslesen
                 is_required: q.querySelector('.q-required').checked,
                 is_metadata: q.querySelector('.q-metadata').checked,
                 options: q.querySelector('.q-opts').value.split(',').filter(x=>x),
@@ -207,17 +248,37 @@ async function loadBackups() {
 function loadBackup(json) { if(json && confirm("Backup laden?")) { config = JSON.parse(json); renderEditor(); sync(); } }
 
 function renderPreview() {
-    const p = document.getElementById('previewContent'); p.innerHTML = '';
-    const data = scrape();
-    data.forEach(s => {
-        const openAttr = s.is_expanded ? 'open' : '';
+    const p = document.getElementById('previewContent');
+
+    // 1. NEU: Status der offenen Details merken (State Preservation)
+    const openStates = {};
+    const existingDetails = p.querySelectorAll('details');
+    existingDetails.forEach((el, index) => {
+        // Wir versuchen, eine ID zu finden (über den Summary-Text oder Index)
+        // Am sichersten ist hier der Index, da renderPreview deterministisch ist
+        openStates[index] = el.open;
+    });
+
+    p.innerHTML = '';
+    const data = scrape(); // Daten aus dem Editor holen
+
+    data.forEach((s, index) => {
+        // Logik:
+        // 1. Wenn in der Vorschau zuvor manuell geändert wurde, nimm diesen Status.
+        // 2. Sonst nimm den Default-Wert aus der Config (Auto-Open).
+        let isOpen = s.is_expanded;
+        if (openStates[index] !== undefined) {
+            isOpen = openStates[index];
+        }
+
+        const openAttr = isOpen ? 'open' : '';
         let html = `<details ${openAttr}><summary>${s.title}</summary><div class="p-content">`;
         let hasVisible = false;
+
         s.content.forEach(q => {
             if(q.types && !q.types.includes(currentSimType)) return;
             hasVisible = true;
             const wClass = q.width === 'full' ? 'w-full' : 'w-half';
-            // NEU: Sternchen
             const reqMark = q.is_required ? ' <span style="color:red; font-weight:bold">*</span>' : '';
 
             let fieldHtml = '';
@@ -230,8 +291,8 @@ function renderPreview() {
                 if(q.type === 'textarea') input = `<textarea disabled rows="3"></textarea>`;
                 if(q.type === 'checkbox') input = `<div style="padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:5px;"><input type="checkbox" disabled style="width:auto; margin-right:10px;"> ${q.label}${reqMark}</div>`;
                 if(q.type === 'file') input = `<input type="file" disabled>`;
+                if(q.type === 'date') input = `<input type="date" disabled>`;
 
-                // Label mit Sternchen rendern
                 if(q.type !== 'checkbox') fieldHtml = `<div class="field-wrapper ${wClass}"><label>${q.label} ${q.tooltip?`<span style="color:#999; font-size:0.8em">(${q.tooltip})</span>`:''}${reqMark}</label>${input}</div>`;
                 else fieldHtml = `<div class="field-wrapper ${wClass}">${input}</div>`;
             }
@@ -241,6 +302,7 @@ function renderPreview() {
         if(hasVisible) p.innerHTML += html;
     });
 }
+
 function sync() { renderPreview(); }
 
 init();
