@@ -174,6 +174,19 @@ class Inspection(db.Model):
         return labels.get(self.status, self.status)
 
 
+class InspectionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    inspection_id = db.Column(db.Integer, db.ForeignKey('inspection.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    action = db.Column(db.String(50))  # z.B. 'status_change', 'data_update', 'file_upload'
+    details = db.Column(db.Text)  # Beschreibung was geändert wurde
+
+    inspection = db.relationship('Inspection', backref=db.backref('logs', order_by=timestamp.desc(), lazy=True))
+    user = db.relationship('User')
+
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

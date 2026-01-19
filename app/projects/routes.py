@@ -5,7 +5,7 @@ from flask import render_template, request, jsonify, current_app, send_from_dire
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
-from app.models import ImmoSection, Inspection
+from app.models import ImmoSection, Inspection, InspectionLog
 from app.decorators import permission_required
 from app.projects import bp
 
@@ -224,3 +224,105 @@ def status_update():
         return jsonify({'success': True, 'new_label': inspection.status_label, 'new_color': inspection.status_color})
 
     return jsonify({'success': False, 'error': 'Ungültiger Status'}), 400
+
+
+# ==============================================================================
+# DETAIL VIEW & EDITING
+# ==============================================================================
+
+@bp.route('/<int:inspection_id>/details', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def detail_view(inspection_id):
+    """
+    Hauptansicht für ein Projekt.
+    """
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection:
+        return render_template('errors/404.html'), 404
+
+    if not (current_user.is_admin or current_user.has_permission(
+            'immo_files_access') or inspection.user_id == current_user.id):
+        return render_template('errors/403.html'), 403
+
+    # 1. Dateien Logik (bleibt gleich)
+    folder_name = os.path.dirname(inspection.pdf_path) if inspection.pdf_path else ""
+    if not folder_name and inspection.csc_name:
+        folder_name = secure_filename(inspection.csc_name)
+
+    files = []
+    if folder_name:
+        target_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+        if os.path.exists(target_dir):
+            for f in os.listdir(target_dir):
+                fp = os.path.join(target_dir, f)
+                if os.path.isfile(fp):
+                    is_img = f.lower().endswith(('.png', '.jpg', '.jpeg'))
+                    is_vid = f.lower().endswith(('.mp4', '.mov'))
+                    files.append({
+                        "name": f,
+                        "size": round(os.path.getsize(fp) / 1024 / 1024, 2),
+                        "is_img": is_img,
+                        "is_vid": is_vid,
+                        "folder": folder_name
+                    })
+
+    # 2. NEU: JSON Daten parsen für das Template (Metadaten Tab)
+    import json
+    parsed_data = {}
+    form_responses = {}
+    if inspection.data_json:
+        try:
+            parsed_data = json.loads(inspection.data_json)
+            form_responses = parsed_data.get('form_responses', {})
+        except:
+            pass
+
+    return render_template('immo/immo_details.html',
+                           inspection=inspection,
+                           files=files,
+                           folder_name=folder_name,
+                           form_responses=form_responses)
+
+
+@bp.route('/<int:inspection_id>/update_data', methods=['POST'])
+@login_required
+@permission_required('immo_user')
+def update_inspection_data(inspection_id):
+    """Speichert Änderungen am Formular (Reiter 2)."""
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection:
+        return jsonify({'error': 'Nicht gefunden'}), 404
+
+    # Check Rechte (Nur Ersteller oder Admin/Manager darf editieren)
+    if not (current_user.is_admin or current_user.has_permission(
+            'immo_files_access') or inspection.user_id == current_user.id):
+        return jsonify({'error': 'Keine Berechtigung'}), 403
+
+    try:
+        new_data = request.json.get('form_data', {})
+
+        # Bestehendes JSON laden und aktualisieren
+        current_json = json.loads(inspection.data_json) if inspection.data_json else {}
+
+        # Wir speichern die alten Werte für das Log (Diff wäre cool, aber Text reicht erstmal)
+        old_form = current_json.get('form_responses', {})
+        current_json['form_responses'] = new_data
+
+        inspection.data_json = json.dumps(current_json)
+        inspection.updated_at = datetime.utcnow()
+
+        # Log schreiben
+        log = InspectionLog(
+            inspection_id=inspection.id,
+            user_id=current_user.id,
+            action='data_update',
+            details=f"Formular bearbeitet."
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

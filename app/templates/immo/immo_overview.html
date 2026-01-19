@@ -4,12 +4,15 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📋 Besichtigungs-Übersicht</h2>
+        <a href="{{ url_for('projects.create_view') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Neue Besichtigung
+        </a>
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="table-responsive">
+        <div class="table-responsive" style="min-height: 500px; overflow-y: visible;">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+                <thead class="bg-light sticky-top">
                     <tr>
                         <th style="width: 150px;">Status</th>
                         <th>Projekt / CSC</th>
@@ -21,11 +24,13 @@
                 </thead>
                 <tbody class="bg-white">
                     {% for i in inspections %}
-                    <tr id="row-{{ i.id }}">
+                    <tr id="row-{{ i.id }}"
+                        style="cursor: pointer;"
+                        onclick="window.location.href='{{ url_for('projects.detail_view', inspection_id=i.id) }}'">
+
                         <td>
                             {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
+                                <div class="dropdown" onclick="event.stopPropagation()"> <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
                                             type="button"
                                             id="statusDropdown{{ i.id }}"
                                             data-bs-toggle="dropdown"
@@ -45,7 +50,9 @@
                             {% endif %}
                         </td>
 
-                        <td class="fw-bold">{{ i.csc_name }}</td>
+                        <td class="fw-bold text-primary">
+                            {{ i.csc_name }}
+                        </td>
                         <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
                         <td class="small text-muted">{{ i.created_at.strftime('%d.%m.%Y') }}</td>
                         <td>
@@ -56,10 +63,9 @@
                                 <span class="small">{{ i.user.username }}</span>
                             </div>
                         </td>
-                        <td class="text-end">
-                            {% set parts = i.pdf_path.replace('\\', '/').split('/') %}
+                        <td class="text-end" onclick="event.stopPropagation()"> {% set parts = i.pdf_path.replace('\\', '/').split('/') %}
                             {% if parts|length >= 2 %}
-                                <a href="{{ url_for('projects.download_file', project=parts[0], filename=parts[1]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <a href="{{ url_for('projects.download_file', project=parts[0], filename=parts[1]) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                 </a>
                             {% else %}
