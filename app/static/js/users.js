@@ -1,27 +1,24 @@
-// Globale Variablen
+// Globale Variable für die aktuell ausgewählte ID
 let currentUserId = null;
-let resetBaseUrl = "";
-let deleteBaseUrl = ""; // Global verfügbar machen
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Basis URLs aus dem HTML Config-Div lesen
-    const configDiv = document.getElementById('js-config');
-    const updateBaseUrl = configDiv.dataset.updateUrl.slice(0, -1);
-
-    // Slice entfernt die "0" am Ende des Platzhalters
-    deleteBaseUrl = configDiv.dataset.deleteUrl.slice(0, -1);
-    resetBaseUrl = configDiv.dataset.resetUrl.slice(0, -1);
-
-    // 2. Modal initialisieren
+    // Modal Instanz vorbereiten
     const editModalEl = document.getElementById('editModal');
     let editModalInstance = null;
     if (editModalEl) {
         editModalInstance = new bootstrap.Modal(editModalEl);
     }
 
-    // 3. Funktion: Modal öffnen und Daten befüllen
+    // URLs aus dem Config-Div lesen (NICHT schneiden, wir ersetzen später die 0)
+    const configDiv = document.getElementById('js-config');
+    // Wir speichern die Templates mit der "0" drin
+    const updateUrlTemplate = configDiv.dataset.updateUrl;
+    const deleteUrlTemplate = configDiv.dataset.deleteUrl;
+    const resetUrlTemplate = configDiv.dataset.resetUrl;
+
+    // --- FUNKTION: Modal öffnen ---
     window.openEditModal = function(row) {
-        // A. Daten aus Data-Attributen der Tabelle lesen
+        // A. Daten aus Tabelle lesen
         currentUserId = row.getAttribute('data-id');
         const name = row.getAttribute('data-username');
         const email = row.getAttribute('data-email');
@@ -29,31 +26,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const permissionsRaw = row.getAttribute('data-permissions');
         const permissions = permissionsRaw ? permissionsRaw.split(',').map(Number) : [];
 
-        // B. Formular Action URL für Update setzen (POST an /user/manage/ID/update)
-        document.getElementById('editForm').action = updateBaseUrl + currentUserId;
+        // B. URLs generieren (Die "0" durch echte ID ersetzen)
+        // WICHTIG: Das behebt den "...updat1" Fehler
+        const realUpdateUrl = updateUrlTemplate.replace('/0/', `/${currentUserId}/`);
+        const realDeleteUrl = deleteUrlTemplate.replace('/0/', `/${currentUserId}/`);
+        const realResetUrl = resetUrlTemplate.replace('/0/', `/${currentUserId}/`);
 
-        // C. Delete Button konfigurieren (Kein href mehr, sondern OnClick Event)
+        // C. Form Action setzen
+        document.getElementById('editForm').action = realUpdateUrl;
+
+        // D. Delete Button und Reset Button mit korrekten URLs versorgen
+        // Wir speichern die URL direkt am Button, damit die Funktionen sie nutzen können
         const delBtn = document.getElementById('delBtn');
-        delBtn.onclick = function() {
-            deleteUser(name); // Ruft die neue async Funktion auf
-        };
+        delBtn.dataset.url = realDeleteUrl;
+        delBtn.onclick = function() { deleteUser(name); };
 
-        // D. Felder im Modal befüllen
+        const resetBtn = document.querySelector('button[onclick="sendResetMail()"]');
+        if(resetBtn) resetBtn.dataset.url = realResetUrl;
+
+
+        // E. Felder befüllen
         document.getElementById('editTitle').innerText = "Bearbeiten: " + name;
         document.getElementById('editUser').value = name;
         document.getElementById('editEmail').value = email || "";
         document.getElementById('editAdmin').checked = isAdmin;
 
-        // E. Checkboxen für Permissions setzen
+        // F. Checkboxen setzen
         document.querySelectorAll('.edit-srv').forEach(cb => {
             cb.checked = permissions.includes(parseInt(cb.value));
         });
 
-        // F. Modal anzeigen
+        // G. Anzeigen
         if (editModalInstance) editModalInstance.show();
     };
 
-    // 4. Suchfunktion für die Tabelle
+    // --- SUCHFUNKTION ---
     window.filterUsers = function() {
         const filter = document.getElementById('userSearch').value.toLowerCase();
         const rows = document.querySelectorAll('#userTable tbody tr');
@@ -66,58 +73,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // --- API ACTIONS ---
 
-// NEU: User löschen via POST Request
 async function deleteUser(username) {
-    if (!currentUserId) return;
-    if (!confirm(`Möchtest du den User "${username}" wirklich unwiderruflich löschen?`)) return;
+    const btn = document.getElementById('delBtn');
+    const url = btn.dataset.url; // URL vom Button holen
+
+    if (!url || !confirm(`User "${username}" wirklich löschen?`)) return;
 
     try {
-        // UI Feedback
-        const delBtn = document.getElementById('delBtn');
-        const originalText = delBtn.innerHTML;
-        delBtn.disabled = true;
-        delBtn.innerHTML = "Lösche...";
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "Lösche...";
 
-        // POST Request senden
-        const res = await fetch(deleteBaseUrl + currentUserId, { method: 'POST' });
+        // Da Delete im Backend ein Redirect macht, nutzen wir hier Submit oder Fetch mit Reload
+        // Fetch ist sauberer, wenn wir Errors fangen wollen
+        const res = await fetch(url, { method: 'POST' });
 
-        // Da der Server bei Erfolg einen Redirect macht (oder Flash Messages),
-        // reicht es oft, die Seite neu zu laden, um das Ergebnis zu sehen.
-        if (res.ok) {
-            window.location.reload(); // Seite neu laden um Tabelle zu aktualisieren
+        if (res.ok || res.redirected) {
+            window.location.reload();
         } else {
-            alert("Fehler beim Löschen. Server antwortete mit Status " + res.status);
-            delBtn.disabled = false;
-            delBtn.innerHTML = originalText;
+            alert("Fehler beim Löschen.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     } catch (e) {
         alert("Netzwerkfehler: " + e);
-        document.getElementById('delBtn').disabled = false;
+        btn.disabled = false;
     }
 }
 
-// Reset Mail senden
 async function sendResetMail() {
-    if (!currentUserId || !confirm("Einen Reset-Link an die E-Mail Adresse dieses Users senden?")) return;
+    const btn = document.querySelector('button[onclick="sendResetMail()"]');
+    const url = btn.dataset.url; // URL vom Button holen
+
+    if (!url || !confirm("Passwort-Reset senden?")) return;
 
     try {
-        const btn = document.querySelector('button[onclick="sendResetMail()"]');
         const originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = "⏳ Sende...";
 
-        const res = await fetch(resetBaseUrl + currentUserId, { method: 'POST' });
+        const res = await fetch(url, { method: 'POST' });
         const data = await res.json();
 
         if (data.success) {
-            alert("✅ " + data.message);
+            // Button kurz grün machen
+            btn.className = "btn btn-success w-100 fw-bold";
+            btn.innerHTML = "✅ Gesendet!";
+            setTimeout(() => {
+                btn.className = "btn btn-outline-warning w-100 fw-bold";
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
         } else {
             alert("❌ Fehler: " + data.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
-        
-        btn.disabled = false;
-        btn.innerHTML = originalText;
     } catch (e) {
         alert("Netzwerkfehler: " + e);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 }
