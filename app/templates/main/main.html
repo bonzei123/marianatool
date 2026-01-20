@@ -12,29 +12,28 @@
 
     <div class="row g-4">
         {% for tile in tiles %}
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ url_for(tile.route_name) }}" class="tile" style="border-left: 5px solid {{ tile.color_hex }};">
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ url_for(tile.route_name) }}" class="tile" style="border-left: 5px solid {{ tile.color_hex }};">
 
-                <div class="tile-icon" style="color: {{ tile.color_hex }};">
-                    <i class="bi {{ tile.icon }}"></i>
-                </div>
-
-                <div class="tile-title" style="color: {{ tile.color_hex }};">
-                    {{ tile.title }}
-                </div>
-
-                <div class="tile-desc">
-                    {{ tile.description }}
-
-                    {% if tile.route_name == 'roadmap.index' and roadmap_meta and roadmap_meta.updated_at %}
-                        <div class="mt-2 small text-muted">
-                            <i class="bi bi-clock-history me-1"></i>
-                            Stand: {{ roadmap_meta.updated_at.strftime('%d.%m.%Y') }}
+                    {% if tile.badge_count and tile.badge_count > 0 %}
+                        <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <span class="badge rounded-pill bg-danger shadow-sm" style="font-size: 0.9rem;">
+                            {{ tile.badge_count }}
+                        </span>
                         </div>
                     {% endif %}
-                </div>
-            </a>
-        </div>
+
+                    <div class="tile-icon" style="color: {{ tile.color_hex }};">
+                        <i class="bi {{ tile.icon }}"></i>
+                    </div>
+                    <div class="tile-title" style="color: {{ tile.color_hex }};">
+                        {{ tile.title }}
+                    </div>
+                    <div class="tile-desc">
+                        {{ tile.description }}
+                    </div>
+                </a>
+            </div>
         {% else %}
             <div class="col-12 text-center text-muted py-5">
                 <i class="bi bi-inbox fs-1"></i><br>

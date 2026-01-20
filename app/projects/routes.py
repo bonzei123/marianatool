@@ -29,13 +29,24 @@ def create_view():
 @permission_required('immo_user')
 def overview():
     """Liste der Projekte/Besichtigungen."""
+
+    # 1. Merken, wann der User ZULETZT da war (für die "Neu"-Markierung)
+    last_visit = current_user.last_projects_visit
+
+    # 2. Zeitstempel aktualisieren (fürs nächste Mal / Dashboard Reset)
+    current_user.last_projects_visit = datetime.utcnow()
+    db.session.commit()
+
+    # Daten laden
     if current_user.has_permission('view_users') or current_user.is_admin:
         inspections = Inspection.query.order_by(Inspection.created_at.desc()).all()
     else:
         inspections = Inspection.query.filter_by(user_id=current_user.id).order_by(Inspection.created_at.desc()).all()
 
-    return render_template('immo/immo_overview.html', inspections=inspections)
-
+    # WICHTIG: last_visit an das Template übergeben!
+    return render_template('immo/immo_overview.html',
+                           inspections=inspections,
+                           last_visit=last_visit)
 
 # --- EHEMALS ADMIN FILES ROUTEN ---
 

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h1 class="mb-4 fw-bold text-success">{{ title }}</h1>
+                    
+                    <div class="text-secondary">
+                        {{ content | safe }}
+                        
+                        {% if title == 'Impressum' %}
+                            <p>
+                                <strong>Angaben gemäß § 5 TMG</strong><br>
+                                Dein Verein e.V.<br>
+                                Musterstraße 123<br>
+                                12345 Musterstadt
+                            </p>
+                            <p>
+                                <strong>Vertreten durch:</strong><br>
+                                Max Mustermann
+                            </p>
+                            <p>
+                                <strong>Kontakt:</strong><br>
+                                Telefon: +49 (0) 123 44 55 66<br>
+                                E-Mail: info@musterverein.de
+                            </p>
+                        {% endif %}
+                        
+                        {% if title == 'Datenschutz' %}
+                            <p>Hier kommt die Datenschutzerklärung hin...</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-5 text-center">
+                        <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary">Zurück zum Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

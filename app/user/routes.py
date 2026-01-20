@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, Blueprint,
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.extensions import db
+from datetime import datetime
 from app.models import User, Permission
 from app.auth.forms import UpdateAccountForm
 from app.utils import send_reset_email
@@ -46,8 +47,19 @@ def profile_update():
 @permission_required('view_users')
 def list_users():
     """Zeigt Liste aller User (Admin-View)."""
-    # Hinweis: Template Pfad muss ggf. angepasst werden oder wir nutzen admin/users.html weiter
-    return render_template('admin/users.html', users=User.query.all(), all_permissions=Permission.query.all())
+
+    # 1. Merken
+    last_visit = current_user.last_users_visit
+
+    # 2. Aktualisieren
+    current_user.last_users_visit = datetime.utcnow()
+    db.session.commit()
+
+    # last_visit übergeben
+    return render_template('admin/users.html',
+                           users=User.query.all(),
+                           all_permissions=Permission.query.all(),
+                           last_visit=last_visit)
 
 
 @bp.route('/manage/create', methods=['POST'])

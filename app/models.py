@@ -32,6 +32,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False) # <--- NEU
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_projects_visit = db.Column(db.DateTime)
+    last_users_visit = db.Column(db.DateTime)
     permissions = db.relationship('Permission', secondary=user_permissions, lazy='subquery',
                                   backref=db.backref('users', lazy=True))
 
@@ -187,6 +190,17 @@ class InspectionLog(db.Model):
 
     inspection = db.relationship('Inspection', backref=db.backref('logs', order_by=timestamp.desc(), lazy=True))
     user = db.relationship('User')
+
+
+class SupportTicket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    category = db.Column(db.String(50))  # 'bug', 'feature', 'feedback'
+    message = db.Column(db.Text, nullable=False)
+    is_solved = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref='tickets')
 
 
 @login_manager.user_loader

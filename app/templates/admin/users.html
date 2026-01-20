@@ -1,154 +1,159 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
 
-<div class="row">
-    <div class="col-md-10 mx-auto">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="m-0 text-white header-shadow">👥 User Verwaltung</h2>
-            <div class="d-flex gap-2">
-                <input type="text" id="userSearch" class="form-control" placeholder="🔍 Suche..." onkeyup="filterUsers()">
-                <button class="btn btn-success fw-bold shadow" data-bs-toggle="modal" data-bs-target="#createModal">+ User anlegen</button>
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="m-0 text-white header-shadow">👥 User Verwaltung</h2>
+                <div class="d-flex gap-2">
+                    <input type="text" id="userSearch" class="form-control" placeholder="🔍 Suche..." onkeyup="filterUsers()">
+                    <button class="btn btn-success fw-bold shadow" data-bs-toggle="modal" data-bs-target="#createModal">+ User anlegen</button>
+                </div>
             </div>
-        </div>
 
-        <div class="card border-0 shadow-lg rounded-3 overflow-hidden">
-            <table class="table table-hover mb-0 align-middle" id="userTable">
-                <thead class="bg-light">
+            <div class="card border-0 shadow-lg rounded-3 overflow-hidden">
+                <table class="table table-hover mb-0 align-middle" id="userTable">
+                    <thead class="bg-light">
                     <tr><th class="ps-4">User</th><th>E-Mail</th><th>Rolle</th><th>Rechte</th><th class="text-end pe-4">Aktion</th></tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {% for user in users %}
-                    <tr style="cursor:pointer;"
-                        data-id="{{ user.id }}"
-                        data-username="{{ user.username }}"
-                        data-email="{{ user.email }}"
-                        data-admin="{{ 'true' if user.is_admin else 'false' }}"
-                        data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
-                        onclick="openEditModal(this)">
-                        <td class="ps-4 fw-bold text-dark">{{ user.username }}</td>
-                        <td class="text-muted">{{ user.email }}</td> <td>
+                        <tr style="cursor:pointer;"
+                            data-id="{{ user.id }}"
+                            data-username="{{ user.username }}"
+                            data-email="{{ user.email }}"
+                            data-admin="{{ 'true' if user.is_admin else 'false' }}"
+                            data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
+                            onclick="openEditModal(this)">
+                            <td class="ps-4 fw-bold text-dark">
+                                {{ user.username }}
+                                {% if not last_visit or user.created_at > last_visit %}
+                                    <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.6em;">NEU</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted">{{ user.email }}</td> <td>
                             {% if user.is_admin %}
                                 <span class="badge bg-danger">Admin</span>
                             {% else %}
                                 <span class="badge bg-secondary">User</span>
                             {% endif %}
                         </td>
-                        <td><small class="text-muted">{{ user.permissions|length }} Dienste</small></td>
-                        <td class="text-end pe-4"><i class="bi bi-pencil-square text-primary fs-5"></i></td>
-                    </tr>
+                            <td><small class="text-muted">{{ user.permissions|length }} Dienste</small></td>
+                            <td class="text-end pe-4"><i class="bi bi-pencil-square text-primary fs-5"></i></td>
+                        </tr>
                     {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="createModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form class="modal-content" action="{{ url_for('user.create_user') }}" method="POST">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title fw-bold">Neuen User anlegen</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="username" class="form-control" required></div>
-                <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" class="form-control" required></div>
-                <div class="mb-3"><label class="fw-bold">Start-Passwort</label><input type="text" name="password" class="form-control" required></div>
-
-                <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
-                    <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" style="float:none;">
-                    <label class="form-check-label fw-bold">Admin?</label>
+    <div class="modal fade" id="createModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('user.create_user') }}" method="POST">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">Neuen User anlegen</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="username" class="form-control" required></div>
+                    <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" class="form-control" required></div>
+                    <div class="mb-3"><label class="fw-bold">Start-Passwort</label><input type="text" name="password" class="form-control" required></div>
 
-                <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    {% for permission in all_permissions %}
-                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
-                         title="{{ permission.description }}">
-                        <div class="form-check m-0 w-100">
-                            <input class="form-check-input edit-srv" type="checkbox" name="permissions"
-                                   value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
-
-                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
-                                <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
-                                <div>
-                                    <span class="small fw-bold d-block">{{ permission.name }}</span>
-                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
-                                </div>
-                            </label>
-                        </div>
+                    <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" style="float:none;">
+                        <label class="form-check-label fw-bold">Admin?</label>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-success fw-bold w-100">Anlegen</button></div>
-        </form>
-    </div>
-</div>
 
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form class="modal-content" id="editForm" method="POST">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="editTitle">Bearbeiten</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
+                    <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
 
-                <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        {% for permission in all_permissions %}
+                            <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
+                                 title="{{ permission.description }}">
+                                <div class="form-check m-0 w-100">
+                                    <input class="form-check-input edit-srv" type="checkbox" name="permissions"
+                                           value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
 
-                <div class="mb-3 p-3 border rounded bg-light text-center">
-                    <label class="fw-bold d-block mb-2 text-muted small">Passwort Management</label>
-                    <button type="button" class="btn btn-outline-warning w-100 fw-bold" onclick="sendResetMail()">
-                        <i class="bi bi-envelope-at-fill me-2"></i> Reset-Link senden
-                    </button>
-                    <div class="form-text small mt-1">Sendet eine E-Mail an den User, um das Passwort neu zu setzen.</div>
-                </div>
-
-                <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
-                    <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" id="editAdmin" style="float:none;">
-                    <label class="form-check-label fw-bold">Admin?</label>
-                </div>
-
-                <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    {% for permission in all_permissions %}
-                    <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
-                         title="{{ permission.description }}">
-                        <div class="form-check m-0 w-100">
-                            <input class="form-check-input edit-srv" type="checkbox" name="permissions"
-                                   value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
-
-                            <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
-                                <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
-                                <div>
-                                    <span class="small fw-bold d-block">{{ permission.name }}</span>
-                                    <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
+                                    <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
+                                        <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
+                                        <div>
+                                            <span class="small fw-bold d-block">{{ permission.name }}</span>
+                                            <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
+                                        </div>
+                                    </label>
                                 </div>
-                            </label>
-                        </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-            <div class="modal-footer justify-content-between">
-                <button type="button" id="delBtn" class="btn btn-outline-danger">Löschen</button>
-                <button class="btn btn-primary fw-bold">Speichern</button>
-            </div>
-        </form>
+                <div class="modal-footer"><button class="btn btn-success fw-bold w-100">Anlegen</button></div>
+            </form>
+        </div>
     </div>
-</div>
 
-<div id="js-config"
-     data-update-url="{{ url_for('user.update_user', user_id=0) }}"
-     data-delete-url="{{ url_for('user.delete_user', user_id=0) }}"
-     data-reset-url="{{ url_for('user.trigger_reset', user_id=0) }}">
-</div>
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="editForm" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="editTitle">Bearbeiten</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
 
-<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+                    <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
+
+                    <div class="mb-3 p-3 border rounded bg-light text-center">
+                        <label class="fw-bold d-block mb-2 text-muted small">Passwort Management</label>
+                        <button type="button" class="btn btn-outline-warning w-100 fw-bold" onclick="sendResetMail()">
+                            <i class="bi bi-envelope-at-fill me-2"></i> Reset-Link senden
+                        </button>
+                        <div class="form-text small mt-1">Sendet eine E-Mail an den User, um das Passwort neu zu setzen.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" name="is_admin" id="editAdmin" style="float:none;">
+                        <label class="form-check-label fw-bold">Admin?</label>
+                    </div>
+
+                    <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        {% for permission in all_permissions %}
+                            <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
+                                 title="{{ permission.description }}">
+                                <div class="form-check m-0 w-100">
+                                    <input class="form-check-input edit-srv" type="checkbox" name="permissions"
+                                           value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
+
+                                    <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
+                                        <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
+                                        <div>
+                                            <span class="small fw-bold d-block">{{ permission.name }}</span>
+                                            <span class="text-muted" style="font-size: 0.7rem; display:block; line-height:1;">{{ permission.slug }}</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" id="delBtn" class="btn btn-outline-danger">Löschen</button>
+                    <button class="btn btn-primary fw-bold">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="js-config"
+         data-update-url="{{ url_for('user.update_user', user_id=0) }}"
+         data-delete-url="{{ url_for('user.delete_user', user_id=0) }}"
+         data-reset-url="{{ url_for('user.trigger_reset', user_id=0) }}">
+    </div>
+
+    <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 {% endblock %}
