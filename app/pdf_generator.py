@@ -42,45 +42,35 @@ class PdfGenerator(FPDF):
         except:
             return text
 
-    # --- HELPER: HÖHE BERECHNEN (NEU) ---
+    # --- HELPER: HÖHE BERECHNEN ---
     def _calculate_height(self, q, label):
-        """
-        Berechnet die vertikale Höhe, die für eine Frage benötigt wird.
-        """
-        # 1. Höhe des Labels (MultiCell Simulation)
-        # Wir nutzen split_only=True, um zu sehen, wie viele Zeilen der Text braucht
+        """Berechnet die vertikale Höhe, die für eine Frage benötigt wird."""
         lines = self.multi_cell(0, 6, label, split_only=True)
         label_height = len(lines) * 6
 
-        # 2. Höhe des Input-Feldes (basierend auf Typ)
         input_height = 0
-
         if q.type == 'textarea':
-            input_height = 30 + 2  # Box + Margin
+            input_height = 30 + 2
         elif q.type == 'checkbox':
             input_height = 6 + 2
         elif q.type == 'select':
-            # Anzahl der Optionen * Höhe (grob geschätzt für Blanko, oder fix für Filled)
-            # Im "Filled" Zustand ist es nur eine Zeile
             if self.inspection is None:
                 opts = json.loads(q.options_json) if q.options_json else []
                 input_height = (len(opts) * 5) + 2
             else:
-                input_height = 6 + 2  # Nur der Wert
+                input_height = 6 + 2
         elif q.type == 'file':
             input_height = 20 + 2
         elif q.type in ['info', 'alert']:
-            # Info Texte haben auch MultiCell
             info_lines = self.multi_cell(0, 6, self._clean(f"Hinweis: {q.label}"), split_only=True)
-            return len(info_lines) * 6 + 4  # + Margin
+            return len(info_lines) * 6 + 4
         elif q.type == 'header':
             header_lines = self.multi_cell(0, 8, label, split_only=True)
             return len(header_lines) * 8 + 4
         else:
-            # Text, Number, Date
-            input_height = 8 + 2  # Linie + Margin
+            input_height = 8 + 2
 
-        return label_height + input_height + 2  # + Puffer
+        return label_height + input_height + 2
 
     def header(self):
         self.set_font('Arial', 'B', 16)
@@ -109,15 +99,21 @@ class PdfGenerator(FPDF):
         for sec in self.sections:
             visible_questions = []
             for q in sec.questions:
+                # 1. Typ Filter
                 q_types = json.loads(q.types_json) if q.types_json else []
-                if not self.target_type or self.target_type in q_types:
+                type_match = not self.target_type or self.target_type in q_types
+
+                # 2. Print Filter (NEU)
+                # getattr nutzen, falls DB-Migration noch nicht 100% aktiv war
+                print_allowed = getattr(q, 'is_print', True)
+
+                if type_match and print_allowed:
                     visible_questions.append(q)
 
             if not visible_questions:
                 continue
 
-            # Section Header
-            # Prüfen ob Platz für Header (10mm) + erste Frage (geschätzt 20mm)
+            # Section Header rendern
             if self.get_y() + 30 > self.page_break_trigger:
                 self.add_page()
 
@@ -133,18 +129,14 @@ class PdfGenerator(FPDF):
                 self.set_x(self.l_margin)
 
                 label = self._clean(q.label)
-                if getattr(q, 'is_required', False):  # getattr sicherheitshalber
+                if getattr(q, 'is_required', False):
                     label += " *"
 
-                # --- NEU: HÖHENCHECK ---
-                # Wir berechnen, wie hoch der Block wird
+                # Höhencheck
                 needed = self._calculate_height(q, label)
 
-                # Wenn nicht genug Platz, neue Seite
-                # page_break_trigger ist normalerweise page_height - bottom_margin
                 if self.get_y() + needed > self.page_break_trigger:
                     self.add_page()
-                    # Optional: Sektions-Titel wiederholen
                     self.set_font('Arial', 'I', 10)
                     self.set_text_color(128)
                     self.cell(0, 8, f"(Fortsetzung: {self._clean(sec.title)})", 0, 1, 'L')
@@ -152,8 +144,7 @@ class PdfGenerator(FPDF):
                     self.set_font('Arial', '', 11)
                     self.set_x(self.l_margin)
 
-                # --- RENDERN ---
-
+                # Rendern
                 if q.type == 'header':
                     self.ln(3)
                     self.set_font('Arial', 'B', 11)
@@ -179,6 +170,7 @@ class PdfGenerator(FPDF):
 
                 self.ln(2)
 
+        # File Output
         if self.inspection:
             filename = f"Inspection_{self.inspection.id}.pdf"
             folder = os.path.dirname(self.inspection.pdf_path) if self.inspection.pdf_path else "temp"

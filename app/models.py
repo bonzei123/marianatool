@@ -90,6 +90,7 @@ class ImmoQuestion(db.Model):
     order = db.Column(db.Integer)
     is_required = db.Column(db.Boolean, default=False)
     is_metadata = db.Column(db.Boolean, default=False)
+    is_print = db.Column(db.Boolean, default=True)
 
 
 class ImmoBackup(db.Model):

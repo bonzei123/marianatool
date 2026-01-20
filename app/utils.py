@@ -54,6 +54,11 @@ def import_json_data(data):
                     question.is_required = q_data.get('is_required') or q_data.get('required') or False
                     question.is_metadata = q_data.get('is_metadata') or q_data.get('metadata') or False
 
+                    val_print = q_data.get('is_print')
+                    if val_print is None:
+                        val_print = q_data.get('print', True)  # Fallback für alte JSONs
+                    question.is_print = val_print
+
                     # Listen (Options/Types) zu JSON String konvertieren
                     opts = q_data.get('options', [])
                     types = q_data.get('types', [])

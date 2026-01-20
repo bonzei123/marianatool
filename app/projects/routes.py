@@ -117,6 +117,7 @@ def get_form_config():
                 "tooltip": q.tooltip,
                 "is_required": q.is_required,
                 "is_metadata": q.is_metadata,
+                "is_print": q.is_print,
                 "options": json.loads(q.options_json) if q.options_json else [],
                 "types": json.loads(q.types_json) if q.types_json else []
             })

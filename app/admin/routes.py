@@ -216,6 +216,10 @@ def perform_question_import():
                     question.is_required = q_data.get('required', False)
                     question.is_metadata = q_data.get('metadata', False)
 
+                    p_val = q_data.get('is_print')
+                    if p_val is None: p_val = True  # Default True
+                    question.is_print = p_val
+
                     # JSON Listen konvertieren
                     # options -> options_json
                     options_list = q_data.get('options', [])

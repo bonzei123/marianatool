@@ -60,19 +60,15 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('mouseup', e => { if(isResizing) { isResizing = false; resizer.classList.remove('resizing'); document.body.style.cursor = 'default'; } });
 
-// --- NEU: EDITOR SECTION TOGGLE ---
+// --- EDITOR SECTION TOGGLE ---
 function toggleEditorSection(secId) {
-    // Status umkehren
     editorCollapsedState[secId] = !editorCollapsedState[secId];
-    // Nur Editor neu rendern, Vorschau bleibt wie sie ist
     renderEditor();
 }
 
 // --- RENDER EDITOR ---
 function renderEditor() {
     const con = document.getElementById('editorContainer');
-
-    // Wir merken uns die Scroll-Position, damit es nicht springt
     const scrollTop = editorPane.scrollTop;
     con.innerHTML = '';
 
@@ -80,26 +76,20 @@ function renderEditor() {
         const secDiv = document.createElement('div'); secDiv.className = 'section-card';
         if(!sec.id) sec.id = generateUniqueId('s');
 
-        // Prüfen ob minimiert
         const isMinimized = editorCollapsedState[sec.id] === true;
         if(isMinimized) secDiv.classList.add('minimized');
 
-        // Icon für den Toggle
         const toggleIcon = isMinimized ? '▶' : '▼';
 
         secDiv.innerHTML = `
                 <div class="section-header">
                     <span class="drag-handle">☰</span>
-                    
                     <button class="btn-collapse me-2" onclick="toggleEditorSection('${sec.id}')" title="Im Editor einklappen">${toggleIcon}</button>
-
                     <div style="flex:1"><input class="form-control fw-bold sec-title" value="${sec.title}" oninput="sync()"></div>
-                    
                     <div class="form-check form-switch ms-4" title="Standardmäßig ausgeklappt beim User?">
                         <input class="form-check-input sec-expand" type="checkbox" ${sec.is_expanded!==false?'checked':''} onchange="sync()">
                         <label class="small text-muted">Auto-Open</label>
                     </div>
-                    
                     <button class="btn btn-sm text-danger ms-3" onclick="removeEl(this)">🗑️</button>
                     <input type="hidden" class="sec-id" value="${sec.id}">
                 </div>
@@ -109,18 +99,13 @@ function renderEditor() {
             `;
         con.appendChild(secDiv);
 
-        // Fragen nur rendern, wenn nicht minimiert (Performance!)
         const list = secDiv.querySelector('.q-list');
-        // Wir rendern die Fragen trotzdem ins DOM, damit Sortable und Scrape funktionieren,
-        // aber sie sind per CSS unsichtbar.
         sec.content.forEach(q => renderQ(list, q));
 
         new Sortable(list, { group:'q', handle:'.drag-handle', animation:150, onEnd:sync });
     });
 
     new Sortable(con, { handle:'.section-header', animation:150, onEnd:sync });
-
-    // Scrollposition wiederherstellen
     editorPane.scrollTop = scrollTop;
 }
 
@@ -137,6 +122,8 @@ function renderQ(list, q) {
 
     const isRequired = q.is_required ? 'checked' : '';
     const isMetadata = q.is_metadata ? 'checked' : '';
+    // NEU: Print Flag (Standard ist true, wenn undefined)
+    const isPrint = (q.is_print !== false) ? 'checked' : '';
 
     div.innerHTML = `
             <div class="grid-row">
@@ -156,6 +143,10 @@ function renderQ(list, q) {
                 <div class="form-check form-switch">
                     <input class="form-check-input q-metadata" type="checkbox" id="meta_${q.id}" ${isMetadata} onchange="sync()">
                     <label class="form-check-label small" for="meta_${q.id}">Info-Tab (Meta)</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input q-print" type="checkbox" id="prn_${q.id}" ${isPrint} onchange="sync()">
+                    <label class="form-check-label small" for="prn_${q.id}">Druckvorlage</label>
                 </div>
             </div>
 
@@ -181,11 +172,11 @@ function toggleOpt(sel) {
 
 function removeEl(btn) { btn.closest(btn.classList.contains('btn-del')?'.question-card':'.section-card').remove(); sync(); }
 function addSection() { config.push({id: generateUniqueId('s'), title:'Neu', content:[]}); renderEditor(); sync(); }
-function addQ(btn) { renderQ(btn.parentElement.previousElementSibling, {id: generateUniqueId('q'), label:'', type:'text'}); sync(); }
+
+// NEU: is_print default true setzen
+function addQ(btn) { renderQ(btn.parentElement.previousElementSibling, {id: generateUniqueId('q'), label:'', type:'text', is_print: true}); sync(); }
 
 function scrape() {
-    // Hier hat sich nichts geändert, außer dass wir auch minimierte Sektionen scrapen können,
-    // da sie im DOM sind (nur hidden).
     const data = [];
     document.querySelectorAll('.section-card').forEach(s => {
         const qs = [];
@@ -207,6 +198,7 @@ function scrape() {
                 tooltip: q.querySelector('.q-tooltip').value,
                 is_required: q.querySelector('.q-required').checked,
                 is_metadata: q.querySelector('.q-metadata').checked,
+                is_print: q.querySelector('.q-print').checked, // NEU: Wert auslesen
                 options: q.querySelector('.q-opts').value.split(',').filter(x=>x),
                 types: types
             });
@@ -249,23 +241,16 @@ function loadBackup(json) { if(json && confirm("Backup laden?")) { config = JSON
 
 function renderPreview() {
     const p = document.getElementById('previewContent');
-
-    // 1. NEU: Status der offenen Details merken (State Preservation)
     const openStates = {};
     const existingDetails = p.querySelectorAll('details');
     existingDetails.forEach((el, index) => {
-        // Wir versuchen, eine ID zu finden (über den Summary-Text oder Index)
-        // Am sichersten ist hier der Index, da renderPreview deterministisch ist
         openStates[index] = el.open;
     });
 
     p.innerHTML = '';
-    const data = scrape(); // Daten aus dem Editor holen
+    const data = scrape();
 
     data.forEach((s, index) => {
-        // Logik:
-        // 1. Wenn in der Vorschau zuvor manuell geändert wurde, nimm diesen Status.
-        // 2. Sonst nimm den Default-Wert aus der Config (Auto-Open).
         let isOpen = s.is_expanded;
         if (openStates[index] !== undefined) {
             isOpen = openStates[index];
