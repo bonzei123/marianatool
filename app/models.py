@@ -192,17 +192,6 @@ class InspectionLog(db.Model):
     user = db.relationship('User')
 
 
-class SupportTicket(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    category = db.Column(db.String(50))  # 'bug', 'feature', 'feedback'
-    message = db.Column(db.Text, nullable=False)
-    is_solved = db.Column(db.Boolean, default=False)
-
-    user = db.relationship('User', backref='tickets')
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
