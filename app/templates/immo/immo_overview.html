@@ -4,9 +4,22 @@
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>📋 Besichtigungs-Übersicht</h2>
-            <a href="{{ url_for('projects.create_view') }}" class="btn btn-success">
-                <i class="bi bi-plus-lg"></i> Neue Besichtigung
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('projects.create_view') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Neue Besichtigung
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-printer"></i> Druckvorlage
+                    </button>
+                    <ul class="dropdown-menu shadow" style="z-index: 9999;">
+                        <li><h6 class="dropdown-header">Typ wählen</h6></li>
+                        <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='einzel') }}" target="_blank">Einzelanbau</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='cluster') }}" target="_blank">Anbaucluster</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='ausgabe') }}" target="_blank">Ausgabestelle</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <div class="card shadow-sm border-0">

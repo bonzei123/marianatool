@@ -1,160 +1,248 @@
 import os
+import json
 from fpdf import FPDF
 from datetime import datetime
 
 
-class PDFReport(FPDF):
-    def header(self):
-        # Header Grün
-        self.set_fill_color(39, 174, 96)
-        self.rect(0, 0, 210, 20, 'F')
-        self.set_text_color(255)
-        self.set_font("Helvetica", "B", 16)
-        # Titel wird von außen gesetzt oder generisch
-        self.cell(0, 10, "", 0, 1, 'C')
-        self.ln(5)
-
-
-class PdfGenerator:
-    def __init__(self, config_models, inspection, upload_folder):
-        """
-        :param config_models: Liste der ImmoSection Objekte (aus DB)
-        :param inspection: Das Inspection Objekt (aus DB)
-        :param upload_folder: Pfad zum Upload Ordner (app.config['UPLOAD_FOLDER'])
-        """
-        self.config = config_models
+class PdfGenerator(FPDF):
+    def __init__(self, sections, inspection=None, upload_folder="app/static/uploads", target_type=None):
+        super().__init__()
+        self.sections = sections
         self.inspection = inspection
-        self.data = {}
         self.upload_folder = upload_folder
 
-        # JSON Daten parsen
-        import json
-        if self.inspection.data_json:
-            loaded = json.loads(self.inspection.data_json)
-            self.data = loaded.get('form_responses', {})
-            self.meta = loaded.get('meta', {})
+        # Welcher Typ soll gedruckt werden?
+        if self.inspection:
+            self.target_type = self.inspection.inspection_type
+        else:
+            self.target_type = target_type
 
-        self.current_type = self.inspection.inspection_type or 'einzel'
+        # Daten vorbereiten
+        self.form_data = {}
+        if self.inspection and self.inspection.data_json:
+            try:
+                data = json.loads(self.inspection.data_json)
+                self.form_data = data.get('form_responses', {})
+            except:
+                self.form_data = {}
+
+        self.set_auto_page_break(auto=True, margin=15)
+        self.add_page()
+
+    # --- HELPER: TEXT BEREINIGEN ---
+    def _clean(self, text):
+        """Ersetzt inkompatible Unicode-Zeichen."""
+        if not text: return ""
+        text = str(text)
+        replacements = {"–": "-", "—": "-", "“": '"', "”": '"', "‘": "'", "’": "'", "…": "...", "€": "EUR"}
+        for k, v in replacements.items():
+            text = text.replace(k, v)
+        try:
+            return text.encode('latin-1', 'replace').decode('latin-1')
+        except:
+            return text
+
+    # --- HELPER: HÖHE BERECHNEN (NEU) ---
+    def _calculate_height(self, q, label):
+        """
+        Berechnet die vertikale Höhe, die für eine Frage benötigt wird.
+        """
+        # 1. Höhe des Labels (MultiCell Simulation)
+        # Wir nutzen split_only=True, um zu sehen, wie viele Zeilen der Text braucht
+        lines = self.multi_cell(0, 6, label, split_only=True)
+        label_height = len(lines) * 6
+
+        # 2. Höhe des Input-Feldes (basierend auf Typ)
+        input_height = 0
+
+        if q.type == 'textarea':
+            input_height = 30 + 2  # Box + Margin
+        elif q.type == 'checkbox':
+            input_height = 6 + 2
+        elif q.type == 'select':
+            # Anzahl der Optionen * Höhe (grob geschätzt für Blanko, oder fix für Filled)
+            # Im "Filled" Zustand ist es nur eine Zeile
+            if self.inspection is None:
+                opts = json.loads(q.options_json) if q.options_json else []
+                input_height = (len(opts) * 5) + 2
+            else:
+                input_height = 6 + 2  # Nur der Wert
+        elif q.type == 'file':
+            input_height = 20 + 2
+        elif q.type in ['info', 'alert']:
+            # Info Texte haben auch MultiCell
+            info_lines = self.multi_cell(0, 6, self._clean(f"Hinweis: {q.label}"), split_only=True)
+            return len(info_lines) * 6 + 4  # + Margin
+        elif q.type == 'header':
+            header_lines = self.multi_cell(0, 8, label, split_only=True)
+            return len(header_lines) * 8 + 4
+        else:
+            # Text, Number, Date
+            input_height = 8 + 2  # Linie + Margin
+
+        return label_height + input_height + 2  # + Puffer
+
+    def header(self):
+        self.set_font('Arial', 'B', 16)
+        if self.inspection:
+            title = f"Protokoll: {self._clean(self.inspection.csc_name)}"
+            sub = f"ID: {self.inspection.id} | Typ: {self._clean(self.target_type)} | {self.inspection.created_at.strftime('%d.%m.%Y')}"
+        else:
+            t_label = self._clean(self.target_type.upper()) if self.target_type else "ALLE"
+            title = f"Erfassungsbogen ({t_label})"
+            sub = "Bitte leserlich in Blockschrift ausfüllen."
+
+        self.cell(0, 10, self._clean(title), ln=True, align='C')
+        self.set_font('Arial', 'I', 10)
+        self.cell(0, 10, self._clean(sub), ln=True, align='C')
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        page = f"Seite {self.page_no()}"
+        self.cell(0, 10, page, 0, 0, 'C')
 
     def create(self):
-        pdf = PDFReport()
-        pdf.add_page()
+        self.set_font('Arial', '', 11)
 
-        # --- HEADER TEXT ---
-        pdf.set_y(6)
-        pdf.set_text_color(255)
-        pdf.set_font("Helvetica", "B", 16)
-        title = f"PROTOKOLL: {self.current_type.upper()}"
-        pdf.cell(0, 10, title, 0, 0, 'C')
+        for sec in self.sections:
+            visible_questions = []
+            for q in sec.questions:
+                q_types = json.loads(q.types_json) if q.types_json else []
+                if not self.target_type or self.target_type in q_types:
+                    visible_questions.append(q)
 
-        # --- SUBHEADER (Weißer Bereich) ---
-        pdf.set_y(25)
-        pdf.set_text_color(0)
-        pdf.set_font("Helvetica", "", 10)
-        date_str = self.inspection.created_at.strftime('%d.%m.%Y')
-        pdf.cell(0, 10, f"CSC: {self.inspection.csc_name} | Datum: {date_str} | ID: {self.inspection.id}", 0, 1)
+            if not visible_questions:
+                continue
 
-        pdf.ln(5)
+            # Section Header
+            # Prüfen ob Platz für Header (10mm) + erste Frage (geschätzt 20mm)
+            if self.get_y() + 30 > self.page_break_trigger:
+                self.add_page()
 
-        # --- CONTENT LOOP ---
-        for section in self.config:
-            # 1. Section Titel (Grau hinterlegt)
-            pdf.set_fill_color(230, 230, 230)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, section.title, 0, 1, 'L', True)
-            pdf.ln(2)
+            self.set_fill_color(240, 240, 240)
+            self.set_font('Arial', 'B', 12)
+            self.set_x(self.l_margin)
+            self.cell(0, 10, self._clean(sec.title), 1, 1, 'L', fill=True)
+            self.ln(2)
 
-            pdf.set_font("Helvetica", "", 10)
+            self.set_font('Arial', '', 11)
 
-            # Fragen durchgehen
-            for q in section.questions:
-                # Typ-Filter prüfen (JSON parsen)
-                import json
-                try:
-                    types = json.loads(q.types_json) if q.types_json else []
-                    if types and self.current_type not in types:
-                        continue
-                except:
-                    pass
+            for q in visible_questions:
+                self.set_x(self.l_margin)
 
-                # Ignorierte Typen
-                if q.type in ['info', 'alert', 'file']:
-                    continue
+                label = self._clean(q.label)
+                if getattr(q, 'is_required', False):  # getattr sicherheitshalber
+                    label += " *"
 
-                # Header innerhalb der Sektion
+                # --- NEU: HÖHENCHECK ---
+                # Wir berechnen, wie hoch der Block wird
+                needed = self._calculate_height(q, label)
+
+                # Wenn nicht genug Platz, neue Seite
+                # page_break_trigger ist normalerweise page_height - bottom_margin
+                if self.get_y() + needed > self.page_break_trigger:
+                    self.add_page()
+                    # Optional: Sektions-Titel wiederholen
+                    self.set_font('Arial', 'I', 10)
+                    self.set_text_color(128)
+                    self.cell(0, 8, f"(Fortsetzung: {self._clean(sec.title)})", 0, 1, 'L')
+                    self.set_text_color(0)
+                    self.set_font('Arial', '', 11)
+                    self.set_x(self.l_margin)
+
+                # --- RENDERN ---
+
                 if q.type == 'header':
-                    pdf.ln(3)
-                    pdf.set_font("Helvetica", "B", 10)
-                    pdf.cell(0, 6, q.label.upper(), 0, 1)
-                    pdf.set_font("Helvetica", "", 10)
+                    self.ln(3)
+                    self.set_font('Arial', 'B', 11)
+                    self.multi_cell(0, 8, label)
+                    self.set_font('Arial', '', 11)
                     continue
 
-                # Wert holen
-                raw_val = self.data.get(q.id)
-                val_text = "-"
+                if q.type in ['info', 'alert']:
+                    self.set_text_color(100, 100, 100)
+                    self.set_font('Arial', 'I', 10)
+                    self.multi_cell(0, 6, self._clean(f"Hinweis: {q.label}"))
+                    self.set_font('Arial', '', 11)
+                    self.set_text_color(0, 0, 0)
+                    self.ln(4)
+                    continue
 
-                if q.type == 'checkbox':
-                    if str(raw_val).lower() in ['true', 'on', '1']:
-                        val_text = "[x] Ja"
-                    else:
-                        val_text = "[ ] Nein"
-                elif q.type == 'select':
-                    val_text = str(raw_val) if raw_val else "-"
+                val = self.form_data.get(q.id)
+
+                if self.inspection is None:
+                    self._render_blank_field(q, label)
                 else:
-                    val_text = str(raw_val) if raw_val else "-"
+                    self._render_filled_field(q, label, val)
 
-                # Layout: Label links (Bold), Wert rechts (Normal)
-                # Wir nutzen MultiCell für Umbrüche
+                self.ln(2)
 
-                x_start = pdf.get_x()
-                y_start = pdf.get_y()
+        if self.inspection:
+            filename = f"Inspection_{self.inspection.id}.pdf"
+            folder = os.path.dirname(self.inspection.pdf_path) if self.inspection.pdf_path else "temp"
+        else:
+            t_suffix = self.target_type if self.target_type else "all"
+            filename = f"Formular_{t_suffix}_{datetime.now().strftime('%Y%m%d')}.pdf"
+            folder = "templates"
 
-                # Label Spalte
-                pdf.set_font("Helvetica", "B", 9)
-                pdf.multi_cell(70, 5, q.label)
+        full_path = os.path.join(self.upload_folder, folder)
+        os.makedirs(full_path, exist_ok=True)
 
-                # Maximale Y-Position nach Label merken
-                y_after_label = pdf.get_y()
+        output_path = os.path.join(full_path, filename)
+        self.output(output_path)
 
-                # Zurück nach oben rechts für den Wert
-                pdf.set_xy(x_start + 75, y_start)
-                pdf.set_font("Helvetica", "", 10)
-                pdf.multi_cell(0, 5, val_text)
+        return os.path.join(folder, filename)
 
-                y_after_value = pdf.get_y()
+    def _render_blank_field(self, q, label):
+        self.set_x(self.l_margin)
+        self.set_font('Arial', 'B', 10)
+        self.multi_cell(0, 6, label)
+        self.set_font('Arial', '', 10)
 
-                # Cursor auf die tiefste Position setzen + Abstand
-                pdf.set_y(max(y_after_label, y_after_value) + 3)
+        if q.type == 'textarea':
+            self.ln(1)
+            self.set_x(self.l_margin)
+            self.cell(0, 30, "", 1, 1)
+        elif q.type == 'checkbox':
+            self.ln(1)
+            self.set_x(self.l_margin)
+            self.cell(5, 5, "", 1, 0)
+            self.cell(0, 5, self._clean(" Ja / Bestätigt"), ln=True)
+        elif q.type == 'select':
+            options = json.loads(q.options_json) if q.options_json else []
+            self.ln(1)
+            for opt in options:
+                self.set_x(self.l_margin)
+                self.cell(5, 5, "", 1, 0)
+                self.cell(0, 5, self._clean(f" {opt}"), ln=True)
+        elif q.type == 'file':
+            self.ln(1)
+            self.set_x(self.l_margin)
+            self.set_font('Arial', 'I', 9)
+            self.cell(0, 20, self._clean("[ Platz für Fotos / Skizzen ]"), 1, 1, 'C')
+            self.set_font('Arial', '', 10)
+        else:
+            self.ln(6)
+            self.set_x(self.l_margin)
+            x_start = self.get_x()
+            x_end = self.w - self.r_margin
+            self.line(x_start, self.get_y(), x_end, self.get_y())
+            self.ln(2)
 
-                # Seitenumbruch Check (einfach gehalten)
-                if pdf.get_y() > 270:
-                    pdf.add_page()
+    def _render_filled_field(self, q, label, val):
+        self.set_x(self.l_margin)
+        self.set_font('Arial', 'B', 10)
+        self.multi_cell(0, 6, label + ":")
 
-            pdf.ln(5)
+        self.set_font('Arial', '', 10)
+        if val is True: val = "Ja"
+        if val is False: val = "Nein"
+        if val == "": val = "-"
+        if val is None: val = "-"
 
-        # --- SPEICHERN ---
-        # Dateiname generieren
-        filename = f"Protokoll_{self.inspection.csc_name}_{self.inspection.id}.pdf".replace(" ", "_")
-        # Zeichen bereinigen
-        from werkzeug.utils import secure_filename
-        filename = secure_filename(filename)
+        display_val = self._clean(val)
 
-        # Ordner Logik (Wir nutzen den Ordner, in dem die Attachments liegen, oder erstellen einen)
-        # inspection.pdf_path ist z.B. "OrdnerName/File.pdf" oder leer.
-
-        folder_name = ""
-        if self.inspection.pdf_path:
-            folder_name = os.path.dirname(self.inspection.pdf_path)
-
-        if not folder_name:
-            # Fallback: Neuen Ordner anlegen
-            folder_name = secure_filename(f"{self.inspection.csc_name}_{datetime.now().strftime('%Y%m%d')}")
-
-        full_dir = os.path.join(self.upload_folder, folder_name)
-        os.makedirs(full_dir, exist_ok=True)
-
-        full_path = os.path.join(full_dir, filename)
-        pdf.output(full_path)
-
-        # Relativen Pfad für DB zurückgeben
-        return os.path.join(folder_name, filename)
+        self.set_x(self.l_margin + 5)
+        self.multi_cell(0, 6, display_val)

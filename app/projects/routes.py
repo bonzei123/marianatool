@@ -428,3 +428,33 @@ def update_inspection_data(inspection_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/blank_pdf', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def download_blank_pdf():
+    """Generiert ein leeres PDF Formular zum Ausdrucken."""
+    # Typ aus URL holen (einzel, cluster, ausgabe)
+    target_type = request.args.get('type', 'einzel')
+
+    try:
+        sections = ImmoSection.query.order_by(ImmoSection.order).all()
+
+        # Generator mit target_type aufrufen
+        gen = PdfGenerator(
+            sections,
+            inspection=None,
+            upload_folder=current_app.config['UPLOAD_FOLDER'],
+            target_type=target_type  # <--- NEU
+        )
+
+        rel_path = gen.create()
+        folder, filename = os.path.split(rel_path)
+        return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], folder), filename,
+                                   as_attachment=True)
+
+    except Exception as e:
+        current_app.logger.error(f"Blank PDF Error: {e}")
+        flash(f"Fehler bei PDF Generierung: {e}", "danger")
+        return redirect(url_for('projects.overview'))
