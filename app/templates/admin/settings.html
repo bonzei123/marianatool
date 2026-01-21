@@ -153,6 +153,7 @@
                             <tr>
                                 <th style="width: 80px;">Pos.</th>
                                 <th>Titel</th>
+                                <th>Beschreibung</th>
                                 <th>Route (Code)</th>
                                 <th>Icon</th>
                                 <th>Farbe</th>
@@ -165,6 +166,9 @@
                                 <tr>
                                     <td><input type="number" name="{{ prefix }}order" value="{{ tile.order }}" class="form-control form-control-sm text-center"></td>
                                     <td><input type="text" name="{{ prefix }}title" value="{{ tile.title }}" class="form-control form-control-sm fw-bold"></td>
+                                    <td>
+                                        <input type="text" name="{{ prefix }}description" value="{{ tile.description or '' }}" class="form-control form-control-sm" placeholder="Kurzbeschreibung...">
+                                    </td>
                                     <td><input type="text" name="{{ prefix }}route" value="{{ tile.route_name }}" class="form-control form-control-sm text-muted font-monospace"></td>
                                     <td>
                                         <div class="input-group input-group-sm">

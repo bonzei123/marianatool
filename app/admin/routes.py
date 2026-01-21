@@ -109,6 +109,7 @@ def save_tiles():
         # Daten aus Formular holen
         if f"{prefix}title" in request.form:
             tile.title = request.form.get(f"{prefix}title")
+            tile.description = request.form.get(f"{prefix}description")
             tile.icon = request.form.get(f"{prefix}icon")
             tile.color_hex = request.form.get(f"{prefix}color")
             tile.route_name = request.form.get(f"{prefix}route")
