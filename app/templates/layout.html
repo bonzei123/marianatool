@@ -51,6 +51,14 @@
         {% block sidebar_specific %}
             <div class="text-muted small fst-italic">Keine Aktionen verfügbar</div>
         {% endblock %}
+        {% if request.blueprint == 'projects' %}
+            <div class="mb-4 border-top pt-3">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Projekt Infos</h6>
+                <button class="btn btn-primary w-100 mb-2 text-start fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#requirementsModal">
+                    <i class="bi bi-journal-text me-2"></i> Anforderungen
+                </button>
+            </div>
+        {% endif %}
     </div>
 
     <div class="mt-4">
