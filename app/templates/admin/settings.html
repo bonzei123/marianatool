@@ -54,6 +54,14 @@
                     </div>
                 </div>
                 <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-secondary text-white fw-bold">Anforderungen</div>
+                    <div class="card-body text-center">
+                        <button class="btn btn-outline-secondary w-100 fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#reqModal">
+                            <i class="bi bi-file-text me-2"></i> Text bearbeiten
+                        </button>
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-3">
                     <div class="card-header bg-warning text-dark fw-bold">Fragenkatalog</div>
                     <div class="card-body text-center">
                         <p class="small text-muted mb-2">
@@ -245,5 +253,24 @@
             </form>
         </div>
     </div>
-
+    <div class="modal fade" id="reqModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" action="{{ url_for('admin.save_requirements') }}" method="POST">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title"><i class="bi bi-file-text me-2"></i> Anforderungen bearbeiten</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Inhalt (Markdown unterstützt)</label>
+                        <textarea name="content" class="form-control font-monospace" rows="15" placeholder="# Bauvorschriften&#10;- Punkt 1... ">{{ requirements_meta.content if requirements_meta else '' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-dark fw-bold">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock %}

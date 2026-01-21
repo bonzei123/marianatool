@@ -1,10 +1,11 @@
 import os
 import json
+import datetime
 from werkzeug.utils import secure_filename
 from flask import render_template, redirect, url_for, request, flash, current_app, Blueprint
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Permission, ImmoSetting, DashboardTile, ImmoQuestion, ImmoSection
+from app.models import Permission, ImmoSetting, DashboardTile, ImmoQuestion, ImmoSection, SiteContent
 from app.decorators import permission_required
 from app.admin import bp
 
@@ -253,4 +254,28 @@ def import_questions_route():
     else:
         flash(message, "danger")
 
+    return redirect(url_for('admin.global_settings_view'))
+
+
+# --- ANFORDERUNGEN SPEICHERN ---
+
+@bp.route('/settings/requirements/save', methods=['POST'])
+@login_required
+@permission_required('view_settings')
+def save_requirements():
+    """Speichert den Text für die Anforderungen (Markdown)."""
+    content = request.form.get('content')
+
+    # Eintrag holen oder erstellen
+    entry = db.session.get(SiteContent, 'requirements')
+    if not entry:
+        entry = SiteContent(id='requirements')
+        db.session.add(entry)
+
+    entry.content = content
+    entry.author = current_user
+    entry.updated_at = datetime.datetime.utcnow()
+
+    db.session.commit()
+    flash("Anforderungen erfolgreich aktualisiert.", "success")
     return redirect(url_for('admin.global_settings_view'))

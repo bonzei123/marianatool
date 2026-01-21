@@ -98,7 +98,8 @@ def create_app(config_class=Config):
                 current_bg = svc.background_image
 
         roadmap = db.session.get(SiteContent, 'roadmap')
-        return dict(roadmap_meta=roadmap, current_background_image=current_bg)
+        req_meta = db.session.get(SiteContent, 'requirements')
+        return dict(roadmap_meta=roadmap, current_background_image=current_bg, requirements_meta=req_meta)
 
     from app.commands import cmd_bp
     app.register_blueprint(cmd_bp)
