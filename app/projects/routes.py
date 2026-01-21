@@ -1,5 +1,8 @@
 import os
 import json
+import csv
+import io
+from flask import make_response
 from datetime import datetime
 from flask import render_template, request, jsonify, current_app, url_for, send_from_directory, Blueprint, flash, redirect
 from flask_login import login_required, current_user
@@ -472,3 +475,113 @@ def download_blank_pdf():
         current_app.logger.error(f"Blank PDF Error: {e}")
         flash(f"Fehler bei PDF Generierung: {e}", "danger")
         return redirect(url_for('projects.overview'))
+
+
+@bp.route('/analytics', methods=['GET'])
+@login_required
+@permission_required('analytics_access')
+def analytics_view():
+    """Zeigt das Dashboard für Auswertungen."""
+
+    # 1. Daten holen (Alle Projekte)
+    all_inspections = Inspection.query.all()
+
+    # 2. KPIs berechnen
+    total_count = len(all_inspections)
+
+    # Status Verteilung
+    status_counts = {
+        'draft': 0, 'submitted': 0, 'review': 0, 'done': 0, 'rejected': 0
+    }
+
+    # Typ Verteilung
+    type_counts = {'einzel': 0, 'cluster': 0, 'ausgabe': 0}
+
+    for i in all_inspections:
+        # Status zählen
+        s = i.status if i.status in status_counts else 'draft'
+        status_counts[s] += 1
+
+        # Typ zählen
+        t = i.inspection_type if i.inspection_type in type_counts else 'einzel'
+        type_counts[t] += 1
+
+    # Daten für Chart.js vorbereiten (Labels & Values)
+    # Wir übergeben einfache Listen an das Template
+
+    return render_template('immo/analytics.html',
+                           total_count=total_count,
+                           status_counts=status_counts,
+                           type_counts=type_counts)
+
+
+@bp.route('/analytics/export_csv', methods=['GET'])
+@login_required
+@permission_required('analytics_access')
+def export_csv():
+    """Generiert eine CSV mit ALLEN Formulardaten."""
+
+    # 1. Alle Fragen laden (als Spaltenüberschriften)
+    questions = ImmoQuestion.query.order_by(ImmoQuestion.order).all()
+    header = ['ID', 'Projekt (CSC)', 'Typ', 'Status', 'Ersteller', 'Datum', 'PDF Pfad']
+
+    # Frage-Labels als Spalten hinzufügen
+    q_map = {}  # ID -> Label Mapping
+    for q in questions:
+        header.append(q.label)
+        q_map[q.id] = q.label
+
+    # 2. CSV im Speicher bauen
+    si = io.StringIO()
+    cw = csv.writer(si, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+
+    # Header schreiben
+    cw.writerow(header)
+
+    # 3. Datenzeilen schreiben
+    inspections = Inspection.query.all()
+
+    for i in inspections:
+        # Basisdaten
+        row = [
+            i.id,
+            i.csc_name,
+            i.inspection_type,
+            i.status_label,
+            i.user.username,
+            i.created_at.strftime('%d.%m.%Y'),
+            i.pdf_path or ''
+        ]
+
+        # JSON Daten parsen
+        form_data = {}
+        if i.data_json:
+            try:
+                data = json.loads(i.data_json)
+                form_data = data.get('form_responses', {})
+            except:
+                pass
+
+        # Für jede Frage den Wert holen
+        for q in questions:
+            val = form_data.get(q.id, '')
+            # True/False in Ja/Nein wandeln
+            if val is True: val = 'Ja'
+            if val is False: val = 'Nein'
+            if isinstance(val, list): val = ", ".join(val)  # Falls Multiple Choice
+
+            # Zeilenumbrüche entfernen für saubere CSV
+            val = str(val).replace('\n', ' ').replace('\r', '')
+            row.append(val)
+
+        cw.writerow(row)
+
+    # 4. Response erstellen
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=export_{datetime.now().strftime('%Y%m%d')}.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+
+    # BOM für Excel hinzufügen (damit Umlaute gehen)
+    output.data = b'\xef\xbb\xbf' + output.data
+
+    return output

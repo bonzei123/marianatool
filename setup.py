@@ -25,6 +25,7 @@ def seed():
             (5, 'immo_files_access', 'Datei Zugriff', 'Darf alle Projekt-Dateien sehen', 'bi-folder'),
             (6, 'roadmap_access', 'Roadmap lesen', 'Darf die Roadmap sehen', 'bi-map'),
             (7, 'roadmap_edit', 'Roadmap schreiben', 'Darf die Roadmap bearbeiten', 'bi-pen'),
+            (8, 'analytics_access', 'Auswertungen sehen', 'Darf Statistiken und Exporte aufrufen', 'bi-graph-up-arrow'),
         ]
 
         print("... Prüfe Permissions")
@@ -79,6 +80,8 @@ def seed():
              "#95a5a6", 6, "view_settings"),
             ("Projekt Roadmap", "Aktueller Entwicklungsstand und geplante Features.", "roadmap.view_roadmap",
              "bi-signpost-split", "#9b59b6", 7, "roadmap_access"),
+            ("Auswertung", "Projekt-Statistiken und Excel-Export.", "projects.analytics_view",
+             "bi-pie-chart-fill", "#6610f2", 8, "analytics_access"),
         ]
 
         print("... Erstelle/Aktualisiere Dashboard Kacheln")
