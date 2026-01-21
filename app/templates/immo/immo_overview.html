@@ -66,7 +66,7 @@
                             <td class="fw-bold text-primary">
                                 {{ i.csc_name }}
 
-                                {% if not last_visit or i.updated_at > last_visit %}
+                                {% if not last_visit or (i.updated_at and i.updated_at > last_visit %}
                                     <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em; vertical-align: middle;">NEU</span>
                                 {% endif %}
                             </td>

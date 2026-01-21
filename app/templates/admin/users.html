@@ -29,7 +29,7 @@
                             onclick="openEditModal(this)">
                             <td class="ps-4 fw-bold text-dark">
                                 {{ user.username }}
-                                {% if not last_visit or user.created_at > last_visit %}
+                                {% if not last_visit or (user.created_at and user.created_at > last_visit) %}
                                     <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.6em;">NEU</span>
                                 {% endif %}
                             </td>
