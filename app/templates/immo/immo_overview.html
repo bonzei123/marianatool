@@ -23,19 +23,26 @@
         </div>
 
         <div class="card shadow-sm border-0">
+            <div class="card-header bg-white p-3 border-bottom">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="projectSearch" class="form-control border-start-0" placeholder="Suche nach Projekt, CSC, User oder Status..." onkeyup="filterProjects()">
+                </div>
+            </div>
+
             <div class="table-responsive" style="min-height: 500px; overflow-y: visible;">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="projectTable">
                     <thead class="bg-light sticky-top">
                     <tr>
-                        <th style="width: 150px;">Status</th>
-                        <th>Projekt / CSC</th>
-                        <th>Typ</th>
-                        <th>Datum</th>
-                        <th>Ersteller</th>
+                        <th style="width: 150px; cursor: pointer;" onclick="sortTable(0)">Status <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th style="cursor: pointer;" onclick="sortTable(1)">Projekt / CSC <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th style="cursor: pointer;" onclick="sortTable(2)">Typ <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th style="cursor: pointer;" onclick="sortTable(3)">Datum <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th style="cursor: pointer;" onclick="sortTable(4)">Ersteller <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
                         <th class="text-end">Aktion</th>
                     </tr>
                     </thead>
-                    <tbody class="bg-white">
+                    <tbody class="bg-white" id="projectTableBody">
                     {% for i in inspections %}
                         <tr id="row-{{ i.id }}"
                             style="cursor: pointer;"
@@ -87,7 +94,7 @@
                             </td>
                         </tr>
                     {% else %}
-                        <tr>
+                        <tr id="noResultsRow">
                             <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                 Keine Besichtigungen gefunden.
