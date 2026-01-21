@@ -12,6 +12,11 @@ from app.roadmap import bp
 @permission_required('roadmap_access')
 def view_roadmap():
     """Zeigt die Roadmap an (Read-Only)."""
+
+    # NEU: Gelesen-Status setzen
+    current_user.last_roadmap_visit = datetime.utcnow()
+    db.session.commit()
+
     # Content laden (Schlüssel ist 'roadmap')
     page_content = db.session.get(SiteContent, 'roadmap')
 

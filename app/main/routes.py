@@ -5,7 +5,7 @@ from flask import request, flash, redirect, url_for, current_app, render_templat
 from flask_login import login_required, current_user
 from flask_mail import Message
 from app.extensions import db, mail
-from app.models import ImmoSetting, DashboardTile
+from app.models import DashboardTile, Inspection, User, SiteContent, ImmoSetting
 
 
 @bp.route('/home')
@@ -46,6 +46,17 @@ def home():
             new_users = user_query.count()
 
         badges['user.list_users'] = new_users
+
+    # --- 3. BADGE: Roadmap Updates ---
+    # Wir holen den Inhalt der Roadmap
+    roadmap_content = db.session.get(SiteContent, 'roadmap')
+
+    if roadmap_content and roadmap_content.updated_at:
+        # Check: Habe ich sie noch nie gesehen? ODER ist das Update neuer als mein Besuch?
+        if not current_user.last_roadmap_visit or roadmap_content.updated_at > current_user.last_roadmap_visit:
+            # Wir zeigen eine "1" an, um zu signalisieren: Hier gibt es was Neues
+            badges['roadmap.view_roadmap'] = 1
+
 
     # --- Kacheln bauen ---
     visible_tiles = []

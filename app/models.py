@@ -35,6 +35,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_projects_visit = db.Column(db.DateTime)
     last_users_visit = db.Column(db.DateTime)
+    last_roadmap_visit = db.Column(db.DateTime)
     permissions = db.relationship('Permission', secondary=user_permissions, lazy='subquery',
                                   backref=db.backref('users', lazy=True))
 
