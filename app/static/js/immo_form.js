@@ -238,6 +238,18 @@ const uploader = {
     }
 };
 
+function getColClass(q) {
+    // ... (Code exakt wie oben) ...
+    const map = { 'full': 12, 'half': 6, 'third': 4 };
+    let desk = map[q.width] || 6;
+    let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
+    let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
+    let classes = `col-${mob}`;
+    if (tab !== mob) classes += ` col-md-${tab}`;
+    if (desk !== tab) classes += ` col-lg-${desk}`;
+    return classes;
+}
+
 const app = {
     data: {}, config: [],
 
@@ -292,52 +304,62 @@ const app = {
             const details = document.createElement('details');
             if(sec.is_expanded !== false) details.open = true;
 
-            const content = document.createElement('div'); content.style.padding = "20px";
+            // UPDATE: Nutze Bootstrap Grid Container (row g-3)
+            const content = document.createElement('div');
+            content.className = "p-3 row g-3"; // <--- WICHTIG: row g-3
+
             let hasFields = false;
 
             sec.content.forEach(field => {
-                // Filter nach Immo-Typ
                 if(field.types && !field.types.includes(type)) return;
                 hasFields = true;
 
                 const wrap = document.createElement('div');
-                wrap.className = `field-wrapper w-${field.width||'half'}`;
-                const val = this.data[field.id] || '';
 
-                // NEU: Required Sternchen
+                // UPDATE: Hole die berechneten Klassen
+                const colClasses = getColClass(field);
+
+                // Sonderfall: Header/Info/Alert sind immer volle Breite
+                if(['header', 'info', 'alert'].includes(field.type)) {
+                    wrap.className = 'col-12';
+                } else {
+                    wrap.className = colClasses;
+                }
+
+                const val = this.data[field.id] || '';
                 const reqMark = field.is_required ? ' <span class="text-danger fw-bold">*</span>' : '';
 
+                // HINWEIS: Ich habe hier auch gleich 'form-control' Klassen für Bootstrap Styling ergänzt
                 if(field.type === 'header') {
-                    wrap.className = 'w-full';
                     wrap.innerHTML = `<h4 style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;">${field.label}</h4>`;
 
                 } else if(field.type === 'info' || field.type === 'alert') {
-                    wrap.className = 'w-full alert ' + (field.type=='alert'?'alert-danger':'alert-info');
+                    wrap.className += ' alert ' + (field.type=='alert'?'alert-danger':'alert-info');
                     wrap.innerText = field.label;
 
                 } else if(field.type === 'text' || field.type === 'number' || field.type === 'date') {
-                    wrap.innerHTML = `<label>${field.label} ${field.tooltip?`(${field.tooltip})`:''}${reqMark}</label>
-                                      <input type="${field.type}" name="${field.id}" value="${val}">`;
+                    wrap.innerHTML = `<label class="form-label fw-bold">${field.label} ${field.tooltip?`(${field.tooltip})`:''}${reqMark}</label>
+                                      <input type="${field.type}" name="${field.id}" value="${val}" class="form-control">`;
 
                 } else if(field.type === 'select') {
-                    wrap.innerHTML = `<label>${field.label}${reqMark}</label>
-                                      <select name="${field.id}">
+                    wrap.innerHTML = `<label class="form-label fw-bold">${field.label}${reqMark}</label>
+                                      <select name="${field.id}" class="form-select">
                                           <option value="">Wählen...</option>
                                           ${field.options.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}
                                       </select>`;
 
                 } else if(field.type === 'checkbox') {
-                    wrap.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px;">
-                                        <input type="checkbox" name="${field.id}" ${val?'checked':''} style="width:20px; height:20px;"> 
-                                        ${field.label}${reqMark}
+                    wrap.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px; height:100%;">
+                                            <input type="checkbox" name="${field.id}" ${val?'checked':''} style="width:20px; height:20px;"> 
+                                            ${field.label}${reqMark}
                                       </label>`;
 
                 } else if(field.type === 'textarea') {
-                    wrap.innerHTML = `<label>${field.label}${reqMark}</label>
-                                      <textarea name="${field.id}" rows="4">${val}</textarea>`;
+                    wrap.innerHTML = `<label class="form-label fw-bold">${field.label}${reqMark}</label>
+                                      <textarea name="${field.id}" rows="4" class="form-control">${val}</textarea>`;
 
                 } else if(field.type === 'file') {
-                    wrap.innerHTML = `<label>${field.label}</label><input type="file" name="${field.id}" multiple>`;
+                    wrap.innerHTML = `<label class="form-label fw-bold">${field.label}</label><input type="file" name="${field.id}" multiple class="form-control">`;
                 }
                 content.appendChild(wrap);
             });

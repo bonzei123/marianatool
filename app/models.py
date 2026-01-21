@@ -88,6 +88,8 @@ class ImmoQuestion(db.Model):
     label = db.Column(db.Text)
     type = db.Column(db.String(50))
     width = db.Column(db.String(20))
+    width_tablet = db.Column(db.String(20), default='default')
+    width_mobile = db.Column(db.String(20), default='default')
     tooltip = db.Column(db.String(255))
     options_json = db.Column(db.Text)
     types_json = db.Column(db.Text)

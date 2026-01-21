@@ -122,16 +122,76 @@ function renderQ(list, q) {
 
     const isRequired = q.is_required ? 'checked' : '';
     const isMetadata = q.is_metadata ? 'checked' : '';
-    // NEU: Print Flag (Standard ist true, wenn undefined)
     const isPrint = (q.is_print !== false) ? 'checked' : '';
 
+    // Values sicherstellen
+    const wDesk = q.width || 'half';
+    const wTab = q.width_tablet || 'default';
+    const wMob = q.width_mobile || 'default';
+
     div.innerHTML = `
-            <div class="grid-row">
+            <div class="grid-row" style="grid-template-columns: 20px 2fr 1.5fr 1.2fr 1.2fr 1.2fr 1fr 30px; gap: 5px;">
                 <div class="drag-handle">::</div>
-                <div><label class="input-label">Label</label><input class="form-control-sm q-label" value="${q.label}" oninput="sync()"></div>
-                <div><label class="input-label">Typ</label><select class="form-select form-select-sm q-type" onchange="toggleOpt(this); sync()"><option value="text" ${q.type=='text'?'selected':''}>Text</option><option value="textarea" ${q.type=='textarea'?'selected':''}>Textfeld</option><option value="number" ${q.type=='number'?'selected':''}>Zahl</option><option value="select" ${q.type=='select'?'selected':''}>Dropdown</option><option value="checkbox" ${q.type=='checkbox'?'selected':''}>Checkbox</option><option value="file" ${q.type=='file'?'selected':''}>Datei</option><option value="date" ${q.type=='date'?'selected':''}>Datum</option><option value="header" ${q.type=='header'?'selected':''}>ÜBERSCHRIFT</option><option value="info" ${q.type=='info'?'selected':''}>Info</option><option value="alert" ${q.type=='alert'?'selected':''}>Warnung</option></select></div>
-                <div><label class="input-label">Breite</label><select class="form-select form-select-sm q-width" onchange="sync()"><option value="half" ${q.width!='full'?'selected':''}>Halb</option><option value="full" ${q.width=='full'?'selected':''}>Voll</option></select></div>
-                <div><label class="input-label">Sichtbar</label><div><span class="badge-check ${types.includes('einzel')?'active':''}" onclick="tog(this)">Einzel</span> <span class="badge-check ${types.includes('cluster')?'active':''}" onclick="tog(this)">Cluster</span> <span class="badge-check ${types.includes('ausgabe')?'active':''}" onclick="tog(this)">Ausgabe</span></div></div>
+                
+                <div>
+                    <label class="input-label">Label</label>
+                    <input class="form-control-sm q-label" value="${q.label}" oninput="sync()">
+                </div>
+                
+                <div>
+                    <label class="input-label">Typ</label>
+                    <select class="form-select form-select-sm q-type" onchange="toggleOpt(this); sync()">
+                        <option value="text" ${q.type=='text'?'selected':''}>Text</option>
+                        <option value="textarea" ${q.type=='textarea'?'selected':''}>Textfeld</option>
+                        <option value="number" ${q.type=='number'?'selected':''}>Zahl</option>
+                        <option value="select" ${q.type=='select'?'selected':''}>Dropdown</option>
+                        <option value="checkbox" ${q.type=='checkbox'?'selected':''}>Checkbox</option>
+                        <option value="file" ${q.type=='file'?'selected':''}>Datei</option>
+                        <option value="date" ${q.type=='date'?'selected':''}>Datum</option>
+                        <option value="header" ${q.type=='header'?'selected':''}>ÜBERSCHRIFT</option>
+                        <option value="info" ${q.type=='info'?'selected':''}>Info</option>
+                        <option value="alert" ${q.type=='alert'?'selected':''}>Warnung</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="input-label"><i class="bi bi-display"></i> Desk</label>
+                    <select class="form-select form-select-sm q-width" onchange="sync()">
+                        <option value="full" ${wDesk=='full'?'selected':''}>Voll</option>
+                        <option value="half" ${wDesk=='half'?'selected':''}>Halb</option>
+                        <option value="third" ${wDesk=='third'?'selected':''}>Drittel</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="input-label"><i class="bi bi-tablet"></i> Tab</label>
+                    <select class="form-select form-select-sm q-width-tab" onchange="sync()" style="background:#f8f9fa">
+                        <option value="default" ${wTab=='default'?'selected':''}>Default</option>
+                        <option value="full" ${wTab=='full'?'selected':''}>Voll</option>
+                        <option value="half" ${wTab=='half'?'selected':''}>Halb</option>
+                        <option value="third" ${wTab=='third'?'selected':''}>Drittel</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="input-label"><i class="bi bi-phone"></i> Mob</label>
+                    <select class="form-select form-select-sm q-width-mob" onchange="sync()" style="background:#f8f9fa">
+                        <option value="default" ${wMob=='default'?'selected':''}>Default</option>
+                        <option value="full" ${wMob=='full'?'selected':''}>Voll</option>
+                        <option value="half" ${wMob=='half'?'selected':''}>Halb</option>
+                        <option value="third" ${wMob=='third'?'selected':''}>Drittel</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="input-label">Sichtbar</label>
+                    <div style="line-height:1.1">
+                        <span class="badge-check ${types.includes('einzel')?'active':''}" onclick="tog(this)">E</span> 
+                        <span class="badge-check ${types.includes('cluster')?'active':''}" onclick="tog(this)">C</span> 
+                        <span class="badge-check ${types.includes('ausgabe')?'active':''}" onclick="tog(this)">A</span>
+                    </div>
+                </div>
+                
                 <div><button class="btn-del" onclick="removeEl(this)">X</button></div>
             </div>
             
@@ -142,11 +202,11 @@ function renderQ(list, q) {
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input q-metadata" type="checkbox" id="meta_${q.id}" ${isMetadata} onchange="sync()">
-                    <label class="form-check-label small" for="meta_${q.id}">Info-Tab (Meta)</label>
+                    <label class="form-check-label small" for="meta_${q.id}">Info-Tab</label>
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input q-print" type="checkbox" id="prn_${q.id}" ${isPrint} onchange="sync()">
-                    <label class="form-check-label small" for="prn_${q.id}">Druckvorlage</label>
+                    <label class="form-check-label small" for="prn_${q.id}">Drucken</label>
                 </div>
             </div>
 
@@ -194,11 +254,15 @@ function scrape() {
                 id: qId,
                 label: q.querySelector('.q-label').value,
                 type: q.querySelector('.q-type').value,
+                // NEU: Alle 3 Breiten auslesen
                 width: q.querySelector('.q-width').value,
+                width_tablet: q.querySelector('.q-width-tab').value,
+                width_mobile: q.querySelector('.q-width-mob').value,
+
                 tooltip: q.querySelector('.q-tooltip').value,
                 is_required: q.querySelector('.q-required').checked,
                 is_metadata: q.querySelector('.q-metadata').checked,
-                is_print: q.querySelector('.q-print').checked, // NEU: Wert auslesen
+                is_print: q.querySelector('.q-print').checked,
                 options: q.querySelector('.q-opts').value.split(',').filter(x=>x),
                 types: types
             });
@@ -239,6 +303,31 @@ async function loadBackups() {
 
 function loadBackup(json) { if(json && confirm("Backup laden?")) { config = JSON.parse(json); renderEditor(); sync(); } }
 
+// --- HELPER FÜR RESPONSIVE KLASSEN ---
+function getColClass(q) {
+    const map = { 'full': 12, 'half': 6, 'third': 4 };
+
+    // 1. Desktop Wert ermitteln (Fallback: 6/Halb)
+    let desk = map[q.width] || 6;
+
+    // 2. Tablet Wert (Wenn 'default', nimm Desktop)
+    let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
+
+    // 3. Mobile Wert (Wenn 'default', nimm Desktop - laut deiner Anforderung)
+    let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
+
+    // 4. Bootstrap Klassen bauen
+    // Mobile ist der Standard (col-X)
+    // Tablet überschreibt Mobile ab md (col-md-X)
+    // Desktop überschreibt Tablet ab lg (col-lg-X)
+
+    let classes = `col-${mob}`;
+    if (tab !== mob) classes += ` col-md-${tab}`;
+    if (desk !== tab) classes += ` col-lg-${desk}`;
+
+    return classes;
+}
+
 function renderPreview() {
     const p = document.getElementById('previewContent');
     const openStates = {};
@@ -257,29 +346,34 @@ function renderPreview() {
         }
 
         const openAttr = isOpen ? 'open' : '';
-        let html = `<details ${openAttr}><summary>${s.title}</summary><div class="p-content">`;
+        // UPDATE: Container ist jetzt eine Bootstrap Row mit Gutter (g-3)
+        let html = `<details ${openAttr}><summary>${s.title}</summary><div class="p-content row g-3">`;
         let hasVisible = false;
 
         s.content.forEach(q => {
             if(q.types && !q.types.includes(currentSimType)) return;
             hasVisible = true;
-            const wClass = q.width === 'full' ? 'w-full' : 'w-half';
+
+            // UPDATE: Berechne die responsive Klasse statt statisch 'w-half'
+            const colClass = getColClass(q);
             const reqMark = q.is_required ? ' <span style="color:red; font-weight:bold">*</span>' : '';
 
             let fieldHtml = '';
-            if(q.type === 'header') fieldHtml = `<div class="w-full" style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;"><h4 style="color:#19835A; margin:0;">${q.label}</h4></div>`;
-            else if (q.type === 'info') fieldHtml = `<div class="w-full alert alert-info">${q.label}</div>`;
-            else if (q.type === 'alert') fieldHtml = `<div class="w-full alert alert-danger">${q.label}</div>`;
-            else {
-                let input = `<input type="text" disabled>`;
-                if(q.type === 'select') input = `<select disabled><option>Wählen...</option></select>`;
-                if(q.type === 'textarea') input = `<textarea disabled rows="3"></textarea>`;
-                if(q.type === 'checkbox') input = `<div style="padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:5px;"><input type="checkbox" disabled style="width:auto; margin-right:10px;"> ${q.label}${reqMark}</div>`;
-                if(q.type === 'file') input = `<input type="file" disabled>`;
-                if(q.type === 'date') input = `<input type="date" disabled>`;
 
-                if(q.type !== 'checkbox') fieldHtml = `<div class="field-wrapper ${wClass}"><label>${q.label} ${q.tooltip?`<span style="color:#999; font-size:0.8em">(${q.tooltip})</span>`:''}${reqMark}</label>${input}</div>`;
-                else fieldHtml = `<div class="field-wrapper ${wClass}">${input}</div>`;
+            // Header, Info und Alert sind immer volle Breite (col-12)
+            if(q.type === 'header') fieldHtml = `<div class="col-12" style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;"><h4 style="color:#19835A; margin:0;">${q.label}</h4></div>`;
+            else if (q.type === 'info') fieldHtml = `<div class="col-12 alert alert-info">${q.label}</div>`;
+            else if (q.type === 'alert') fieldHtml = `<div class="col-12 alert alert-danger">${q.label}</div>`;
+            else {
+                let input = `<input type="text" class="form-control" disabled>`;
+                if(q.type === 'select') input = `<select class="form-select" disabled><option>Wählen...</option></select>`;
+                if(q.type === 'textarea') input = `<textarea class="form-control" disabled rows="3"></textarea>`;
+                if(q.type === 'checkbox') input = `<div style="padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:5px;"><input type="checkbox" disabled style="width:auto; margin-right:10px;"> ${q.label}${reqMark}</div>`;
+                if(q.type === 'file') input = `<input type="file" class="form-control" disabled>`;
+                if(q.type === 'date') input = `<input type="date" class="form-control" disabled>`;
+
+                if(q.type !== 'checkbox') fieldHtml = `<div class="${colClass}"><label class="form-label fw-bold">${q.label} ${q.tooltip?`<span style="color:#999; font-size:0.8em">(${q.tooltip})</span>`:''}${reqMark}</label>${input}</div>`;
+                else fieldHtml = `<div class="${colClass}">${input}</div>`;
             }
             html += fieldHtml;
         });

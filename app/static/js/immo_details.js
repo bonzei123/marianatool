@@ -4,6 +4,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let formConfig = [];
 
+// --- HELPER FÜR RESPONSIVE KLASSEN (Identisch zu immo_admin.js & immo_form.js) ---
+function getColClass(q) {
+    const map = { 'full': 12, 'half': 6, 'third': 4 };
+
+    // 1. Desktop Wert ermitteln (Fallback: 6/Halb)
+    let desk = map[q.width] || 6;
+
+    // 2. Tablet Wert (Wenn 'default', nimm Desktop)
+    let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
+
+    // 3. Mobile Wert (Wenn 'default', nimm Desktop)
+    let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
+
+    // 4. Bootstrap Klassen bauen
+    let classes = `col-${mob}`;
+    if (tab !== mob) classes += ` col-md-${tab}`;
+    if (desk !== tab) classes += ` col-lg-${desk}`;
+
+    return classes;
+}
+
 async function initForm() {
     const container = document.getElementById('formContainer');
     try {
@@ -17,8 +38,7 @@ async function initForm() {
 }
 
 /**
- * Rendert das Formular EXAKT wie im Generator (immo_form.js).
- * Unterschied: Werte werden aus savedResponses geladen.
+ * Rendert das Formular responsive mit Bootstrap Grid.
  */
 function renderForm(container) {
     container.innerHTML = '';
@@ -26,15 +46,10 @@ function renderForm(container) {
     // Gespeicherte Antworten aus DB laden
     const responses = (savedResponses && savedResponses.form_responses) ? savedResponses.form_responses : {};
 
-    // Typ aus dem inspection object lesen (wird im Template in JS-Variable geschrieben)
-    // Da wir das im Template noch nicht explizit gemacht haben, lesen wir es aus dem DOM oder nehmen den Default.
-    // Aber warte: savedResponses hat "meta.type" oder inspection object hat es.
-    // Wir nehmen an, dass 'einzel' der Fallback ist, falls im JS nicht definiert.
-    // Besser: Wir definieren currentType im Template oben.
+    // Typ aus dem inspection object lesen
     const currentType = (savedResponses && savedResponses.meta && savedResponses.meta.type) ? savedResponses.meta.type : 'einzel';
 
     formConfig.forEach(sec => {
-        // Nutzt native <details> für Collapse, genau wie im Original
         const details = document.createElement('details');
         details.className = 'mb-3 border rounded shadow-sm bg-white';
         // Wenn in Config nicht explizit eingeklappt, dann offen
@@ -46,67 +61,76 @@ function renderForm(container) {
         summary.innerText = sec.title;
         details.appendChild(summary);
 
+        // UPDATE: Bootstrap Row Container mit Gutter (g-3)
         const content = document.createElement('div');
-        content.style.padding = "20px";
+        content.className = "p-3 row g-3";
 
         let hasVisibleFields = false;
 
         sec.content.forEach(field => {
-            // Sichtbarkeits-Check wie im Original
+            // Sichtbarkeits-Check
             if(field.types && !field.types.includes(currentType)) return;
             hasVisibleFields = true;
 
             const wrap = document.createElement('div');
-            // WICHTIG: CSS Klassen exakt wie im Original für Grid
-            wrap.className = `field-wrapper w-${field.width||'half'}`;
+
+            // UPDATE: Responsive Klassen berechnen
+            const colClasses = getColClass(field);
+
+            // Sonderfall: Header, Info, Alert sind immer volle Breite
+            if(['header', 'info', 'alert'].includes(field.type)) {
+                wrap.className = 'col-12';
+            } else {
+                wrap.className = colClasses;
+            }
 
             // Wert holen
             let val = responses[field.id];
             if (val === undefined || val === null) val = '';
 
-            // Input Element bauen (mit 'immo-input' Klasse für unseren Saver)
-            const commonInputClass = "immo-input"; // Im Original gibt es diese Klasse nicht, aber wir brauchen sie zum Selektieren
+            // Input Element bauen. 'immo-input' für Selektor, 'form-control' für Bootstrap Design
+            const commonInputClass = "immo-input form-control";
 
             if(field.type === 'header') {
-                wrap.className = 'w-full';
                 wrap.innerHTML = `<h4 style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;">${field.label}</h4>`;
             }
             else if(field.type === 'info' || field.type === 'alert') {
-                wrap.className = 'w-full alert ' + (field.type=='alert'?'alert-danger':'alert-info');
+                wrap.className += ' alert ' + (field.type=='alert'?'alert-danger':'alert-info');
                 wrap.innerText = field.label;
             }
             else if(field.type === 'text' || field.type === 'number' || field.type === 'date') {
                 wrap.innerHTML = `
-                    <label>${field.label} ${field.tooltip?`<span class="text-muted small">(${field.tooltip})</span>`:''}</label>
+                    <label class="form-label fw-bold">${field.label} ${field.tooltip?`<span class="text-muted small">(${field.tooltip})</span>`:''}</label>
                     <input type="${field.type}" class="${commonInputClass}" data-id="${field.id}" value="${val}">
                 `;
             }
             else if(field.type === 'select') {
                 const optionsHtml = field.options.map(o => `<option ${val===o?'selected':''}>${o}</option>`).join('');
+                // Bei Select 'form-select' statt 'form-control' nutzen
                 wrap.innerHTML = `
-                    <label>${field.label}</label>
-                    <select class="${commonInputClass}" data-id="${field.id}">
+                    <label class="form-label fw-bold">${field.label}</label>
+                    <select class="immo-input form-select" data-id="${field.id}">
                         <option value="">Wählen...</option>
                         ${optionsHtml}
                     </select>
                 `;
             }
             else if(field.type === 'checkbox') {
-                // Checkbox Style exakt kopiert
+                // Checkbox Style angepasst, damit die Höhe passt
                 wrap.innerHTML = `
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px;">
-                        <input type="checkbox" class="${commonInputClass}" data-id="${field.id}" ${val === true || val === 'true' || val === 'on' ? 'checked' : ''} style="width:20px; height:20px;"> 
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f9f9f9; padding:10px; border:1px solid #eee; border-radius:4px; height:100%;">
+                        <input type="checkbox" class="immo-input" data-id="${field.id}" ${val === true || val === 'true' || val === 'on' ? 'checked' : ''} style="width:20px; height:20px;"> 
                         ${field.label}
                     </label>
                 `;
             }
             else if(field.type === 'textarea') {
                 wrap.innerHTML = `
-                    <label>${field.label}</label>
+                    <label class="form-label fw-bold">${field.label}</label>
                     <textarea class="${commonInputClass}" data-id="${field.id}" rows="4">${val}</textarea>
                 `;
             }
-            // File Uploads blenden wir im Editor aus, da Anhänge im anderen Tab sind
+            // File Uploads blenden wir im Editor aus
 
             content.appendChild(wrap);
         });

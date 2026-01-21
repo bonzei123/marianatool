@@ -125,6 +125,8 @@ def get_form_config():
                 "label": q.label,
                 "type": q.type,
                 "width": q.width,
+                "width_tablet": q.width_tablet,
+                "width_mobile": q.width_mobile,
                 "tooltip": q.tooltip,
                 "is_required": q.is_required,
                 "is_metadata": q.is_metadata,

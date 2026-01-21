@@ -45,6 +45,8 @@ def import_json_data(data):
                     question.label = q_data.get('label', '')
                     question.type = q_data.get('type', 'text')
                     question.width = q_data.get('width', 'half')
+                    question.width_tablet = q_data.get('width_tablet', 'default')
+                    question.width_mobile = q_data.get('width_mobile', 'default')
                     question.tooltip = q_data.get('tooltip', '')
                     question.order = q_idx
 
