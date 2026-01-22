@@ -126,42 +126,44 @@ def delete_user(user_id):
     """Löscht einen User, überträgt Projekte an Admin und schreibt Logs."""
     user = db.session.get(User, user_id)
 
-    if user:
-        if user.id == current_user.id:
-            flash('Du kannst dich nicht selbst löschen!', 'danger')
-            return redirect(url_for('user.list_users'))
-
-        # --- SCHRITT 1: PROJEKTE RETTEN & LOGGEN ---
-        user_inspections = Inspection.query.filter_by(user_id=user.id).all()
-
-        if user_inspections:
-            count = len(user_inspections)
-            for inspection in user_inspections:
-                # Log schreiben
-                log = InspectionLog(
-                    inspection_id=inspection.id,
-                    user_id=current_user.id,
-                    action='owner_change',
-                    details=f"Besitzer gewechselt von '{user.username}' zu '{current_user.username}' (User gelöscht)."
-                )
-                db.session.add(log)
-
-                inspection.user_id = current_user.id
-
-            db.session.commit()
-
-            flash(f'{count} Projekte wurden von {user.username} auf dich übertragen.', 'info')
-
-        username_cache = user.username
-        db.session.delete(user)
-        db.session.commit()  # Zweiter Commit für das Löschen
-
-        flash(f'User "{username_cache}" wurde erfolgreich gelöscht.', 'success')
-
-    else:
+    # Fall 1: User existiert nicht
+    if not user:
         flash('User nicht gefunden', 'warning')
+        return jsonify({"success": False})
 
-    return redirect(url_for('user.list_users'))
+    # Fall 2: Selbst-Löschung
+    if user.id == current_user.id:
+        flash('Du kannst dich nicht selbst löschen!', 'danger')
+        return jsonify({"success": False})
+
+    # --- SCHRITT 1: PROJEKTE RETTEN & LOGGEN ---
+    user_inspections = Inspection.query.filter_by(user_id=user.id).all()
+
+    if user_inspections:
+        count = len(user_inspections)
+        for inspection in user_inspections:
+            # Log schreiben
+            log = InspectionLog(
+                inspection_id=inspection.id,
+                user_id=current_user.id,
+                action='owner_change',
+                details=f"Besitzer gewechselt von '{user.username}' zu '{current_user.username}' (User gelöscht)."
+            )
+            db.session.add(log)
+
+            inspection.user_id = current_user.id
+
+        db.session.commit()
+
+        flash(f'{count} Projekte wurden von {user.username} auf dich übertragen.', 'info')
+
+    username_cache = user.username
+    db.session.delete(user)
+    db.session.commit()  # Zweiter Commit für das Löschen
+
+    flash(f'User "{username_cache}" wurde erfolgreich gelöscht.', 'success')
+
+    return jsonify({"success": True})
 
 
 @bp.route('/manage/<int:user_id>/reset-mail', methods=['POST'])
