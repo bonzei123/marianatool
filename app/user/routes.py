@@ -127,35 +127,34 @@ def delete_user(user_id):
     user = db.session.get(User, user_id)
 
     if user:
-        # 1. Selbst-Löschung verhindern
         if user.id == current_user.id:
             flash('Du kannst dich nicht selbst löschen!', 'danger')
             return redirect(url_for('user.list_users'))
 
-        # 2. Projekte retten (Reassign & Log)
+        # --- SCHRITT 1: PROJEKTE RETTEN & LOGGEN ---
         user_inspections = Inspection.query.filter_by(user_id=user.id).all()
 
         if user_inspections:
             count = len(user_inspections)
             for inspection in user_inspections:
-                # LOG SCHREIBEN: Bevor wir den Besitzer ändern
+                # Log schreiben
                 log = InspectionLog(
                     inspection_id=inspection.id,
-                    user_id=current_user.id,  # Du (Admin) führst die Änderung durch
+                    user_id=current_user.id,
                     action='owner_change',
                     details=f"Besitzer gewechselt von '{user.username}' zu '{current_user.username}' (User gelöscht)."
                 )
                 db.session.add(log)
 
-                # BESITZER ÄNDERN
                 inspection.user_id = current_user.id
+
+            db.session.commit()
 
             flash(f'{count} Projekte wurden von {user.username} auf dich übertragen.', 'info')
 
-        # 3. User löschen
-        username_cache = user.username  # Name merken für Flash-Message
+        username_cache = user.username
         db.session.delete(user)
-        db.session.commit()
+        db.session.commit()  # Zweiter Commit für das Löschen
 
         flash(f'User "{username_cache}" wurde erfolgreich gelöscht.', 'success')
 
