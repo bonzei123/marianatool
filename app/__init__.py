@@ -1,7 +1,7 @@
 import os
 import bleach
 import markdown
-from flask import Flask
+from flask import Flask, flash, redirect, url_for
 from config import Config
 from app.extensions import db, login_manager, migrate, mail
 
@@ -119,5 +119,16 @@ def create_app(config_class=Config):
             click.secho(f"SUCCESS: {msg}", fg="green")
         else:
             click.secho(f"ERROR: {msg}", fg="red")
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        # Prüfen, ob User eingeloggt ist (sonst macht Dashboard keinen Sinn)
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            flash('Die aufgerufene Seite existiert nicht. Du wurdest zum Dashboard umgeleitet.', 'warning')
+            return redirect(url_for('main.index'))  # oder 'projects.overview', je nach deinem Dashboard
+        else:
+            flash('Seite nicht gefunden. Bitte logge dich ein.', 'warning')
+            return redirect(url_for('auth.login'))
 
     return app
