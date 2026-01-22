@@ -12,8 +12,6 @@ URL_SOURCE = "https://anbauverband.de/antrags-und-genehmigungszahlen/"
 
 
 @bp.route('/', methods=['GET'])
-@login_required
-@permission_required('stats_access')
 def index():
     """Zeigt das Dashboard an."""
     stats = MarketStat.query.all()

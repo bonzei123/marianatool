@@ -1,23 +1,29 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
 
-<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0">📈 Markt-Daten Deutschland</h2>
+            <p class="text-secondary mb-1 mt-2" style="max-width: 600px;">
+                Aktuelle Übersicht der deutschlandweit gestellten Lizenzanträge für Anbauvereinigungen (Cannabis Clubs).
+            </p>
             <div class="text-muted small">
                 Quelle: anbauverband.de |
                 Stand: {% if last_update %}{{ last_update.strftime('%d.%m.%Y %H:%M') }}{% else %}Never{% endif %}
             </div>
         </div>
+
         <div class="d-flex gap-2">
-            <form action="{{ url_for('stats.sync_data') }}" method="POST" onsubmit="return confirm('Jetzt Daten live abrufen?');">
-                <button type="submit" class="btn btn-primary fw-bold">
-                    <i class="bi bi-arrow-repeat me-2"></i> Sync
-                </button>
-            </form>
+            {% if current_user.is_authenticated and current_user.has_permission('stats_access') %}
+                <form action="{{ url_for('stats.sync_data') }}" method="POST" onsubmit="return confirm('Jetzt Daten live abrufen?');">
+                    <button type="submit" class="btn btn-primary fw-bold">
+                        <i class="bi bi-arrow-repeat me-2"></i> Sync
+                    </button>
+                </form>
+            {% endif %}
+
             <button onclick="saveAsImage()" class="btn btn-outline-dark fw-bold">
                 <i class="bi bi-camera me-2"></i> Als Bild speichern
             </button>
@@ -30,110 +36,110 @@
         </div>
     {% else %}
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body py-2 d-flex align-items-center bg-light">
-            <label class="fw-bold me-3 text-nowrap">Region wählen:</label>
-            <select id="stateSelector" class="form-select form-select-sm" style="max-width: 300px;" onchange="updateChart()">
-                <option value="DE">🇩🇪 Deutschland (Gesamt)</option>
-                <hr>
-                {% for s in stats %}
-                    <option value="{{ s.id }}">{{ s.state_name }}</option>
-                {% endfor %}
-            </select>
-            <span id="disp_date" class="ms-auto text-muted small fst-italic"></span>
-        </div>
-    </div>
-
-    <div id="captureArea" class="bg-white p-4 rounded border shadow-sm">
-
-        <h3 class="text-center mb-4 fw-bold" id="chartTitle">Marktübersicht</h3>
-
-        <div class="row g-4 align-items-center">
-
-            <div class="col-lg-4">
-                <div class="d-flex flex-column gap-3">
-
-                    <div class="stat-box box-primary">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="label">Gestellte Anträge</span>
-                            <span class="percent badge bg-primary bg-opacity-25 text-primary">100%</span>
-                        </div>
-                        <div class="value text-primary" id="disp_applied">-</div>
-                    </div>
-
-                    <div class="stat-box box-success">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="label">Genehmigt</span>
-                            <span class="percent badge bg-success bg-opacity-25 text-success" id="pct_approved">-%</span>
-                        </div>
-                        <div class="value text-success" id="disp_approved">-</div>
-                    </div>
-
-                    <div class="stat-box box-warning">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="label">Offen / In Prüfung</span>
-                            <span class="percent badge bg-warning bg-opacity-25 text-dark" id="pct_open">-%</span>
-                        </div>
-                        <div class="value text-warning" id="disp_open">-</div>
-                    </div>
-
-                    <div class="stat-box box-danger">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="label">Abgelehnt</span>
-                            <span class="percent badge bg-danger bg-opacity-25 text-danger" id="pct_rejected">-%</span>
-                        </div>
-                        <div class="value text-danger" id="disp_rejected">-</div>
-                    </div>
-
-                    <div class="stat-box box-secondary">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="label">Zurückgezogen</span>
-                            <span class="percent badge bg-secondary bg-opacity-25 text-secondary" id="pct_withdrawn">-%</span>
-                        </div>
-                        <div class="value text-secondary" id="disp_withdrawn">-</div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="col-lg-8">
-                <div class="chart-wrapper">
-                    <canvas id="marketChart"></canvas>
-                </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body py-2 d-flex align-items-center bg-light">
+                <label class="fw-bold me-3 text-nowrap">Region wählen:</label>
+                <select id="stateSelector" class="form-select form-select-sm" style="max-width: 300px;" onchange="updateChart()">
+                    <option value="DE">🇩🇪 Deutschland (Gesamt)</option>
+                    <hr>
+                    {% for s in stats %}
+                        <option value="{{ s.id }}">{{ s.state_name }}</option>
+                    {% endfor %}
+                </select>
+                <span id="disp_date" class="ms-auto text-muted small fst-italic"></span>
             </div>
         </div>
 
-        <div class="mt-4 pt-3 border-top text-center text-muted small">
-           Generiert durch Vereins-Portal | Datenquelle: anbauverband.de | Datum: <span id="footer_date" class="fw-bold"></span>
+        <div id="captureArea" class="bg-white p-4 rounded border shadow-sm">
+
+            <h3 class="text-center mb-4 fw-bold" id="chartTitle">Marktübersicht</h3>
+
+            <div class="row g-4 align-items-center">
+
+                <div class="col-lg-4">
+                    <div class="d-flex flex-column gap-3">
+
+                        <div class="stat-box box-primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="label">Gestellte Anträge</span>
+                                <span class="percent badge bg-primary bg-opacity-25 text-primary">100%</span>
+                            </div>
+                            <div class="value text-primary" id="disp_applied">-</div>
+                        </div>
+
+                        <div class="stat-box box-success">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="label">Genehmigt</span>
+                                <span class="percent badge bg-success bg-opacity-25 text-success" id="pct_approved">-%</span>
+                            </div>
+                            <div class="value text-success" id="disp_approved">-</div>
+                        </div>
+
+                        <div class="stat-box box-warning">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="label">Offen / In Prüfung</span>
+                                <span class="percent badge bg-warning bg-opacity-25 text-dark" id="pct_open">-%</span>
+                            </div>
+                            <div class="value text-warning" id="disp_open">-</div>
+                        </div>
+
+                        <div class="stat-box box-danger">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="label">Abgelehnt</span>
+                                <span class="percent badge bg-danger bg-opacity-25 text-danger" id="pct_rejected">-%</span>
+                            </div>
+                            <div class="value text-danger" id="disp_rejected">-</div>
+                        </div>
+
+                        <div class="stat-box box-secondary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="label">Zurückgezogen</span>
+                                <span class="percent badge bg-secondary bg-opacity-25 text-secondary" id="pct_withdrawn">-%</span>
+                            </div>
+                            <div class="value text-secondary" id="disp_withdrawn">-</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="chart-wrapper">
+                        <canvas id="marketChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top text-center text-muted small">
+                Generiert durch Vereins-Portal | Datenquelle: anbauverband.de | Datum: <span id="footer_date" class="fw-bold"></span>
+            </div>
         </div>
+    {% endif %}
     </div>
-    {% endif %}
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<script>
-    const rawData = [
-        {% for s in stats %}
-        {
-            id: "{{ s.id }}",
-            name: "{{ s.state_name }}",
-            applied: {{ s.applied }},
-            approved: {{ s.approved }},
-            rejected: {{ s.rejected }},
-            withdrawn: {{ s.withdrawn }},
-            open: {{ s.open_applications }},
-            date: "{{ s.data_date }}"
-        },
-        {% endfor %}
-    ];
-</script>
-<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+    <script>
+        const rawData = [
+            {% for s in stats %}
+                {
+                    id: "{{ s.id }}",
+                    name: "{{ s.state_name }}",
+                    applied: {{ s.applied }},
+                    approved: {{ s.approved }},
+                    rejected: {{ s.rejected }},
+                    withdrawn: {{ s.withdrawn }},
+                    open: {{ s.open_applications }},
+                    date: "{{ s.data_date }}"
+                },
+            {% endfor %}
+        ];
+    </script>
+    <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
 
-<script>
-    {% if has_data %}
-        document.addEventListener('DOMContentLoaded', () => { updateChart(); });
-    {% endif %}
-</script>
+    <script>
+        {% if has_data %}
+            document.addEventListener('DOMContentLoaded', () => { updateChart(); });
+        {% endif %}
+    </script>
 {% endblock %}
