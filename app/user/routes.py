@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from datetime import datetime
-from app.models import User, Permission
+from app.models import User, Permission, Inspection, InspectionLog
 from app.auth.forms import UpdateAccountForm
 from app.utils import send_reset_email
 from app.decorators import permission_required
@@ -123,19 +123,45 @@ def update_user(user_id):
 @login_required
 @permission_required('view_users')
 def delete_user(user_id):
-    """Löscht einen User."""
+    """Löscht einen User, überträgt Projekte an Admin und schreibt Logs."""
     user = db.session.get(User, user_id)
+
     if user:
-        # Optional: Verhindern, dass man sich selbst löscht
+        # 1. Selbst-Löschung verhindern
         if user.id == current_user.id:
             flash('Du kannst dich nicht selbst löschen!', 'danger')
             return redirect(url_for('user.list_users'))
 
+        # 2. Projekte retten (Reassign & Log)
+        user_inspections = Inspection.query.filter_by(user_id=user.id).all()
+
+        if user_inspections:
+            count = len(user_inspections)
+            for inspection in user_inspections:
+                # LOG SCHREIBEN: Bevor wir den Besitzer ändern
+                log = InspectionLog(
+                    inspection_id=inspection.id,
+                    user_id=current_user.id,  # Du (Admin) führst die Änderung durch
+                    action='owner_change',
+                    details=f"Besitzer gewechselt von '{user.username}' zu '{current_user.username}' (User gelöscht)."
+                )
+                db.session.add(log)
+
+                # BESITZER ÄNDERN
+                inspection.user_id = current_user.id
+
+            flash(f'{count} Projekte wurden von {user.username} auf dich übertragen.', 'info')
+
+        # 3. User löschen
+        username_cache = user.username  # Name merken für Flash-Message
         db.session.delete(user)
         db.session.commit()
-        flash('User gelöscht', 'success')
+
+        flash(f'User "{username_cache}" wurde erfolgreich gelöscht.', 'success')
+
     else:
         flash('User nicht gefunden', 'warning')
+
     return redirect(url_for('user.list_users'))
 
 
