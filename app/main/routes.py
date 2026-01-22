@@ -139,6 +139,6 @@ def favicon():
     """Favicon ausliefern."""
     return send_from_directory(
         os.path.join(current_app.root_path, 'static', 'img'),
-        'logo_small.jpg',
-        mimetype='image/jpeg'
+        'logo_small.png',
+        mimetype='image/png'
     )
