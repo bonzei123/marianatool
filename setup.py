@@ -26,6 +26,7 @@ def seed():
             (6, 'roadmap_access', 'Roadmap lesen', 'Darf die Roadmap sehen', 'bi-map'),
             (7, 'roadmap_edit', 'Roadmap schreiben', 'Darf die Roadmap bearbeiten', 'bi-pen'),
             (8, 'analytics_access', 'Auswertungen sehen', 'Darf Statistiken und Exporte aufrufen', 'bi-graph-up-arrow'),
+            (9, 'stats_access', 'Marktdaten lesen', 'Darf bundesweite Statistiken einsehen', 'bi-bar-chart-line'),
         ]
 
         print("... Prüfe Permissions")
@@ -82,6 +83,8 @@ def seed():
              "bi-signpost-split", "#9b59b6", 7, "roadmap_access"),
             ("Auswertung", "Projekt-Statistiken und Excel-Export.", "projects.analytics_view",
              "bi-pie-chart-fill", "#6610f2", 8, "analytics_access"),
+            ("Markt-Daten", "Bundesweite Antrags- und Genehmigungszahlen.", "stats.index",
+             "bi-graph-up", "#fd7e14", 9, "stats_access"),
         ]
 
         print("... Erstelle/Aktualisiere Dashboard Kacheln")

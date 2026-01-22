@@ -195,6 +195,25 @@ class InspectionLog(db.Model):
     user = db.relationship('User')
 
 
+class MarketStat(db.Model):
+    """Speichert die Antragszahlen pro Bundesland."""
+    id = db.Column(db.Integer, primary_key=True)
+    state_name = db.Column(db.String(50), unique=True)  # z.B. Bayern
+
+    applied = db.Column(db.Integer, default=0)  # Gestellt (Spalte 2)
+    approved = db.Column(db.Integer, default=0)  # Genehmigt (Spalte 3)
+    rejected = db.Column(db.Integer, default=0)  # Abgelehnt (Spalte 4)
+    withdrawn = db.Column(db.Integer, default=0)  # Zurückgezogen (Spalte 5)
+
+    data_date = db.Column(db.String(20))  # Datum aus der Tabelle (Spalte 6)
+    last_scraped = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def open_applications(self):
+        """Berechnet: Gestellt - (Genehmigt + Abgelehnt + Zurückgezogen)"""
+        return self.applied - (self.approved + self.rejected + self.withdrawn)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

@@ -50,6 +50,10 @@ def create_app(config_class=Config):
     from app.roadmap import bp as roadmap_bp
     app.register_blueprint(roadmap_bp, url_prefix='/roadmap')
 
+    # 8. Stats / Markt-Daten -> /stats
+    from app.stats import bp as stats_bp
+    app.register_blueprint(stats_bp, url_prefix='/stats')
+    
     # --- CONTEXT PROCESSORS & FILTERS ---
 
     @app.context_processor
