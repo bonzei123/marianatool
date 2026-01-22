@@ -28,12 +28,6 @@ def login_action():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=True)
-
-            # Dev-Helper: Falls User noch keine Rechte hat, alles geben (kann später raus)
-            if not user.permissions and not user.is_admin:
-                user.permissions = Permission.query.all()
-                db.session.commit()
-
             return redirect(url_for('main.home'))
         else:
             flash("Login fehlgeschlagen. Bitte prüfen.", "danger")
