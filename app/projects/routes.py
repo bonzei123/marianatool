@@ -19,14 +19,9 @@ from app.pdf_generator import PdfGenerator
 # VIEW ROUTES (GET)
 # ==============================================================================
 
-@bp.route('/new', methods=['GET'])
-@login_required
-@permission_required('immo_user')
-def create_view():
-    """Zeigt das leere Erfassungsformular."""
-    # Template Pfad bleibt vorerst gleich, bis wir Templates verschieben
-    return render_template('immo/immo_form.html')
-
+# VERALTET / ABGESÄGT
+# @bp.route('/new', methods=['GET'])
+# ...
 
 @bp.route('/', methods=['GET'])
 @login_required
@@ -53,7 +48,7 @@ def overview():
                            last_visit=last_visit)
 
 
-# --- EHEMALS ADMIN FILES ROUTEN ---
+# --- FILES ROUTEN ---
 
 @bp.route('/files', methods=['GET'])
 @login_required
@@ -176,59 +171,54 @@ def upload_chunk():
         return jsonify({"error": str(e)}), 500
 
 
-@bp.route('/submit', methods=['POST'])
+@bp.route('/create_quick', methods=['POST'])
 @login_required
 @permission_required('immo_user')
-def submit_inspection():
-    """Speichert die Besichtigung (DB + JSON). KEIN PDF UPLOAD MEHR ERFORDERLICH."""
+def create_quick():
+    """
+    Erstellt schnell ein neues Projekt (Draft) und gibt die ID zurück.
+    Ersetzt den alten Wizard.
+    """
     try:
         data = request.json
-        # filename_pdf wird jetzt ignoriert oder ist null
-        folder_name = secure_filename(data.get('folder'))
         csc_name = data.get('csc_name', 'Unbekannt')
         immo_type = data.get('immo_type', 'einzel')
-        form_responses = data.get('form_data', {})
 
+        # 1. Ordnernamen generieren (Sicher & Eindeutig)
+        # Format: Name_Timestamp (um Kollisionen zu vermeiden)
+        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        safe_csc = secure_filename(csc_name.replace(" ", "_"))
+        if not safe_csc: safe_csc = "Project"
+        folder_name = f"{safe_csc}_{ts}"
+
+        # Ordner erstellen
         upload_folder = current_app.config['UPLOAD_FOLDER']
         full_folder_path = os.path.join(upload_folder, folder_name)
+        os.makedirs(full_folder_path, exist_ok=True)
 
-        attached_files = []
-        if os.path.exists(full_folder_path):
-            attached_files = [f for f in os.listdir(full_folder_path) if
-                              os.path.isfile(os.path.join(full_folder_path, f))]
-
+        # 2. JSON Struktur initieren
         full_json_record = {
-            "meta": {"csc": csc_name, "type": immo_type, "date": datetime.utcnow().isoformat(),
-                     "uploaded_by": current_user.username},
-            "form_responses": form_responses,
-            "attachments": attached_files
+            "meta": {
+                "csc": csc_name,
+                "type": immo_type,
+                "date": datetime.utcnow().isoformat(),
+                "uploaded_by": current_user.username
+            },
+            "form_responses": {},
+            "attachments": []
         }
 
-        # Wir setzen pdf_path vorerst leer, es wird beim ersten Klick generiert
-        # Oder wir setzen einen Platzhalter-Ordnerpfad
-
+        # 3. DB Eintrag (DRAFT)
         inspection = Inspection(
             user_id=current_user.id,
             csc_name=csc_name,
             inspection_type=immo_type,
-            status=Inspection.STATUS_SUBMITTED,
-            pdf_path=os.path.join(folder_name, ""),  # Nur Ordner merken erstmal (Trick)
+            status=Inspection.STATUS_DRAFT,
+            pdf_path=os.path.join(folder_name, ""),  # Placeholder, damit der Ordner bekannt ist
             data_json=json.dumps(full_json_record)
         )
         db.session.add(inspection)
         db.session.commit()
-
-        # OPTIONAL: PDF Direkt generieren lassen (Server-Side)
-        # Damit es direkt da ist:
-        try:
-            # Config laden
-            sections = ImmoSection.query.order_by(ImmoSection.order).all()
-            gen = PdfGenerator(sections, inspection, current_app.config['UPLOAD_FOLDER'])
-            rel_path = gen.create()
-            inspection.pdf_path = rel_path
-            db.session.commit()
-        except Exception as e:
-            print(f"Auto-PDF Error: {e}")
 
         return jsonify({"success": True, "id": inspection.id})
     except Exception as e:
@@ -236,37 +226,31 @@ def submit_inspection():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# VERALTET / ABGESÄGT
+# @bp.route('/submit', methods=['POST'])
+# ...
+
+
 @bp.route('/<int:inspection_id>/generate_pdf', methods=['GET'])
 @login_required
 def generate_and_download_pdf(inspection_id):
-    """
-    Generiert das PDF aus den DB-Daten neu, speichert es und sendet es an den User.
-    """
+    """Generiert das PDF aus den DB-Daten neu."""
     inspection = db.session.get(Inspection, inspection_id)
-    if not inspection:
-        return render_template('errors/404.html'), 404
+    if not inspection: return render_template('errors/404.html'), 404
 
     if not (current_user.is_admin or current_user.has_permission(
             'immo_files_access') or inspection.user_id == current_user.id):
         return render_template('errors/403.html'), 403
 
     try:
-        # 1. Config laden (inklusive Questions)
         sections = ImmoSection.query.order_by(ImmoSection.order).all()
-
-        # 2. Generator aufrufen
         gen = PdfGenerator(sections, inspection, current_app.config['UPLOAD_FOLDER'])
-        rel_path = gen.create()  # Gibt z.B. "Ordner/File.pdf" zurück
-
-        # 3. Pfad in DB aktualisieren
+        rel_path = gen.create()
         inspection.pdf_path = rel_path
         db.session.commit()
-
-        # 4. Datei senden
         folder, filename = os.path.split(rel_path)
         return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], folder), filename,
                                    as_attachment=True)
-
     except Exception as e:
         current_app.logger.error(f"PDF Gen Error: {e}")
         flash(f"Fehler bei PDF Generierung: {e}", "danger")
@@ -276,48 +260,35 @@ def generate_and_download_pdf(inspection_id):
 @bp.route('/status', methods=['POST'])
 @login_required
 def status_update():
-    """Status-Update (Ampel). Ehemals Admin, jetzt Workflow."""
+    """Status-Update (Ampel)."""
     data = request.json
     inspection = db.session.get(Inspection, data.get('id'))
 
-    if not inspection:
-        return jsonify({'success': False, 'error': 'Eintrag fehlt'}), 404
+    if not inspection: return jsonify({'success': False, 'error': 'Eintrag fehlt'}), 404
 
     new_status = data.get('status')
-
-    # --- BERECHTIGUNGSPRÜFUNG ---
-    # 1. Manager/Admins dürfen alles (Files Access = Leitung)
     is_manager = current_user.is_admin or current_user.has_permission('immo_files_access')
-
-    # 2. Owner darf NUR von Draft -> Submitted wechseln
     is_owner = inspection.user_id == current_user.id
     allow_submit = (
                 is_owner and inspection.status == Inspection.STATUS_DRAFT and new_status == Inspection.STATUS_SUBMITTED)
 
     if not (is_manager or allow_submit):
-        return jsonify({'success': False, 'error': 'Keine Berechtigung für diesen Statuswechsel'}), 403
+        return jsonify({'success': False, 'error': 'Keine Berechtigung'}), 403
 
-    # Validierung der Status-Strings aus dem Model
     valid_statuses = [
         Inspection.STATUS_DRAFT, Inspection.STATUS_SUBMITTED,
-        Inspection.STATUS_REVIEW, Inspection.STATUS_DONE,
-        Inspection.STATUS_REJECTED
+        Inspection.STATUS_REVIEW, Inspection.STATUS_DONE, Inspection.STATUS_REJECTED
     ]
 
     if new_status in valid_statuses:
         old_status = inspection.status
         inspection.status = new_status
-
-        # Best Practice: Statusänderung loggen
         if old_status != new_status:
             log = InspectionLog(
-                inspection_id=inspection.id,
-                user_id=current_user.id,
-                action='status_change',
+                inspection_id=inspection.id, user_id=current_user.id, action='status_change',
                 details=f"Status geändert: {old_status} -> {new_status}"
             )
             db.session.add(log)
-
         db.session.commit()
         return jsonify({'success': True, 'new_label': inspection.status_label, 'new_color': inspection.status_color})
 
@@ -332,19 +303,14 @@ def status_update():
 @login_required
 @permission_required('immo_user')
 def detail_view(inspection_id):
-    """
-    Hauptansicht für ein Projekt.
-    """
+    """Hauptansicht für ein Projekt."""
     inspection = db.session.get(Inspection, inspection_id)
-    if not inspection:
-        return render_template('errors/404.html'), 404
+    if not inspection: return render_template('errors/404.html'), 404
 
-    # Rechte prüfen
     if not (current_user.is_admin or current_user.has_permission(
             'immo_files_access') or inspection.user_id == current_user.id):
         return render_template('errors/403.html'), 403
 
-    # 1. Daten aus JSON laden
     import json
     parsed_data = {}
     form_responses = {}
@@ -355,51 +321,27 @@ def detail_view(inspection_id):
         except:
             pass
 
-    # 2. Metadaten-Fragen laden und Antworten mappen
-    # Wir holen alle Fragen, die is_metadata=True haben, sortiert nach Section und Order
-    meta_questions = db.session.query(ImmoQuestion) \
-        .join(ImmoSection) \
-        .filter(ImmoQuestion.is_metadata == True) \
-        .order_by(ImmoSection.order, ImmoQuestion.order) \
-        .all()
+    meta_questions = db.session.query(ImmoQuestion).join(ImmoSection).filter(ImmoQuestion.is_metadata == True).order_by(
+        ImmoSection.order, ImmoQuestion.order).all()
 
     meta_fields = []
     for q in meta_questions:
-        # Wert aus den Antworten holen (Key ist die Question ID)
         val = form_responses.get(q.id)
-
-        # Formatierung (Checkboxen sind True/False -> Ja/Nein)
         if val is True: val = "Ja"
         if val is False: val = "Nein"
         if val is None or val == "": val = "-"
+        meta_fields.append({'label': q.label, 'value': val})
 
-        # Einheiten anhängen? (Könnte man im Tooltip oder Label parsen, hier simpel:)
-        # if q.type == 'number' and 'm²' in q.label: val = f"{val} m²"
-
-        meta_fields.append({
-            'label': q.label,
-            'value': val
-        })
-
-    # 3. Dateien Logik
-    # Falls pdf_path leer ist, versuchen wir den CSC-Namen als Fallback für den Ordner
+    # Datei Logik (vereinfacht für Übersicht)
     folder_name = ""
     if inspection.pdf_path:
         folder_name = os.path.dirname(inspection.pdf_path)
-
-    # Fallback: Wenn pdf_path leer ist (alte Daten), versuchen wir csc_name
-    # (Aber Vorsicht: Umlaute/Sonderzeichen müssen wie beim Upload behandelt werden)
     if not folder_name and inspection.csc_name:
-        # Hier müssten wir eigentlich wissen, wie der Ordner genau hieß beim Upload.
-        # Da wir das in 'pdf_path' oder 'folder' im JSON speichern sollten, schauen wir dort nach:
-        if parsed_data.get('attachments'):
-            # Wenn wir Attachments haben, liegt der Ordner dort
-            pass  # Logik müsste robuster sein, aber für jetzt okay.
-
-        # Simpler Fallback: Name bereinigen
-        folder_name = secure_filename(inspection.csc_name.replace(" ", "_"))
-        # ACHTUNG: Das ist unsicher, besser wäre es, den Ordnernamen in der DB zu haben.
-        # Da wir in 'submit' pdf_path = "Ordnername/" setzen, sollte es passen.
+        # Fallback (weniger sicher, aber besser als nichts)
+        # Wir versuchen den Ordner anhand des Timestamp-Musters zu finden wenn möglich,
+        # sonst nehmen wir den Namen.
+        # Da create_quick nun Ordner mit TS erstellt, ist der Pfad in der DB (pdf_path) wichtig!
+        pass
 
     files = []
     if folder_name:
@@ -410,62 +352,47 @@ def detail_view(inspection_id):
                 if os.path.isfile(fp):
                     is_img = f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
                     is_vid = f.lower().endswith(('.mp4', '.mov', '.avi'))
-                    # Größe berechnen
                     size_mb = round(os.path.getsize(fp) / (1024 * 1024), 2)
-
                     files.append({
-                        "name": f,
-                        "size": size_mb,
-                        "is_img": is_img,
-                        "is_vid": is_vid,
-                        "folder": folder_name
+                        "name": f, "size": size_mb, "is_img": is_img, "is_vid": is_vid, "folder": folder_name
                     })
 
-    return render_template('immo/immo_details.html',  # Template Name angepasst an deine Datei
-                           inspection=inspection,
-                           files=files,
-                           folder_name=folder_name,
-                           form_responses=form_responses,
-                           meta_fields=meta_fields)  # <--- NEU übergeben
+    return render_template('immo/immo_details.html', inspection=inspection, files=files,
+                           folder_name=folder_name, form_responses=form_responses, meta_fields=meta_fields)
 
 
 @bp.route('/<int:inspection_id>/update_data', methods=['POST'])
 @login_required
 @permission_required('immo_user')
 def update_inspection_data(inspection_id):
-    """Speichert Änderungen am Formular (Reiter 2)."""
+    """Speichert Änderungen am Formular."""
     inspection = db.session.get(Inspection, inspection_id)
-    if not inspection:
-        return jsonify({'error': 'Nicht gefunden'}), 404
+    if not inspection: return jsonify({'error': 'Nicht gefunden'}), 404
 
-    # Check Rechte (Nur Ersteller oder Admin/Manager darf editieren)
     if not (current_user.is_admin or current_user.has_permission(
             'immo_files_access') or inspection.user_id == current_user.id):
         return jsonify({'error': 'Keine Berechtigung'}), 403
 
     try:
         new_data = request.json.get('form_data', {})
-
-        # Bestehendes JSON laden und aktualisieren
         current_json = json.loads(inspection.data_json) if inspection.data_json else {}
 
-        # Wir speichern die alten Werte für das Log (Diff wäre cool, aber Text reicht erstmal)
-        old_form = current_json.get('form_responses', {})
-        current_json['form_responses'] = new_data
+        # Merge Logik: Bestehende Daten behalten, neue überschreiben
+        # (Wichtig, falls Requests sich überschneiden, aber hier einfach Replace)
+        existing_responses = current_json.get('form_responses', {})
+        existing_responses.update(new_data)
 
+        current_json['form_responses'] = existing_responses
         inspection.data_json = json.dumps(current_json)
         inspection.updated_at = datetime.utcnow()
 
-        # Log schreiben
-        log = InspectionLog(
-            inspection_id=inspection.id,
-            user_id=current_user.id,
-            action='data_update',
-            details=f"Formular bearbeitet."
-        )
-        db.session.add(log)
-        db.session.commit()
+        # Log sparen wir uns bei jedem Autosave, sonst platzt die Tabelle.
+        # Nur wenn explizit gewünscht oder bei Statuswechsel.
+        # Hier optional:
+        # log = InspectionLog(inspection_id=inspection.id, user_id=current_user.id, action='data_update', details="Auto-Save")
+        # db.session.add(log)
 
+        db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()

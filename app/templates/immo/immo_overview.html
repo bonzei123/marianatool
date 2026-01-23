@@ -5,9 +5,10 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>📋 Besichtigungs-Übersicht</h2>
             <div class="d-flex gap-2">
-                <a href="{{ url_for('projects.create_view') }}" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
                     <i class="bi bi-plus-lg"></i> Neue Besichtigung
-                </a>
+                </button>
+
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-printer"></i> Druckvorlage
@@ -50,33 +51,28 @@
 
                             <td>
                                 {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
-                                    {# --- ADMIN / LEITUNG ANSICHT (Dropdown) --- #}
+                                    {# --- ADMIN ANSICHT --- #}
                                     <div class="dropdown" onclick="event.stopPropagation()">
                                         <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
-                                                type="button"
-                                                id="statusDropdown{{ i.id }}"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false">
+                                                type="button" id="statusDropdown{{ i.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{ i.status_label }}
                                         </button>
                                         <ul class="dropdown-menu" aria-labelledby="statusDropdown{{ i.id }}">
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'submitted')">🔵 Eingereicht</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'review')">🟡 In Prüfung</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'done')">🟢 Genehmigt</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'submitted', 'Status auf EINGEREICHT ändern?')">🔵 Eingereicht</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'review', 'Status auf IN PRÜFUNG ändern?')">🟡 In Prüfung</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'done', 'Status auf GENEHMIGT ändern?')">🟢 Genehmigt</a></li>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'rejected')">🔴 Ablehnen</a></li>
+                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'rejected', 'Status auf ABGELEHNT ändern?')">🔴 Ablehnen</a></li>
                                         </ul>
                                     </div>
                                 {% else %}
                                     {# --- MITARBEITER ANSICHT --- #}
-                                    {# Wenn Entwurf UND eigener User -> Einreichen Button #}
                                     {% if i.status == 'draft' and i.user_id == current_user.id %}
                                         <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                                                onclick="event.stopPropagation(); changeStatus({{ i.id }}, 'submitted')">
+                                                onclick="event.stopPropagation(); confirmChangeStatus({{ i.id }}, 'submitted', 'Möchtest du das Projekt verbindlich einreichen?')">
                                             <i class="bi bi-send-fill me-1"></i> Einreichen
                                         </button>
                                     {% else %}
-                                        {# Sonst nur Badge #}
                                         <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
                                     {% endif %}
                                 {% endif %}
@@ -84,9 +80,8 @@
 
                             <td class="fw-bold text-primary">
                                 {{ i.csc_name }}
-
                                 {% if not last_visit or (i.updated_at and i.updated_at > last_visit) %}
-                                    <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em; vertical-align: middle;">NEU</span>
+                                    <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEU</span>
                                 {% endif %}
                             </td>
                             <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
@@ -99,11 +94,7 @@
                                     <div style="line-height: 1.1;">
                                         <div class="small fw-bold">{{ i.user.username }}</div>
                                         <small class="text-muted" style="font-size: 0.7em;">
-                                            {% if i.user.is_admin or i.user.has_permission('immo_files_access') %}
-                                                Bereichsleitung
-                                            {% else %}
-                                                Mitarbeiter
-                                            {% endif %}
+                                            {{ 'Bereichsleitung' if (i.user.is_admin or i.user.has_permission('immo_files_access')) else 'Mitarbeiter' }}
                                         </small>
                                     </div>
                                 </div>
@@ -117,8 +108,7 @@
                     {% else %}
                         <tr id="noResultsRow">
                             <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Keine Besichtigungen gefunden.
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>Keine Besichtigungen gefunden.
                             </td>
                         </tr>
                     {% endfor %}
@@ -127,6 +117,77 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="newProjectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Neue Besichtigung anlegen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Projekt Name (CSC) <span class="text-danger">*</span></label>
+                        <input type="text" id="newCscName" class="form-control" placeholder="z.B. CSC Hanfglück">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Immobilien Typ <span class="text-danger">*</span></label>
+                        <select id="newImmoType" class="form-select">
+                            <option value="einzel">Einzelanbau</option>
+                            <option value="cluster">Anbaucluster</option>
+                            <option value="ausgabe">Ausgabestelle</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" onclick="createQuickProject()">Anlegen & Starten</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmChangeStatus(id, status, msg) {
+            if (confirm(msg)) changeStatus(id, status);
+        }
+
+        async function createQuickProject() {
+            const name = document.getElementById('newCscName').value;
+            const type = document.getElementById('newImmoType').value;
+
+            if(!name.trim()) {
+                alert("Bitte Projektname eingeben!");
+                return;
+            }
+
+            const btn = document.querySelector('#newProjectModal .btn-primary');
+            const original = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Lege an...";
+
+            try {
+                const res = await fetch('/projects/create_quick', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ csc_name: name, immo_type: type })
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    window.location.href = '/projects/' + data.id + '/details';
+                } else {
+                    alert("Fehler: " + data.error);
+                    btn.disabled = false;
+                    btn.innerText = original;
+                }
+            } catch(e) {
+                alert("Netzwerkfehler");
+                btn.disabled = false;
+                btn.innerText = original;
+            }
+        }
+    </script>
 
     <script src="{{ url_for('static', filename='js/immo_overview.js') }}"></script>
 {% endblock %}

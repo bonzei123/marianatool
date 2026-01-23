@@ -1,3 +1,76 @@
+// --- HELPER FUNCTIONS ---
+
+function getColClass(q) {
+    const map = { 'full': 12, 'half': 6, 'third': 4 };
+    let desk = map[q.width] || 6;
+    let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
+    let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
+    let classes = `col-${mob}`;
+    if (tab !== mob) classes += ` col-md-${tab}`;
+    if (desk !== tab) classes += ` col-lg-${desk}`;
+    return classes;
+}
+
+function getFileType(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'img';
+    if (['mp4', 'mov', 'avi', 'mkv'].includes(ext)) return 'vid';
+    if (ext === 'pdf') return 'pdf';
+    return 'other';
+}
+
+// Injiziert das Modal in den Body, falls es nicht existiert (für Preview)
+function ensureModalExists() {
+    if (document.getElementById('filePreviewModal')) return;
+
+    const modalHtml = `
+    <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-hidden="true" style="z-index: 10000;">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="height: 90vh;">
+                <div class="modal-header">
+                    <h5 class="modal-title text-truncate" id="previewTitle" style="max-width: 80%;">Vorschau</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 bg-dark d-flex align-items-center justify-content-center position-relative">
+                    <div id="previewContent" class="w-100 h-100 d-flex align-items-center justify-content-center"></div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function openLocalPreview(url, name, type) {
+    ensureModalExists();
+    const modalEl = document.getElementById('filePreviewModal');
+    const titleEl = document.getElementById('previewTitle');
+    const contentEl = document.getElementById('previewContent');
+
+    titleEl.textContent = name;
+    contentEl.innerHTML = '';
+
+    if(type === 'img') {
+        contentEl.innerHTML = `<img src="${url}" class="img-fluid" style="max-height: 85vh; object-fit: contain;">`;
+    } else if (type === 'pdf') {
+        contentEl.innerHTML = `<object data="${url}" type="application/pdf" width="100%" height="100%" style="min-height: 80vh;">
+                                 <p class="text-white">Vorschau nicht möglich.</p>
+                               </object>`;
+    } else if (type === 'vid') {
+        contentEl.innerHTML = `<video controls style="max-width: 100%; max-height: 85vh;"><source src="${url}">Browser unterstützt Video nicht.</video>`;
+    } else {
+        contentEl.innerHTML = `<div class="text-center text-white"><i class="bi bi-file-earmark fs-1 mb-3"></i><br>Keine Vorschau verfügbar.</div>`;
+    }
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+
+// --- UPLOADER LOGIK ---
+
 const uploader = {
     queue: [],
     isUploading: false,
@@ -10,14 +83,16 @@ const uploader = {
         this.isUploading = false;
         this.folderName = "";
 
+        // 1. PDF hinzufügen (falls generiert)
         if (pdfBlob && pdfName) {
             this.addItemToQueue(new File([pdfBlob], pdfName, {type:"application/pdf"}));
         }
 
-        document.querySelectorAll('input[type="file"]').forEach(i => {
-            if(i.files.length) {
-                Array.from(i.files).forEach(f => this.addItemToQueue(f));
-            }
+        // 2. NEU: Dateien aus dem app.pendingFiles Speicher holen (statt aus inputs)
+        Object.values(app.pendingFiles).forEach(fileList => {
+            fileList.forEach(file => {
+                this.addItemToQueue(file);
+            });
         });
 
         document.getElementById('uploadModal').style.display='block';
@@ -238,20 +313,12 @@ const uploader = {
     }
 };
 
-function getColClass(q) {
-    // ... (Code exakt wie oben) ...
-    const map = { 'full': 12, 'half': 6, 'third': 4 };
-    let desk = map[q.width] || 6;
-    let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
-    let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
-    let classes = `col-${mob}`;
-    if (tab !== mob) classes += ` col-md-${tab}`;
-    if (desk !== tab) classes += ` col-lg-${desk}`;
-    return classes;
-}
+
+// --- APP LOGIK ---
 
 const app = {
     data: {}, config: [],
+    pendingFiles: {}, // NEU: Zwischenspeicher für Dateien
 
     init: async function() {
         // Daten holen
@@ -264,21 +331,32 @@ const app = {
             document.getElementById('global_csc_name').value = this.data.csc_name||'';
             if(this.data.immo_typ) {
                 document.getElementById('immoSelector').value = this.data.immo_typ;
+                // Files säubern beim Neuladen, da wir die Binary-Daten nicht im LocalStorage haben
+                this.cleanFileFieldData();
                 this.render();
             }
         }
 
         // Live-Saving bei Eingabe
         document.addEventListener('input', e => {
-            if(e.target.id != 'global_csc_name') {
+            if(e.target.id != 'global_csc_name' && e.target.type !== 'file') {
                 this.data[e.target.name] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-
-                // NEU: Wenn ein Feld ausgefüllt wird, Fehler-Klasse entfernen
                 if(e.target.classList.contains('is-invalid') && e.target.value.trim() !== '') {
                     e.target.classList.remove('is-invalid');
                 }
             }
             this.save();
+        });
+    },
+
+    // Entfernt Dateinamen aus app.data bei Reload (da echte Dateien weg sind)
+    cleanFileFieldData: function() {
+        this.config.forEach(sec => {
+            sec.content.forEach(field => {
+                if(field.type === 'file') {
+                    this.data[field.id] = "";
+                }
+            });
         });
     },
 
@@ -295,18 +373,48 @@ const app = {
         }
     },
 
+    // Handelt Datei-Auswahl: Umbenennen & Speichern
+    handleFileUpload: function(input, fieldId, fieldLabel) {
+        if(!input.files || !input.files[0]) return;
+        const file = input.files[0];
+
+        // 1. Name generieren
+        const cleanLabel = fieldLabel.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g, '_');
+        const ext = file.name.split('.').pop();
+
+        if(!this.pendingFiles[fieldId]) this.pendingFiles[fieldId] = [];
+        const count = this.pendingFiles[fieldId].length + 1;
+        const newName = `${cleanLabel}_${count}.${ext}`;
+
+        // 2. Neues File Objekt erstellen (mit neuem Namen)
+        const renamedFile = new File([file], newName, {type: file.type});
+
+        // 3. Speichern
+        this.pendingFiles[fieldId].push(renamedFile);
+
+        // 4. app.data aktualisieren (CSV String für DB)
+        const names = this.pendingFiles[fieldId].map(f => f.name).join(',');
+        this.data[fieldId] = names;
+
+        // 5. UI Update & Reset
+        this.render();
+        this.save();
+    },
+
     render: function() {
         const type = document.getElementById('immoSelector').value;
         const container = document.getElementById('form-generator-output');
+        // Merken der Scroll-Position, da render() alles neu baut
+        // const scrollPos = window.scrollY;
+
         container.innerHTML = '';
 
         this.config.forEach(sec => {
             const details = document.createElement('details');
             if(sec.is_expanded !== false) details.open = true;
 
-            // UPDATE: Nutze Bootstrap Grid Container (row g-3)
             const content = document.createElement('div');
-            content.className = "p-3 row g-3"; // <--- WICHTIG: row g-3
+            content.className = "p-3 row g-3";
 
             let hasFields = false;
 
@@ -315,11 +423,8 @@ const app = {
                 hasFields = true;
 
                 const wrap = document.createElement('div');
-
-                // UPDATE: Hole die berechneten Klassen
                 const colClasses = getColClass(field);
 
-                // Sonderfall: Header/Info/Alert sind immer volle Breite
                 if(['header', 'info', 'alert'].includes(field.type)) {
                     wrap.className = 'col-12';
                 } else {
@@ -329,7 +434,6 @@ const app = {
                 const val = this.data[field.id] || '';
                 const reqMark = field.is_required ? ' <span class="text-danger fw-bold">*</span>' : '';
 
-                // HINWEIS: Ich habe hier auch gleich 'form-control' Klassen für Bootstrap Styling ergänzt
                 if(field.type === 'header') {
                     wrap.innerHTML = `<h4 style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;">${field.label}</h4>`;
 
@@ -337,7 +441,7 @@ const app = {
                     wrap.className += ' alert ' + (field.type=='alert'?'alert-danger':'alert-info');
                     wrap.innerText = field.label;
 
-                } else if(field.type === 'text' || field.type === 'number' || field.type === 'date') {
+                } else if(['text', 'number', 'date'].includes(field.type)) {
                     wrap.innerHTML = `<label class="form-label fw-bold">${field.label} ${field.tooltip?`(${field.tooltip})`:''}${reqMark}</label>
                                       <input type="${field.type}" name="${field.id}" value="${val}" class="form-control">`;
 
@@ -358,9 +462,46 @@ const app = {
                     wrap.innerHTML = `<label class="form-label fw-bold">${field.label}${reqMark}</label>
                                       <textarea name="${field.id}" rows="4" class="form-control">${val}</textarea>`;
 
-                } else if(field.type === 'file') {
-                    wrap.innerHTML = `<label class="form-label fw-bold">${field.label}</label><input type="file" name="${field.id}" multiple class="form-control">`;
                 }
+                // --- NEUE DATEI LOGIK ---
+                else if(field.type === 'file') {
+                    const files = this.pendingFiles[field.id] || [];
+
+                    let chips = '';
+                    if(files.length > 0) {
+                         chips = '<div class="mt-2 d-flex flex-wrap gap-2">';
+                         files.forEach(f => {
+                             // URL für Vorschau erstellen
+                             const url = URL.createObjectURL(f);
+                             const fType = getFileType(f.name);
+
+                             chips += `
+                                <div class="badge bg-white text-primary border border-primary p-2 d-flex align-items-center cursor-pointer hover-shadow"
+                                     onclick="openLocalPreview('${url}', '${f.name}', '${fType}')">
+                                    <i class="bi bi-file-earmark-text me-2"></i> ${f.name}
+                                    <i class="bi bi-eye ms-2 small text-muted"></i>
+                                </div>`;
+                         });
+                         chips += '</div>';
+                    }
+
+                    wrap.innerHTML = `
+                        <label class="form-label fw-bold mb-1">${field.label}</label>
+                        <div class="d-flex align-items-center gap-2">
+                             <button class="btn btn-sm btn-outline-secondary" type="button" onclick="document.getElementById('file-${field.id}').click()">
+                                <i class="bi bi-cloud-plus"></i> Hinzufügen
+                            </button>
+                            ${files.length === 0 ? '<span class="text-muted small fst-italic ms-2">Keine Datei</span>' : ''}
+                        </div>
+                        ${chips}
+                        
+                        <input type="hidden" name="${field.id}" value="${val}">
+                        
+                        <input type="file" id="file-${field.id}" style="display:none;" 
+                               onchange="app.handleFileUpload(this, '${field.id}', '${field.label.replace(/'/g, "\\'")}')">
+                    `;
+                }
+
                 content.appendChild(wrap);
             });
 
@@ -370,16 +511,16 @@ const app = {
                 container.appendChild(details);
             }
         });
+
+        // window.scrollTo(0, scrollPos); // Optional: Scroll Position halten
     },
 
-    // NEU: Validierungsfunktion
     validate: function() {
         const cscName = document.getElementById('global_csc_name');
         const currentType = document.getElementById('immoSelector').value;
         let isValid = true;
         let firstErrorElement = null;
 
-        // 1. Basis-Check
         if (!cscName.value.trim()) {
             cscName.classList.add('is-invalid');
             if(!firstErrorElement) firstErrorElement = cscName;
@@ -395,33 +536,24 @@ const app = {
             document.getElementById('immoSelector').classList.remove('is-invalid');
         }
 
-        // 2. Felder Check
         this.config.forEach(sec => {
             sec.content.forEach(field => {
-                // Nur Felder prüfen, die sichtbar sind (Typ-Filter) UND Required sind
                 if(field.types && !field.types.includes(currentType)) return;
                 if(!field.is_required) return;
 
                 const el = document.querySelector(`[name="${field.id}"]`);
                 if(!el) return;
 
-                // Wert prüfen
                 let isFieldValid = true;
-
                 if (field.type === 'checkbox') {
-                    // Bei Checkbox (z.B. "Ich stimme zu") muss sie checked sein
                     if (!el.checked) isFieldValid = false;
                 } else {
-                    // Text, Select, Number etc.
                     if (!el.value || el.value.trim() === "") isFieldValid = false;
                 }
 
                 if (!isFieldValid) {
-                    el.classList.add('is-invalid'); // Nutzt Bootstrap Klasse (roter Rahmen)
-
-                    // Bei Checkboxen den Container färben (optional)
+                    el.classList.add('is-invalid');
                     if(field.type === 'checkbox') el.parentElement.style.border = "1px solid red";
-
                     isValid = false;
                     if(!firstErrorElement) firstErrorElement = el;
                 } else {
@@ -432,10 +564,8 @@ const app = {
         });
 
         if (!isValid && firstErrorElement) {
-            // Zum ersten Fehler scrollen
             firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             alert("⚠️ Bitte füllen Sie alle Pflichtfelder aus (rot markiert)!");
-            // Details öffnen, falls Fehler in zugeklapptem Bereich
             const parentDetails = firstErrorElement.closest('details');
             if(parentDetails) parentDetails.open = true;
         }
@@ -444,11 +574,11 @@ const app = {
     },
 
     submitData: async function() {
-        // Erst Validieren
         if (!this.validate()) return;
 
-        // Dann Upload
+        // Uploader starten (nimmt jetzt Files aus app.pendingFiles)
         uploader.initModal(null, null);
     }
 };
+
 app.init();

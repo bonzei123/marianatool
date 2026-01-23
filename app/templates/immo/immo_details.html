@@ -11,6 +11,11 @@
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
         }
         @media(max-width: 768px) { .w-half { width: 100%; } }
+
+        /* Dashed Border für Upload Card */
+        .border-dashed { border-style: dashed !important; }
+        .hover-lift:hover { transform: translateY(-3px); transition: transform 0.2s; }
+        .cursor-pointer { cursor: pointer; }
     </style>
 
     <div class="container-fluid py-4">
@@ -30,22 +35,31 @@
                     <i class="bi bi-arrow-left"></i> Zurück
                 </a>
 
+                {# --- STATUS BUTTONS --- #}
                 {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
+                    {# ADMIN / LEITUNG #}
                     <div class="dropdown">
                         <button class="btn btn-{{ inspection.status_color }} dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
                             {{ inspection.status_label }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li><h6 class="dropdown-header">Status ändern</h6></li>
-                            <li><button class="dropdown-item" onclick="setStatus('submitted')">🔵 Eingereicht</button></li>
-                            <li><button class="dropdown-item" onclick="setStatus('review')">🟡 In Prüfung</button></li>
-                            <li><button class="dropdown-item" onclick="setStatus('done')">🟢 Genehmigt</button></li>
+                            <li><button class="dropdown-item" onclick="confirmStatus('submitted')">🔵 Eingereicht</button></li>
+                            <li><button class="dropdown-item" onclick="confirmStatus('review')">🟡 In Prüfung</button></li>
+                            <li><button class="dropdown-item" onclick="confirmStatus('done')">🟢 Genehmigt</button></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><button class="dropdown-item text-danger" onclick="setStatus('rejected')">🔴 Ablehnen</button></li>
+                            <li><button class="dropdown-item text-danger" onclick="confirmStatus('rejected')">🔴 Ablehnen</button></li>
                         </ul>
                     </div>
                 {% else %}
-                    <span class="badge bg-{{ inspection.status_color }} fs-6 px-3 py-2">{{ inspection.status_label }}</span>
+                    {# MITARBEITER #}
+                    {% if inspection.status == 'draft' and inspection.user_id == current_user.id %}
+                        <button class="btn btn-outline-primary fw-bold" onclick="confirmStatus('submitted')">
+                            <i class="bi bi-send-fill me-1"></i> Einreichen
+                        </button>
+                    {% else %}
+                        <span class="badge bg-{{ inspection.status_color }} fs-6 px-3 py-2">{{ inspection.status_label }}</span>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -79,7 +93,10 @@
                                     <div class="col-sm-7">
                                         <div class="d-flex align-items-center">
                                             <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:24px; height:24px; font-size:0.7rem;">{{ inspection.user.username[0]|upper }}</div>
-                                            {{ inspection.user.username }}
+                                            <div>
+                                                {{ inspection.user.username }}
+                                                <span class="text-muted small ms-2">({{ 'Admin/Leitung' if inspection.user.is_admin or inspection.user.has_permission('immo_files_access') else 'Mitarbeiter' }})</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -139,11 +156,31 @@
 
             <div class="tab-pane fade" id="files" role="tabpanel">
                 <div class="row g-3">
+                    {# --- NEU: UPLOAD KACHEL --- #}
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <div class="card h-100 shadow-sm border-2 border-dashed bg-white text-center hover-lift"
+                             style="cursor: pointer; min-height: 120px;"
+                             onclick="triggerNeutralUpload()">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center text-primary">
+                                <i class="bi bi-cloud-arrow-up fs-1 mb-2"></i>
+                                <div class="fw-bold small">Datei hochladen</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">Allgemein</div>
+                            </div>
+                        </div>
+                        <input type="file" id="neutralFileInput" style="display: none;">
+                    </div>
+
+                    {# --- DATEIEN LISTE --- #}
                     {% for file in files %}
                         {% set file_url = url_for('projects.download_file', project=file.folder, filename=file.name) %}
+                        {# Bestimmen des Typs für JS Helper #}
+                        {% set f_type = 'img' if file.is_img else 'vid' if file.is_vid else 'pdf' if file.name.lower().endswith('.pdf') else 'other' %}
+
                         <div class="col-6 col-md-4 col-lg-2">
-                            <div class="card h-100 shadow-sm border-0 bg-light folder-card">
-                                <a href="{{ file_url }}" target="_blank" class="card-body text-center d-flex flex-column align-items-center justify-content-center text-decoration-none text-dark p-3">
+                            <div class="card h-100 shadow-sm border-0 bg-light folder-card hover-lift cursor-pointer"
+                                 onclick="openFilePreview('{{ file_url }}', '{{ file.name }}', '{{ f_type }}')">
+
+                                <div class="card-body text-center d-flex flex-column align-items-center justify-content-center p-3">
                                     {% if file.is_img %}
                                         <img src="{{ file_url }}" class="mb-2 rounded shadow-sm" style="max-height: 80px; max-width: 100%; object-fit: cover;">
                                     {% elif file.is_vid %}<i class="bi bi-camera-video-fill fs-1 text-secondary mb-2"></i>
@@ -151,12 +188,33 @@
                                     {% else %}<i class="bi bi-file-earmark-fill fs-1 text-secondary mb-2"></i>{% endif %}
                                     <div class="small text-truncate w-100 fw-bold">{{ file.name }}</div>
                                     <div class="text-muted" style="font-size: 0.7rem;">{{ file.size }} MB</div>
-                                </a>
+                                </div>
                             </div>
                         </div>
                     {% else %}
-                        <div class="col-12 text-center text-muted py-5"><i class="bi bi-folder-x fs-1 d-block mb-3 opacity-50"></i>Keine Dateien gefunden.</div>
+                        {# Hinweis nur anzeigen, wenn auch keine Upload-Kachel da wäre (aber die ist ja jetzt da) #}
                     {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="height: 90vh;">
+                <div class="modal-header">
+                    <h5 class="modal-title text-truncate" id="previewTitle" style="max-width: 80%;">Dateivorschau</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 bg-dark d-flex align-items-center justify-content-center position-relative">
+                    <div id="previewContent" class="w-100 h-100 d-flex align-items-center justify-content-center">
+                        </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <a href="#" id="previewDownloadBtn" class="btn btn-primary" download target="_blank">
+                        <i class="bi bi-download"></i> Herunterladen / Öffnen
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
                 </div>
             </div>
         </div>
@@ -166,6 +224,31 @@
         const savedResponses = {{ inspection.data_json | safe }};
         const inspectionId = {{ inspection.id }};
         const formConfigUrl = "{{ url_for('projects.get_form_config') }}";
+        const uploadFolder = "{{ folder_name }}";
+
+        // --- Status ändern Wrapper ---
+        function confirmStatus(newStatus) {
+            if (!confirm("Möchtest du den Status wirklich auf '" + newStatus + "' ändern?")) return;
+            if(typeof setStatus === 'function') setStatus(newStatus);
+        }
+
+        // --- Neutraler Upload Trigger ---
+        function triggerNeutralUpload() {
+            const input = document.getElementById('neutralFileInput');
+            input.value = null; // Reset
+            input.click();
+        }
+
+        document.getElementById('neutralFileInput').addEventListener('change', function(e) {
+            if(this.files && this.files[0]) {
+                if(typeof uploadFileGeneric === 'function') {
+                    uploadFileGeneric(this.files[0]);
+                } else {
+                    alert("Upload-Funktion noch nicht geladen.");
+                }
+            }
+        });
+
     </script>
     <script src="{{ url_for('static', filename='js/immo_details.js') }}"></script>
 {% endblock %}

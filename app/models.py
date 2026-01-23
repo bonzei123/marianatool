@@ -144,8 +144,8 @@ class Inspection(db.Model):
     csc_name = db.Column(db.String(100), nullable=False)  # Name des Anbauclubs/Projekts
     inspection_type = db.Column(db.String(50))  # einzel, cluster, ausgabe
 
-    # Status (Ampel)
-    status = db.Column(db.String(20), default=STATUS_SUBMITTED)
+    # Status (Ampel) - HIER GEÄNDERT: Default ist jetzt Draft
+    status = db.Column(db.String(20), default=STATUS_DRAFT)
 
     # Verknüpfung zum Ersteller
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
