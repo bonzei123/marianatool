@@ -165,22 +165,22 @@ def fetch_mariana_sheet():
         # Beispiel: Wert steht in C5 -> Zeile 4, Spalte 2
 
         SHEET_COORDS = {
-            'Baden-Württemberg': (5, 75),  # <--- BITTE ÄNDERN
-            'Bayern': (58, 5),  # <--- BITTE ÄNDERN
-            'Berlin': (8, 95),  # <--- BITTE ÄNDERN
-            'Brandenburg': (5, 95),  # <--- BITTE ÄNDERN
-            'Bremen': (5, 65),  # <--- BITTE ÄNDERN
-            'Hamburg': (5, 88),  # <--- BITTE ÄNDERN
-            'Hessen': (5, 69),  # <--- BITTE ÄNDERN
-            'Mecklenburg-Vorpommern': (5, 80),  # <--- BITTE ÄNDERN
+            'Baden-Württemberg': (72, 4),  # <--- BITTE ÄNDERN
+            'Bayern': (57, 4),  # <--- BITTE ÄNDERN
+            'Berlin': (92, 7),  # <--- BITTE ÄNDERN
+            'Brandenburg': (92, 4),  # <--- BITTE ÄNDERN
+            'Bremen': (62, 4),  # <--- BITTE ÄNDERN
+            'Hamburg': (85, 4),  # <--- BITTE ÄNDERN
+            'Hessen': (66, 4),  # <--- BITTE ÄNDERN
+            'Mecklenburg-Vorpommern': (77, 4),  # <--- BITTE ÄNDERN
             'Niedersachsen': (62, 7),  # <--- BITTE ÄNDERN
-            'Nordrhein-Westfalen': (69, 8),  # <--- BITTE ÄNDERN
-            'Rheinland-Pfalz': (8, 80),  # <--- BITTE ÄNDERN
-            'Saarland': (8, 88),  # <--- BITTE ÄNDERN
-            'Sachsen': (8, 101),  # <--- BITTE ÄNDERN
-            'Sachsen-Anhalt': (5, 101),  # <--- BITTE ÄNDERN
-            'Schleswig-Holstein': (8, 75),  # <--- BITTE ÄNDERN
-            'Thüringen': (85, 8),  # <--- BITTE ÄNDERN
+            'Nordrhein-Westfalen': (66, 7),  # <--- BITTE ÄNDERN
+            'Rheinland-Pfalz': (77, 7),  # <--- BITTE ÄNDERN
+            'Saarland': (85, 7),  # <--- BITTE ÄNDERN
+            'Sachsen': (98, 7),  # <--- BITTE ÄNDERN
+            'Sachsen-Anhalt': (98, 4),  # <--- BITTE ÄNDERN
+            'Schleswig-Holstein': (72, 7),  # <--- BITTE ÄNDERN
+            'Thüringen': (57, 7),  # <--- BITTE ÄNDERN
         }
 
         data_map = {}
@@ -214,3 +214,91 @@ def fetch_mariana_sheet():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route('/debug_csv', methods=['GET'])
+@login_required
+@permission_required('stats_access')
+def debug_csv():
+    """
+    Zeigt die 'Matrix' der CSV-Datei an.
+    Jede Zelle zeigt ihren Inhalt UND ihre Koordinaten [Zeile, Spalte].
+    """
+    import requests, csv, io
+
+    try:
+        # CSV laden
+        response = requests.get(MARIANA_SHEET_URL)
+        response.raise_for_status()
+
+        # Grid erstellen
+        content = response.content.decode('utf-8')
+        grid = list(csv.reader(io.StringIO(content), delimiter=','))
+
+        # HTML bauen
+        html = """
+        <style>
+            body { font-family: sans-serif; padding: 20px; background: #f8f9fa; }
+            .matrix-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+            .matrix-table td { 
+                border: 1px solid #dee2e6; 
+                padding: 8px; 
+                vertical-align: top;
+                background: white;
+                min-width: 100px;
+            }
+            .coord { 
+                display: block; 
+                font-size: 10px; 
+                color: #adb5bd; 
+                margin-bottom: 4px; 
+                font-family: monospace;
+            }
+            .val { font-weight: bold; color: #212529; }
+            .highlight { background-color: #d1e7dd !important; border: 2px solid #198754 !important; }
+            .search-box { 
+                position: fixed; top: 10px; right: 10px; 
+                background: white; padding: 15px; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+                border-radius: 8px; z-index: 1000; 
+                border-left: 5px solid #0d6efd;
+            }
+        </style>
+
+        <div class="search-box">
+            <h4 style="margin-top:0">🔍 Koordinaten-Finder</h4>
+            <p style="margin-bottom:5px; font-size: 0.9rem;">Drücke <b>STRG + F</b> und suche dein Bundesland.</p>
+            <p style="margin-bottom:0; font-size: 0.9rem;">Die Zahl daneben hat die Koordinaten, die du brauchst.</p>
+        </div>
+
+        <h2 style="margin-top: 50px;">CSV Matrix Ansicht</h2>
+        <table class="matrix-table">
+        """
+
+        # Durch das Grid iterieren
+        for r_idx, row in enumerate(grid):
+            html += "<tr>"
+            # Zeilen-Index am Anfang
+            html += f"<td style='background:#e9ecef; font-weight:bold;'>Zeile {r_idx}</td>"
+
+            for c_idx, col in enumerate(row):
+                val = col.strip()
+
+                # Leere Zellen leicht ausgrauen, volle hervorheben
+                bg_style = ""
+                if val:
+                    # Wenn es nach einer Zahl aussieht, grünlich markieren
+                    if val.replace('.', '').isdigit():
+                        bg_style = "class='highlight'"
+
+                html += f"<td {bg_style}>"
+                html += f"<span class='coord'>[{r_idx}, {c_idx}]</span>"  # DIE KOORDINATE
+                html += f"<span class='val'>{val}</span>"
+                html += "</td>"
+            html += "</tr>"
+
+        html += "</table>"
+        return html
+
+    except Exception as e:
+        return f"<h1>Fehler beim Laden:</h1><pre>{e}</pre>"
