@@ -4,7 +4,8 @@ import csv
 import io
 from flask import make_response
 from datetime import datetime
-from flask import render_template, request, jsonify, current_app, url_for, send_from_directory, Blueprint, flash, redirect
+from flask import render_template, request, jsonify, current_app, url_for, send_from_directory, Blueprint, flash, \
+    redirect
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.extensions import db
@@ -50,6 +51,7 @@ def overview():
     return render_template('immo/immo_overview.html',
                            inspections=inspections,
                            last_visit=last_visit)
+
 
 # --- EHEMALS ADMIN FILES ROUTEN ---
 
@@ -275,14 +277,25 @@ def generate_and_download_pdf(inspection_id):
 @login_required
 def status_update():
     """Status-Update (Ampel). Ehemals Admin, jetzt Workflow."""
-    # Check: Admin oder Permission 'immo_files_access' (aka Manager)
-    if not (current_user.is_admin or current_user.has_permission('immo_files_access')):
-        return jsonify({'success': False, 'error': 'Keine Berechtigung'}), 403
-
     data = request.json
     inspection = db.session.get(Inspection, data.get('id'))
+
     if not inspection:
         return jsonify({'success': False, 'error': 'Eintrag fehlt'}), 404
+
+    new_status = data.get('status')
+
+    # --- BERECHTIGUNGSPRÜFUNG ---
+    # 1. Manager/Admins dürfen alles (Files Access = Leitung)
+    is_manager = current_user.is_admin or current_user.has_permission('immo_files_access')
+
+    # 2. Owner darf NUR von Draft -> Submitted wechseln
+    is_owner = inspection.user_id == current_user.id
+    allow_submit = (
+                is_owner and inspection.status == Inspection.STATUS_DRAFT and new_status == Inspection.STATUS_SUBMITTED)
+
+    if not (is_manager or allow_submit):
+        return jsonify({'success': False, 'error': 'Keine Berechtigung für diesen Statuswechsel'}), 403
 
     # Validierung der Status-Strings aus dem Model
     valid_statuses = [
@@ -291,8 +304,20 @@ def status_update():
         Inspection.STATUS_REJECTED
     ]
 
-    if data.get('status') in valid_statuses:
-        inspection.status = data.get('status')
+    if new_status in valid_statuses:
+        old_status = inspection.status
+        inspection.status = new_status
+
+        # Best Practice: Statusänderung loggen
+        if old_status != new_status:
+            log = InspectionLog(
+                inspection_id=inspection.id,
+                user_id=current_user.id,
+                action='status_change',
+                details=f"Status geändert: {old_status} -> {new_status}"
+            )
+            db.session.add(log)
+
         db.session.commit()
         return jsonify({'success': True, 'new_label': inspection.status_label, 'new_color': inspection.status_color})
 

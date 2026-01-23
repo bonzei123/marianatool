@@ -50,13 +50,15 @@
 
                             <td>
                                 {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
-                                    <div class="dropdown" onclick="event.stopPropagation()"> <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
-                                                                                                     type="button"
-                                                                                                     id="statusDropdown{{ i.id }}"
-                                                                                                     data-bs-toggle="dropdown"
-                                                                                                     aria-expanded="false">
-                                        {{ i.status_label }}
-                                    </button>
+                                    {# --- ADMIN / LEITUNG ANSICHT (Dropdown) --- #}
+                                    <div class="dropdown" onclick="event.stopPropagation()">
+                                        <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
+                                                type="button"
+                                                id="statusDropdown{{ i.id }}"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            {{ i.status_label }}
+                                        </button>
                                         <ul class="dropdown-menu" aria-labelledby="statusDropdown{{ i.id }}">
                                             <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'submitted')">🔵 Eingereicht</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeStatus({{ i.id }}, 'review')">🟡 In Prüfung</a></li>
@@ -66,7 +68,17 @@
                                         </ul>
                                     </div>
                                 {% else %}
-                                    <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
+                                    {# --- MITARBEITER ANSICHT --- #}
+                                    {# Wenn Entwurf UND eigener User -> Einreichen Button #}
+                                    {% if i.status == 'draft' and i.user_id == current_user.id %}
+                                        <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                                                onclick="event.stopPropagation(); changeStatus({{ i.id }}, 'submitted')">
+                                            <i class="bi bi-send-fill me-1"></i> Einreichen
+                                        </button>
+                                    {% else %}
+                                        {# Sonst nur Badge #}
+                                        <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
 
@@ -84,7 +96,16 @@
                                     <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">
                                         {{ i.user.username[0]|upper }}
                                     </div>
-                                    <span class="small">{{ i.user.username }}</span>
+                                    <div style="line-height: 1.1;">
+                                        <div class="small fw-bold">{{ i.user.username }}</div>
+                                        <small class="text-muted" style="font-size: 0.7em;">
+                                            {% if i.user.is_admin or i.user.has_permission('immo_files_access') %}
+                                                Bereichsleitung
+                                            {% else %}
+                                                Mitarbeiter
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
                             </td>
                             <td class="text-end" onclick="event.stopPropagation()">

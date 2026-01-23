@@ -66,8 +66,6 @@ def seed():
         # ---------------------------------------------------------
         # (Titel, Description, Route, Icon, Color, Order, Required Permission Slug)
         tiles_data = [
-            ("Neue Besichtigung", "Starten Sie hier die Erfassung einer neuen Immobilie.", "projects.create_view",
-             "bi-plus-circle-dotted", "#2ecc71", 1, "immo_user"),
             (
             "Meine Übersicht", "Status und Details Ihrer laufenden Projekte prüfen.", "projects.overview", "bi-list-ul",
             "#3498db", 2, "immo_user"),
@@ -83,7 +81,7 @@ def seed():
              "bi-signpost-split", "#9b59b6", 7, "roadmap_access"),
             ("Auswertung", "Projekt-Statistiken und Excel-Export.", "projects.analytics_view",
              "bi-pie-chart-fill", "#6610f2", 8, "analytics_access"),
-            ("Markt-Daten", "Bundesweite Antrags- und Genehmigungszahlen.", "stats.index",
+            ("CSC Statistiken Bundesweit", "Bundesweite Antrags- und Genehmigungszahlen.", "stats.index",
              "bi-graph-up", "#fd7e14", 9, "stats_access"),
         ]
 

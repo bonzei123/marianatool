@@ -10,14 +10,6 @@
   ],
   "tiles": [
     {
-      "title": "Neue Besichtigung",
-      "route": "projects.create_view",
-      "icon": "bi-plus-circle-dotted",
-      "color": "#2ecc71",
-      "order": 1,
-      "permission_slug": "immo_user"
-    },
-    {
       "title": "Meine Übersicht",
       "route": "projects.overview",
       "icon": "bi-list-ul",
@@ -64,6 +56,22 @@
       "color": "#9b59b6",
       "order": 7,
       "permission_slug": "roadmap_access"
+    },
+    {
+      "title": "Auswertung",
+      "route": "projects.analytics_view",
+      "icon": "bi-pie-chart-fill",
+      "color": "#6610f2",
+      "order": 8,
+      "permission_slug": "analytics_access"
+    },
+     {
+      "title": "CSC Statistiken Bundesweit",
+      "route": "stats.index",
+      "icon": "bi-graph-up",
+      "color": "#fd7e14",
+      "order": 9,
+      "permission_slug": "stats_access"
     }
   ]
 }
