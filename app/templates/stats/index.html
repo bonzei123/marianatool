@@ -3,141 +3,233 @@
 {% block content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0">📈 Markt-Daten Deutschland</h2>
-            <p class="text-secondary mb-1 mt-2" style="max-width: 600px;">
-                Aktuelle Übersicht der deutschlandweit gestellten Lizenzanträge für Anbauvereinigungen (Cannabis Clubs).
-            </p>
-            <div class="text-muted small">
-                Quelle: anbauverband.de |
-                Stand: {% if last_update %}{{ last_update.strftime('%d.%m.%Y %H:%M') }}{% else %}Never{% endif %}
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">📈 Markt-Daten Deutschland</h2>
+                <p class="text-secondary mb-1 mt-2" style="max-width: 600px;">
+                    Aktuelle Übersicht der deutschlandweit gestellten Lizenzanträge für Anbauvereinigungen.
+                </p>
+                <div class="text-muted small">
+                    Quelle: anbauverband.de & Interne Daten |
+                    Stand: {% if last_update %}{{ last_update.strftime('%d.%m.%Y %H:%M') }}{% else %}Never{% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center">
+                {% if current_user.is_authenticated and current_user.has_permission('stats_access') %}
+                    <button class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#marianaEditModal">
+                        <i class="bi bi-pencil-square me-2"></i> Mariana Daten
+                    </button>
+
+                    <form action="{{ url_for('stats.sync_data') }}" method="POST" onsubmit="return confirm('Jetzt Daten live abrufen?');">
+                        <button type="submit" class="btn btn-primary fw-bold">
+                            <i class="bi bi-arrow-repeat me-2"></i> Synchronisieren
+                        </button>
+                    </form>
+                {% endif %}
+
+                <button onclick="saveAsImage()" class="btn btn-outline-dark fw-bold">
+                    <i class="bi bi-camera me-2"></i> Als Bild speichern
+                </button>
             </div>
         </div>
 
-        <div class="d-flex gap-2">
-            {% if current_user.is_authenticated and current_user.has_permission('stats_access') %}
-                <form action="{{ url_for('stats.sync_data') }}" method="POST" onsubmit="return confirm('Jetzt Daten live abrufen?');">
-                    <button type="submit" class="btn btn-primary fw-bold">
-                        <i class="bi bi-arrow-repeat me-2"></i> Sync
-                    </button>
-                </form>
-            {% endif %}
+        {% if not has_data %}
+            <div class="alert alert-warning text-center">Keine Daten. Bitte Sync drücken.</div>
+        {% else %}
 
-            <button onclick="saveAsImage()" class="btn btn-outline-dark fw-bold">
-                <i class="bi bi-camera me-2"></i> Als Bild speichern
-            </button>
-        </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body py-2 d-flex align-items-center bg-light justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center w-100">
+                        <label class="fw-bold me-3 text-nowrap">Region wählen:</label>
+                        <select id="stateSelector" class="form-select form-select-sm" style="max-width: 300px;" onchange="updateChart()">
+                            <option value="DE">🇩🇪 Deutschland (Gesamt)</option>
+                            <hr>
+                            {% for s in stats|sort(attribute='state_name') %}
+                                <option value="{{ s.id }}">{{ s.state_name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <span id="disp_date" class="ms-auto text-muted small fst-italic"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="captureArea" class="bg-white p-4 rounded border shadow-sm">
+                <h3 class="text-center mb-4 fw-bold" id="chartTitle">Marktübersicht</h3>
+
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-4">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="stat-box box-primary"><div class="d-flex justify-content-between"><span class="label">Gestellte Anträge</span><span class="percent badge bg-primary bg-opacity-25 text-primary">100%</span></div><div class="value text-primary" id="disp_applied">-</div></div>
+                            <div class="stat-box box-success"><div class="d-flex justify-content-between"><span class="label">Genehmigt</span><span class="percent badge bg-success bg-opacity-25 text-success" id="pct_approved">-%</span></div><div class="value text-success" id="disp_approved">-</div></div>
+                            <div class="stat-box box-warning"><div class="d-flex justify-content-between"><span class="label">Offen / In Prüfung</span><span class="percent badge bg-warning bg-opacity-25 text-dark" id="pct_open">-%</span></div><div class="value text-warning" id="disp_open">-</div></div>
+                            <div class="stat-box box-danger"><div class="d-flex justify-content-between"><span class="label">Abgelehnt</span><span class="percent badge bg-danger bg-opacity-25 text-danger" id="pct_rejected">-%</span></div><div class="value text-danger" id="disp_rejected">-</div></div>
+                            <div class="stat-box box-secondary"><div class="d-flex justify-content-between"><span class="label">Zurückgezogen</span><span class="percent badge bg-secondary bg-opacity-25 text-secondary" id="pct_withdrawn">-%</span></div><div class="value text-secondary" id="disp_withdrawn">-</div></div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="chart-wrapper">
+                            <canvas id="marketChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top text-center text-muted small">
+                    Generiert durch Vereins-Portal | Datenquelle: anbauverband.de | Datum: <span id="footer_date" class="fw-bold"></span>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
-    {% if not has_data %}
-        <div class="alert alert-warning text-center">
-            Noch keine Daten vorhanden. Bitte klicke auf "Sync".
-        </div>
-    {% else %}
+    <div class="modal fade" id="marianaEditModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <form class="modal-content" action="{{ url_for('stats.update_mariana') }}" method="POST">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Mariana Statistiken (Alle Bundesländer)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-2 bg-light border-bottom text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="importSheetData(this)">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> "Gestellt" aus Google Sheet laden
+                        </button>
+                    </div>
+                    <div class="table-responsive" style="max-height: 70vh;">
+                        <table class="table table-striped table-hover mb-0 align-middle">
+                            <thead class="bg-light sticky-top" style="z-index: 5;">
+                            <tr>
+                                <th class="ps-4">Bundesland</th>
+                                <th style="width: 15%" class="text-primary">Gestellt</th>
+                                <th style="width: 15%" class="text-success">Genehmigt</th>
+                                <th style="width: 15%" class="text-danger">Abgelehnt</th>
+                                <th style="width: 15%" class="text-secondary">Zurück</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for s in stats|sort(attribute='state_name') %}
+                                <tr>
+                                    <td class="ps-4 fw-bold">{{ s.state_name }}</td>
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-body py-2 d-flex align-items-center bg-light">
-                <label class="fw-bold me-3 text-nowrap">Region wählen:</label>
-                <select id="stateSelector" class="form-select form-select-sm" style="max-width: 300px;" onchange="updateChart()">
-                    <option value="DE">🇩🇪 Deutschland (Gesamt)</option>
-                    <hr>
-                    {% for s in stats %}
-                        <option value="{{ s.id }}">{{ s.state_name }}</option>
-                    {% endfor %}
-                </select>
-                <span id="disp_date" class="ms-auto text-muted small fst-italic"></span>
-            </div>
-        </div>
-
-        <div id="captureArea" class="bg-white p-4 rounded border shadow-sm">
-
-            <h3 class="text-center mb-4 fw-bold" id="chartTitle">Marktübersicht</h3>
-
-            <div class="row g-4 align-items-center">
-
-                <div class="col-lg-4">
-                    <div class="d-flex flex-column gap-3">
-
-                        <div class="stat-box box-primary">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="label">Gestellte Anträge</span>
-                                <span class="percent badge bg-primary bg-opacity-25 text-primary">100%</span>
-                            </div>
-                            <div class="value text-primary" id="disp_applied">-</div>
-                        </div>
-
-                        <div class="stat-box box-success">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="label">Genehmigt</span>
-                                <span class="percent badge bg-success bg-opacity-25 text-success" id="pct_approved">-%</span>
-                            </div>
-                            <div class="value text-success" id="disp_approved">-</div>
-                        </div>
-
-                        <div class="stat-box box-warning">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="label">Offen / In Prüfung</span>
-                                <span class="percent badge bg-warning bg-opacity-25 text-dark" id="pct_open">-%</span>
-                            </div>
-                            <div class="value text-warning" id="disp_open">-</div>
-                        </div>
-
-                        <div class="stat-box box-danger">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="label">Abgelehnt</span>
-                                <span class="percent badge bg-danger bg-opacity-25 text-danger" id="pct_rejected">-%</span>
-                            </div>
-                            <div class="value text-danger" id="disp_rejected">-</div>
-                        </div>
-
-                        <div class="stat-box box-secondary">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="label">Zurückgezogen</span>
-                                <span class="percent badge bg-secondary bg-opacity-25 text-secondary" id="pct_withdrawn">-%</span>
-                            </div>
-                            <div class="value text-secondary" id="disp_withdrawn">-</div>
-                        </div>
-
+                                    <td>
+                                        <input type="number" name="m_applied_{{ s.id }}" value="{{ s.mariana_applied or 0 }}" class="form-control form-control-sm border-primary" min="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="m_approved_{{ s.id }}" value="{{ s.mariana_approved or 0 }}" class="form-control form-control-sm border-success" min="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="m_rejected_{{ s.id }}" value="{{ s.mariana_rejected or 0 }}" class="form-control form-control-sm border-danger" min="0">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="m_withdrawn_{{ s.id }}" value="{{ s.mariana_withdrawn or 0 }}" class="form-control form-control-sm border-secondary" min="0">
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <div class="col-lg-8">
-                    <div class="chart-wrapper">
-                        <canvas id="marketChart"></canvas>
-                    </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success fw-bold">Alle speichern</button>
                 </div>
-            </div>
-
-            <div class="mt-4 pt-3 border-top text-center text-muted small">
-                Generiert durch Vereins-Portal | Datenquelle: anbauverband.de | Datum: <span id="footer_date" class="fw-bold"></span>
-            </div>
+            </form>
         </div>
-    {% endif %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
+        // Datenübergabe
         const rawData = [
             {% for s in stats %}
                 {
                     id: "{{ s.id }}",
                     name: "{{ s.state_name }}",
-                    applied: {{ s.applied }},
-                    approved: {{ s.approved }},
-                    rejected: {{ s.rejected }},
-                    withdrawn: {{ s.withdrawn }},
-                    open: {{ s.open_applications }},
-                    date: "{{ s.data_date }}"
+                    date: "{{ s.data_date or '' }}",
+                    applied: {{ s.applied or 0 }},
+                    approved: {{ s.approved or 0 }},
+                    rejected: {{ s.rejected or 0 }},
+                    withdrawn: {{ s.withdrawn or 0 }},
+                    open: {{ s.open_applications or 0 }},
+                    m_applied: {{ s.mariana_applied or 0 }},
+                    m_approved: {{ s.mariana_approved or 0 }},
+                    m_rejected: {{ s.mariana_rejected or 0 }},
+                    m_withdrawn: {{ s.mariana_withdrawn or 0 }},
+                    m_open: {{ s.mariana_open or 0 }}
                 },
             {% endfor %}
         ];
     </script>
     <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
-
     <script>
+        async function importSheetData(btn) {
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Lade CSV...`;
+
+            try {
+                const res = await fetch("{{ url_for('stats.fetch_mariana_sheet') }}");
+                const json = await res.json();
+
+                if (!json.success) {
+                    alert("Fehler: " + json.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const dataMap = json.data;
+                let count = 0;
+
+                // Durch die Tabelle iterieren
+                const rows = document.querySelectorAll('#marianaEditModal tbody tr');
+
+                rows.forEach(row => {
+                    // 1. Bundesland Name aus der ersten Zelle holen
+                    const stateName = row.querySelector('td:first-child').innerText.trim();
+
+                    // 2. Das Input Feld für "m_applied" finden
+                    // Der Name ist immer m_applied_{ID}, daher nutzen wir den "starts with" Selektor
+                    const inputApplied = row.querySelector('input[name^="m_applied_"]');
+
+                    if (stateName && inputApplied && dataMap.hasOwnProperty(stateName)) {
+                        // Wert aus der Python-Map holen
+                        const newVal = dataMap[stateName];
+
+                        // Wert setzen
+                        inputApplied.value = newVal;
+
+                        // Visuelles Feedback
+                        inputApplied.style.transition = "background-color 0.5s";
+                        inputApplied.style.backgroundColor = "#d1e7dd"; // Hellgrün
+                        setTimeout(() => { inputApplied.style.backgroundColor = ""; }, 1500);
+
+                        count++;
+                    }
+                });
+
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-success');
+                btn.innerHTML = `<i class="bi bi-check-lg"></i> ${count} Werte aktualisiert`;
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-primary');
+                    btn.disabled = false;
+                }, 2000);
+
+            } catch (e) {
+                console.error(e);
+                alert("Netzwerkfehler beim Laden der Daten.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
         {% if has_data %}
             document.addEventListener('DOMContentLoaded', () => { updateChart(); });
         {% endif %}

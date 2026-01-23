@@ -198,20 +198,42 @@ class InspectionLog(db.Model):
 class MarketStat(db.Model):
     """Speichert die Antragszahlen pro Bundesland."""
     id = db.Column(db.Integer, primary_key=True)
-    state_name = db.Column(db.String(50), unique=True)  # z.B. Bayern
+    state_name = db.Column(db.String(50), unique=True)
 
-    applied = db.Column(db.Integer, default=0)  # Gestellt (Spalte 2)
-    approved = db.Column(db.Integer, default=0)  # Genehmigt (Spalte 3)
-    rejected = db.Column(db.Integer, default=0)  # Abgelehnt (Spalte 4)
-    withdrawn = db.Column(db.Integer, default=0)  # Zurückgezogen (Spalte 5)
+    # Gesamtmarkt (Scraper)
+    applied = db.Column(db.Integer, default=0)
+    approved = db.Column(db.Integer, default=0)
+    rejected = db.Column(db.Integer, default=0)
+    withdrawn = db.Column(db.Integer, default=0)
 
-    data_date = db.Column(db.String(20))  # Datum aus der Tabelle (Spalte 6)
+    # NEU: Mariana Interne Zahlen (Manuell oder später autom. gepflegt)
+    mariana_applied = db.Column(db.Integer, default=0)
+    mariana_approved = db.Column(db.Integer, default=0)
+    mariana_rejected = db.Column(db.Integer, default=0)
+    mariana_withdrawn = db.Column(db.Integer, default=0)
+
+    data_date = db.Column(db.String(20))
     last_scraped = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
     def open_applications(self):
         """Berechnet: Gestellt - (Genehmigt + Abgelehnt + Zurückgezogen)"""
-        return self.applied - (self.approved + self.rejected + self.withdrawn)
+        # (x or 0) wandelt None sicher in 0 um
+        app = self.applied or 0
+        ok = self.approved or 0
+        rej = self.rejected or 0
+        wd = self.withdrawn or 0
+        return app - (ok + rej + wd)
+
+    @property
+    def mariana_open(self):
+        """Berechnet offene Mariana Anträge."""
+        # Auch hier: None sicher in 0 umwandeln
+        m_app = self.mariana_applied or 0
+        m_ok = self.mariana_approved or 0
+        m_rej = self.mariana_rejected or 0
+        m_wd = self.mariana_withdrawn or 0
+        return m_app - (m_ok + m_rej + m_wd)
 
 
 @login_manager.user_loader

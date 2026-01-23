@@ -1,10 +1,8 @@
 /**
- * stats.js
+ * stats.js - Mit doppelter Prozentanzeige im Tooltip
  */
-
 let chartInstance = null;
 
-// Helper: Wandelt "24.01.2026" in eine Zahl 20260124 um (zum Vergleichen)
 function dateToNum(dStr) {
     if(!dStr) return 0;
     const parts = dStr.split('.');
@@ -13,33 +11,32 @@ function dateToNum(dStr) {
 }
 
 function calculateTotal() {
-    // Initialisiere mit dem Datum des ersten Eintrags als Fallback
-    let t = { applied:0, approved:0, rejected:0, withdrawn:0, open:0, date: (rawData[0] ? rawData[0].date : "") };
+    let t = {
+        applied:0, approved:0, rejected:0, withdrawn:0, open:0,
+        m_applied:0, m_approved:0, m_rejected:0, m_withdrawn:0, m_open:0,
+        date: (rawData[0] ? rawData[0].date : "")
+    };
 
     if (typeof rawData === 'undefined') return t;
-
     let maxDateNum = 0;
 
     rawData.forEach(d => {
-        t.applied += d.applied;
-        t.approved += d.approved;
-        t.rejected += d.rejected;
-        t.withdrawn += d.withdrawn;
-        t.open += d.open;
+        t.applied += d.applied; t.approved += d.approved; t.rejected += d.rejected; t.withdrawn += d.withdrawn; t.open += d.open;
+        t.m_applied += d.m_applied; t.m_approved += d.m_approved; t.m_rejected += d.m_rejected; t.m_withdrawn += d.m_withdrawn; t.m_open += d.m_open;
 
-        // Prüfen ob dieses Datum neuer ist
         const currentNum = dateToNum(d.date);
         if (currentNum > maxDateNum) {
             maxDateNum = currentNum;
-            t.date = d.date; // Das String-Datum übernehmen
+            t.date = d.date;
         }
     });
     return t;
 }
 
 // Helper: Prozent berechnen
+// val = Teilwert, total = Bezugsgröße
 function calcPct(val, total) {
-    if(!total || total === 0) return '0%';
+    if(!total || total === 0) return '0.0%';
     return ((val / total) * 100).toFixed(1) + '%';
 }
 
@@ -47,6 +44,7 @@ function updateChart() {
     if (typeof rawData === 'undefined') return;
 
     const sel = document.getElementById('stateSelector').value;
+
     let d = null;
     let titleText = "";
 
@@ -60,49 +58,46 @@ function updateChart() {
 
     if (!d) return;
 
-    // 1. Titel Update
+    // --- DOM UPDATES ---
     document.getElementById('chartTitle').innerText = titleText;
-
-    // 2. Datum Update (Oben Info & Footer für Bild)
-    const dateText = d.date; // Ist jetzt entweder das Datum des Landes oder das neuste bei DE
-
-    // Oben neben Dropdown
     const dateEl = document.getElementById('disp_date');
-    if (dateEl) dateEl.innerText = (sel === 'DE') ? '' : 'Stand: ' + dateText;
-
-    // Unten im Footer (für Screenshot)
+    if (dateEl) dateEl.innerText = (sel === 'DE') ? '' : 'Stand: ' + d.date;
     const footerDateEl = document.getElementById('footer_date');
-    if (footerDateEl) footerDateEl.innerText = dateText;
+    if (footerDateEl) footerDateEl.innerText = d.date;
 
-    // 3. Absolute Zahlen setzen
+    // Boxen
     document.getElementById('disp_applied').innerText = d.applied;
     document.getElementById('disp_approved').innerText = d.approved;
     document.getElementById('disp_rejected').innerText = d.rejected;
     document.getElementById('disp_withdrawn').innerText = d.withdrawn;
     document.getElementById('disp_open').innerText = d.open;
 
-    // 4. Prozente berechnen & setzen
-    const total = d.applied;
+    const total = d.applied; // Basis: Alle gestellten Anträge
     document.getElementById('pct_approved').innerText = calcPct(d.approved, total);
     document.getElementById('pct_rejected').innerText = calcPct(d.rejected, total);
     document.getElementById('pct_withdrawn').innerText = calcPct(d.withdrawn, total);
     document.getElementById('pct_open').innerText = calcPct(d.open, total);
 
-
-    // 5. Chart Update
+    // --- CHART LOGIC ---
     const ctx = document.getElementById('marketChart');
     if (!ctx) return;
-
     if (chartInstance) chartInstance.destroy();
+
+    const chartLabels = ['Genehmigt', 'Offen / In Prüfung', 'Abgelehnt', 'Zurückgezogen'];
+    const chartData = [d.approved, d.open, d.rejected, d.withdrawn];
+    const chartColors = ['#198754', '#ffc107', '#dc3545', '#6c757d'];
+
+    const marianaData = [d.m_approved, d.m_open, d.m_rejected, d.m_withdrawn];
 
     chartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Genehmigt', 'Offen / In Prüfung', 'Abgelehnt', 'Zurückgezogen'],
+            labels: chartLabels,
             datasets: [{
-                data: [d.approved, d.open, d.rejected, d.withdrawn],
-                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'],
-                borderWidth: 0,
+                data: chartData,
+                backgroundColor: chartColors,
+                borderWidth: 1,
+                borderColor: '#ffffff',
                 hoverOffset: 10
             }]
         },
@@ -111,13 +106,47 @@ function updateChart() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom', labels: { padding: 20 } },
-                title: { display: false }
+                title: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13, family: "'Segoe UI', Roboto, sans-serif" },
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label;
+                            const value = context.raw;     // Wert des Segments (z.B. 50 Genehmigte)
+                            const idx = context.dataIndex;
+
+                            // 1. Prozentualer Anteil des Segments am GESAMTMARKT
+                            const slicePct = calcPct(value, total);
+
+                            // Mariana Aufschlüsselung
+                            const mVal = marianaData[idx] || 0;
+                            const otherVal = Math.max(0, value - mVal);
+
+                            // 2. Berechnung für Mariana
+                            const mPctTotal = calcPct(mVal, total); // % vom Gesamtmarkt
+                            const mPctSlice = calcPct(mVal, value); // % innerhalb dieses Segments (z.B. % der Genehmigungen)
+
+                            // 3. Berechnung für Andere
+                            const oPctTotal = calcPct(otherVal, total); // % vom Gesamtmarkt
+                            const oPctSlice = calcPct(otherVal, value); // % innerhalb dieses Segments
+
+                            return [
+                                `Gesamt: ${value} (${slicePct})`,
+                                `------------------`,
+                                `🟢 Mariana: ${mVal} (${mPctTotal} / ${mPctSlice})`,
+                                `⚪ Andere: ${otherVal} (${oPctTotal} / ${oPctSlice})`
+                            ];
+                        }
+                    }
+                }
             }
         }
     });
 }
 
-// --- Screenshot Funktion ---
 function saveAsImage() {
     const element = document.getElementById("captureArea");
     document.body.classList.add('taking-screenshot');
@@ -128,7 +157,7 @@ function saveAsImage() {
         logging: false
     }).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'Markt_Daten_' + new Date().toISOString().slice(0,10) + '.png';
+        link.download = 'Mariana_Markt_Daten_' + new Date().toISOString().slice(0,10) + '.png';
         link.href = canvas.toDataURL("image/png");
         link.click();
         document.body.classList.remove('taking-screenshot');
