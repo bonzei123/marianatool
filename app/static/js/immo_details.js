@@ -100,11 +100,9 @@ function collectFormData() {
 }
 
 window.handleInput = function(el) {
-    // Validierungs-Fehler entfernen, sobald User tippt
     if(el.classList.contains('is-invalid')) {
         el.classList.remove('is-invalid');
     }
-
     saveToLocalStorage(collectFormData());
     triggerAutosave();
 }
@@ -174,7 +172,7 @@ async function saveFormData(silent = false) {
     }
 }
 
-// --- VALIDIERUNG (NEU) ---
+// --- VALIDIERUNG ---
 function validateForm() {
     const currentType = (savedResponses && savedResponses.meta && savedResponses.meta.type) ? savedResponses.meta.type : 'einzel';
     let isValid = true;
@@ -182,44 +180,27 @@ function validateForm() {
 
     formConfig.forEach(sec => {
         sec.content.forEach(field => {
-            // 1. Ist Feld sichtbar für aktuellen Typ?
             if(field.types && !field.types.includes(currentType)) return;
-
-            // 2. Ist es ein Pflichtfeld?
             if(!field.is_required) return;
 
-            // 3. Element suchen
-            // Hinweis: Hidden Inputs (Files) oder Checkboxen oder Text
-            // Wir suchen nach dem Element mit data-id
             let el = document.querySelector(`.immo-input[data-id="${field.id}"]`);
-
-            // Fallback für Files: Da ist das hidden input das entscheidende
             if(!el) return;
 
             let isFieldValid = true;
-
             if (field.type === 'checkbox') {
-                 // Checkbox muss checked sein (z.B. "Ich stimme zu")
-                 // Falls Pflicht-Checkbox -> muss true sein.
                  if (!el.checked) isFieldValid = false;
             } else {
-                 // Text, Select, File (hidden input value)
                  if (!el.value || el.value.trim() === "") isFieldValid = false;
             }
 
-            // UI Update
             if (!isFieldValid) {
                 isValid = false;
-
-                // Roten Rahmen setzen (funktioniert bei hidden inputs nicht sichtbar,
-                // daher suchen wir ggf. den Wrapper oder Button bei Files)
                 if(field.type === 'file') {
                      const btn = el.parentElement.querySelector('.btn-outline-secondary');
                      if(btn) btn.classList.add('border-danger', 'text-danger');
                 } else {
                     el.classList.add('is-invalid');
                 }
-
                 if(!firstError) firstError = el;
             } else {
                 if(field.type === 'file') {
@@ -233,11 +214,8 @@ function validateForm() {
     });
 
     if (!isValid && firstError) {
-        // Zuklappen öffnen, falls Fehler versteckt
         const details = firstError.closest('details');
         if(details) details.open = true;
-
-        // Hinscrollen
         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         alert("⚠️ Bitte füllen Sie alle Pflichtfelder aus, bevor Sie einreichen!");
     }
@@ -247,13 +225,8 @@ function validateForm() {
 
 // --- STATUS UPDATE ---
 async function setStatus(newStatus) {
-    // NEU: Validierung VOR Statuswechsel auf "submitted"
     if (newStatus === 'submitted') {
-        // Erst Validieren
-        if (!validateForm()) {
-            return; // Abbruch
-        }
-        // Dann sicherstellen, dass alles gespeichert ist
+        if (!validateForm()) return;
         await saveFormData(true);
     }
 
@@ -295,7 +268,10 @@ function renderForm(container) {
         content.className = "p-3 row g-3";
 
         let hasVisibleFields = false;
-        let allFieldsFilled = true;
+
+        // LOGIK UPDATE: Auto-Collapse
+        let hasInputFields = false; // Gibt es überhaupt Felder zum Ausfüllen?
+        let isComplete = true; // Sind ALLE diese Felder ausgefüllt?
 
         sec.content.forEach(field => {
             if(field.types && !field.types.includes(currentType)) return;
@@ -307,13 +283,22 @@ function renderForm(container) {
             let val = responses[field.id];
             if (val === undefined || val === null) val = '';
 
-            if (!['header', 'info', 'alert', 'checkbox'].includes(field.type)) {
-                if (val === '') allFieldsFilled = false;
+            // --- PRÜFUNG OB SEKTION FERTIG IST ---
+            // Wir ignorieren reine Infotexte für die "Fertig"-Prüfung
+            if (!['header', 'info', 'alert'].includes(field.type)) {
+                hasInputFields = true;
+
+                // Bei Checkboxen: Auch wenn sie nicht checked sind, sind sie "da".
+                // Aber für "Auto-Collapse" wollen wir, dass der User sie explizit bestätigt hat.
+                // In einem neuen Projekt sind sie false. -> isComplete = false -> Offen lassen.
+                if (field.type === 'checkbox') {
+                    if (!val) isComplete = false;
+                } else {
+                    if (val === '') isComplete = false;
+                }
             }
 
-            // NEU: Pflichtfeld-Markierung (*)
             const reqMark = field.is_required ? ' <span class="text-danger fw-bold">*</span>' : '';
-
             const inputEvents = `oninput="handleInput(this)" onchange="handleInput(this)"`;
             const commonInputClass = "immo-input form-control";
             let fieldHtml = '';
@@ -397,14 +382,21 @@ function renderForm(container) {
         if(hasVisibleFields) {
             details.appendChild(content);
             container.appendChild(details);
-            if (allFieldsFilled) details.open = false;
-            else if (sec.is_expanded !== false) details.open = true;
+
+            // LOGIK ENTSCHEIDUNG:
+            // 1. Haben wir Input Felder UND sind alle ausgefüllt? -> Zuklappen (Auto-Collapse)
+            if (hasInputFields && isComplete) {
+                details.open = false;
+            }
+            // 2. Ansonsten (Leer, Neu, oder nur Info-Texte) -> Config respektieren
+            else if (sec.is_expanded !== false) {
+                details.open = true;
+            }
         }
     });
 }
 
-// --- UPLOAD LOGIK ---
-
+// --- UPLOAD ---
 async function uploadFileChunked(file, folderName, customName, onProgress) {
     const initRes = await fetch('/projects/upload/init', {
         method: 'POST',
@@ -465,7 +457,6 @@ window.handleFormFieldUpload = async function(input, fieldId, fieldLabel) {
         if(hiddenInput) hiddenInput.value = filesArray.join(',');
         input.value = '';
 
-        // Bei File Upload entfernen wir ggf. den Error-Status
         const btn = document.querySelector(`.immo-input[data-id="${fieldId}"]`).parentElement.querySelector('.btn-outline-secondary');
         if(btn) btn.classList.remove('border-danger', 'text-danger');
 
