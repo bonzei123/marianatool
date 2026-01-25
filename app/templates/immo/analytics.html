@@ -2,57 +2,81 @@
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
-            <h2 class="mb-0">📊 Projekt Auswertung</h2>
-            <div class="text-muted">Gesamtanzahl Projekte: <strong>{{ total_count }}</strong></div>
+            <h2 class="mb-0 fw-bold">📊 Analytics Dashboard</h2>
+            <div class="text-muted small">Echtzeit-Auswertung aller Projekte</div>
         </div>
         <div>
-            <a href="{{ url_for('projects.export_csv') }}" class="btn btn-success fw-bold">
-                <i class="bi bi-file-earmark-spreadsheet me-2"></i> CSV Exportieren
+            <a href="{{ url_for('projects.export_csv') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel-fill me-2"></i> CSV Exportieren
             </a>
-            <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary ms-2">Zurück</a>
+            <a href="{{ url_for('projects.overview') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Zurück
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-primary h-100">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase">Gesamt Projekte</div>
+                    <div class="display-5 fw-bold text-dark my-2">{{ total_count }}</div>
+                    <div class="small text-muted"><i class="bi bi-folder2-open"></i> Datenbank Einträge</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-warning h-100">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase">In Bearbeitung</div>
+                    <div class="display-5 fw-bold text-dark my-2">
+                        {{ status_counts.get('draft',0) + status_counts.get('submitted',0) + status_counts.get('review',0) }}
+                    </div>
+                    <div class="small text-muted"><i class="bi bi-hourglass-split"></i> Noch nicht abgeschlossen</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-success h-100">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase">Genehmigt</div>
+                    <div class="display-5 fw-bold text-dark my-2">{{ status_counts.get('done', 0) }}</div>
+                    <div class="small text-muted"><i class="bi bi-check-circle-fill"></i> Erfolgreich</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-4 border-danger h-100">
+                <div class="card-body">
+                    <div class="text-muted small fw-bold text-uppercase">Abgelehnt</div>
+                    <div class="display-5 fw-bold text-dark my-2">{{ status_counts.get('rejected', 0) }}</div>
+                    <div class="small text-muted"><i class="bi bi-x-circle-fill"></i> Storniert / Abgelehnt</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
+        <div class="col-lg-6">
             <div class="card shadow-sm h-100 border-0">
-                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">Projekt Status</div>
+                <div class="card-header bg-white fw-bold py-3">
+                    <i class="bi bi-pie-chart-fill text-primary me-2"></i> Status Verteilung
+                </div>
                 <div class="card-body">
-                    <canvas id="statusChart"></canvas>
+                    <canvas id="statusChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-lg-6">
             <div class="card shadow-sm h-100 border-0">
-                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">Immobilien Typen</div>
-                <div class="card-body">
-                    <canvas id="typeChart"></canvas>
+                <div class="card-header bg-white fw-bold py-3">
+                    <i class="bi bi-bar-chart-fill text-info me-2"></i> Immobilien Typen
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-12">
-            <div class="card shadow-sm border-0 bg-light">
-                <div class="card-body d-flex justify-content-around text-center py-4">
-                    <div>
-                        <h1 class="fw-bold text-success mb-0">{{ status_counts['done'] }}</h1>
-                        <span class="text-muted small text-uppercase fw-bold">Genehmigt</span>
-                    </div>
-                    <div>
-                        <h1 class="fw-bold text-primary mb-0">{{ status_counts['submitted'] }}</h1>
-                        <span class="text-muted small text-uppercase fw-bold">Eingereicht</span>
-                    </div>
-                    <div>
-                        <h1 class="fw-bold text-warning mb-0">{{ status_counts['review'] }}</h1>
-                        <span class="text-muted small text-uppercase fw-bold">In Prüfung</span>
-                    </div>
-                    <div>
-                        <h1 class="fw-bold text-danger mb-0">{{ status_counts['rejected'] }}</h1>
-                        <span class="text-muted small text-uppercase fw-bold">Abgelehnt</span>
-                    </div>
+                <div class="card-body">
+                    <canvas id="typeChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -60,53 +84,79 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Daten aus Flask in JS übergeben
-    const statusData = {{ status_counts | tojson }};
-    const typeData = {{ type_counts | tojson }};
+    document.addEventListener("DOMContentLoaded", function() {
+        // DATEN AUS JINJA IN JS ÜBERNEHMEN
+        const statusData = {
+            draft: {{ status_counts.get('draft', 0) }},
+            submitted: {{ status_counts.get('submitted', 0) }},
+            review: {{ status_counts.get('review', 0) }},
+            done: {{ status_counts.get('done', 0) }},
+            rejected: {{ status_counts.get('rejected', 0) }}
+        };
 
-    // 1. Status Chart (Doughnut)
-    new Chart(document.getElementById('statusChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Entwurf', 'Eingereicht', 'Prüfung', 'Genehmigt', 'Abgelehnt'],
-            datasets: [{
-                data: [
-                    statusData.draft, 
-                    statusData.submitted, 
-                    statusData.review, 
-                    statusData.done, 
-                    statusData.rejected
-                ],
-                backgroundColor: ['#6c757d', '#0d6efd', '#ffc107', '#198754', '#dc3545'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'right' }
-            }
-        }
-    });
+        const typeData = {
+            einzel: {{ type_counts.get('einzel', 0) }},
+            cluster: {{ type_counts.get('cluster', 0) }},
+            ausgabe: {{ type_counts.get('ausgabe', 0) }}
+        };
 
-    // 2. Type Chart (Pie)
-    new Chart(document.getElementById('typeChart'), {
-        type: 'pie',
-        data: {
-            labels: ['Einzelanbau', 'Cluster', 'Ausgabestelle'],
-            datasets: [{
-                data: [typeData.einzel, typeData.cluster, typeData.ausgabe],
-                backgroundColor: ['#20c997', '#6f42c1', '#fd7e14'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'right' }
+        // --- CHART 1: STATUS (DOUGHNUT) ---
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: ['Entwurf', 'Eingereicht', 'In Prüfung', 'Genehmigt', 'Abgelehnt'],
+                datasets: [{
+                    data: [statusData.draft, statusData.submitted, statusData.review, statusData.done, statusData.rejected],
+                    backgroundColor: [
+                        '#6c757d', // Grey (Draft)
+                        '#0d6efd', // Blue (Submitted)
+                        '#ffc107', // Yellow (Review)
+                        '#198754', // Green (Done)
+                        '#dc3545'  // Red (Rejected)
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
             }
-        }
+        });
+
+        // --- CHART 2: TYPEN (BAR) ---
+        const ctxType = document.getElementById('typeChart').getContext('2d');
+        new Chart(ctxType, {
+            type: 'bar',
+            data: {
+                labels: ['Einzelanbau', 'Anbaucluster', 'Ausgabestelle'],
+                datasets: [{
+                    label: 'Anzahl Projekte',
+                    data: [typeData.einzel, typeData.cluster, typeData.ausgabe],
+                    backgroundColor: [
+                        '#0dcaf0', // Cyan
+                        '#6610f2', // Purple
+                        '#fd7e14'  // Orange
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

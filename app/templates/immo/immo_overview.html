@@ -2,19 +2,54 @@
 
 {% block content %}
     <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>📋 Besichtigungs-Übersicht</h2>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
-                    <i class="bi bi-plus-lg"></i> Neue Besichtigung
-                </button>
 
+        {# --- HEADER BEREICH (Dynamisch je nach view_type) --- #}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                {% if view_type == 'archive' %}
+                    <h2 class="text-secondary"><i class="bi bi-archive-fill me-2"></i>Projekt Archiv</h2>
+                    <div class="text-muted small">Abgeschlossene und archivierte Vorgänge</div>
+                {% else %}
+                    <h2>📋 Besichtigungs-Übersicht</h2>
+                    <div class="text-muted small">Alle aktiven Projekte</div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+
+                {# --- BUTTONS FÜR AKTIVE ANSICHT --- #}
+                {% if view_type == 'active' %}
+
+                    {# Analytics (Nur Berechtigte) #}
+                    {% if current_user.has_permission('analytics_access') or current_user.is_admin %}
+                        <a href="{{ url_for('projects.analytics_view') }}" class="btn btn-outline-info" title="Dashboard">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                        </a>
+                    {% endif %}
+
+                    {# Zum Archiv wechseln #}
+                    <a href="{{ url_for('projects.archive_view') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-archive"></i> Archiv ansehen
+                    </a>
+
+                    {# Neu Button #}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+                        <i class="bi bi-plus-lg"></i> Neue Besichtigung
+                    </button>
+
+                {# --- BUTTONS FÜR ARCHIV ANSICHT --- #}
+                {% else %}
+                    <a href="{{ url_for('projects.overview') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+                    </a>
+                {% endif %}
+
+                {# Druckvorlage (Immer sichtbar) #}
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-printer"></i> Druckvorlage
                     </button>
                     <ul class="dropdown-menu shadow" style="z-index: 9999;">
-                        <li><h6 class="dropdown-header">Typ wählen</h6></li>
                         <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='einzel') }}" target="_blank">Einzelanbau</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='cluster') }}" target="_blank">Anbaucluster</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('projects.download_blank_pdf', type='ausgabe') }}" target="_blank">Ausgabestelle</a></li>
@@ -23,11 +58,12 @@
             </div>
         </div>
 
+        {# --- TABELLE --- #}
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white p-3 border-bottom">
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="projectSearch" class="form-control border-start-0" placeholder="Suche nach Projekt, CSC, User oder Status..." onkeyup="filterProjects()">
+                    <input type="text" id="projectSearch" class="form-control border-start-0" placeholder="Suche..." onkeyup="filterProjects()">
                 </div>
             </div>
 
@@ -35,84 +71,118 @@
                 <table class="table table-hover align-middle mb-0" id="projectTable">
                     <thead class="bg-light sticky-top">
                     <tr>
-                        <th style="width: 150px; cursor: pointer;" onclick="sortTable(0)">Status <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
-                        <th style="cursor: pointer;" onclick="sortTable(1)">Projekt / CSC <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
-                        <th style="cursor: pointer;" onclick="sortTable(2)">Typ <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
-                        <th style="cursor: pointer;" onclick="sortTable(3)">Datum <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
-                        <th style="cursor: pointer;" onclick="sortTable(4)">Ersteller <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th style="width: 150px;" onclick="sortTable(0)">Status <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th onclick="sortTable(1)">Projekt / CSC <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th onclick="sortTable(2)">Typ <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th onclick="sortTable(3)">Datum <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
+                        <th onclick="sortTable(4)">Ersteller <i class="bi bi-arrow-down-up small text-muted ms-1 sort-icon"></i></th>
                         <th class="text-end">Aktion</th>
                     </tr>
                     </thead>
                     <tbody class="bg-white" id="projectTableBody">
-                    {% for i in inspections %}
-                        <tr id="row-{{ i.id }}"
-                            style="cursor: pointer;"
-                            onclick="window.location.href='{{ url_for('projects.detail_view', inspection_id=i.id) }}'">
+{% for i in inspections %}
+    <tr id="row-{{ i.id }}"
+        style="cursor: pointer;"
+        class="{{ 'table-secondary text-muted' if i.is_archived else '' }}"
+        onclick="window.location.href='{{ url_for('projects.detail_view', inspection_id=i.id) }}'">
 
-                            <td>
-                                {% if current_user.is_admin or current_user.has_permission('immo_files_access') %}
-                                    {# --- ADMIN ANSICHT --- #}
-                                    <div class="dropdown" onclick="event.stopPropagation()">
-                                        <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
-                                                type="button" id="statusDropdown{{ i.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {{ i.status_label }}
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="statusDropdown{{ i.id }}">
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'submitted', 'Status auf EINGEREICHT ändern?')">🔵 Eingereicht</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'review', 'Status auf IN PRÜFUNG ändern?')">🟡 In Prüfung</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'done', 'Status auf GENEHMIGT ändern?')">🟢 Genehmigt</a></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'rejected', 'Status auf ABGELEHNT ändern?')">🔴 Ablehnen</a></li>
-                                        </ul>
-                                    </div>
-                                {% else %}
-                                    {# --- MITARBEITER ANSICHT --- #}
-                                    {% if i.status == 'draft' and i.user_id == current_user.id %}
-                                        <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                                                onclick="event.stopPropagation(); confirmChangeStatus({{ i.id }}, 'submitted', 'Möchtest du das Projekt verbindlich einreichen?')">
-                                            <i class="bi bi-send-fill me-1"></i> Einreichen
-                                        </button>
-                                    {% else %}
-                                        <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
-                                    {% endif %}
-                                {% endif %}
-                            </td>
+        <td>
+            {% if i.is_archived %}
+                 <span class="badge bg-secondary w-100 py-2" title="Ursprünglicher Status: {{ i.status_label }}">
+                     <i class="bi bi-archive-fill me-1"></i> Archiv
+                 </span>
+            {% elif current_user.is_admin or current_user.has_permission('immo_files_access') %}
+                <div class="dropdown" onclick="event.stopPropagation()">
+                    <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
+                            type="button" data-bs-toggle="dropdown">{{ i.status_label }}</button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'submitted', 'Status auf EINGEREICHT ändern?')">🔵 Eingereicht</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'review', 'Status auf IN PRÜFUNG ändern?')">🟡 In Prüfung</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'done', 'Status auf GENEHMIGT ändern?')">🟢 Genehmigt</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'rejected', 'Status auf ABGELEHNT ändern?')">🔴 Ablehnen</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                {% if i.status == 'draft' and i.user_id == current_user.id %}
+                    <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                            onclick="event.stopPropagation(); confirmChangeStatus({{ i.id }}, 'submitted', 'Verbindlich einreichen?')">
+                        <i class="bi bi-send-fill me-1"></i> Einreichen
+                    </button>
+                {% else %}
+                    <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
+                {% endif %}
+            {% endif %}
+        </td>
 
-                            <td class="fw-bold text-primary">
-                                {{ i.csc_name }}
-                                {% if not last_visit or (i.updated_at and i.updated_at > last_visit) %}
-                                    <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEU</span>
-                                {% endif %}
-                            </td>
-                            <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
-                            <td class="small text-muted">{{ i.created_at.strftime('%d.%m.%Y') }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">
-                                        {{ i.user.username[0]|upper }}
-                                    </div>
-                                    <div style="line-height: 1.1;">
-                                        <div class="small fw-bold">{{ i.user.username }}</div>
-                                        <small class="text-muted" style="font-size: 0.7em;">
-                                            {{ 'Bereichsleitung' if (i.user.is_admin or i.user.has_permission('immo_files_access')) else 'Mitarbeiter' }}
-                                        </small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-end" onclick="event.stopPropagation()">
-                                <a href="{{ url_for('projects.generate_and_download_pdf', inspection_id=i.id) }}" class="btn btn-sm btn-outline-danger" target="_blank">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </a>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr id="noResultsRow">
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>Keine Besichtigungen gefunden.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
+        <td class="fw-bold {{ 'text-secondary' if i.is_archived else 'text-primary' }}">
+            {{ i.csc_name }}
+            {% if not i.is_archived and view_type == 'active' and (not last_visit or (i.updated_at and i.updated_at > last_visit)) %}
+                <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEU</span>
+            {% endif %}
+        </td>
+
+        <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
+
+        <td class="small text-muted">{{ i.created_at.strftime('%d.%m.%Y') }}</td>
+
+        <td>
+             <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">{{ i.user.username[0]|upper }}</div>
+                <div style="line-height: 1.1;"><div class="small fw-bold">{{ i.user.username }}</div></div>
+            </div>
+        </td>
+
+        <td class="text-end" onclick="event.stopPropagation()">
+            <div class="d-flex justify-content-end gap-1">
+                <a href="{{ url_for('projects.generate_and_download_pdf', inspection_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+
+                {% set can_delete = current_user.is_admin or (i.user_id == current_user.id and i.status == 'draft') %}
+                {% set can_manage_archive = current_user.is_admin or current_user.has_permission('immo_files_access') %}
+
+                {% if can_delete or can_manage_archive %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                            {# ARCHIVIEREN (Nur wenn NICHT archiviert) #}
+                            {% if can_manage_archive and not i.is_archived %}
+                                <li><button class="dropdown-item text-secondary" onclick="archiveProject({{ i.id }})"><i class="bi bi-archive me-2"></i> Archivieren</button></li>
+                            {% endif %}
+
+                            {# WIEDERHERSTELLEN (Nur wenn archiviert) #}
+                            {% if can_manage_archive and i.is_archived %}
+                                <li><button class="dropdown-item text-success" onclick="unarchiveProject({{ i.id }})"><i class="bi bi-arrow-counterclockwise me-2"></i> Wiederherstellen</button></li>
+                            {% endif %}
+
+                            {# LÖSCHEN #}
+                            {% if can_delete %}
+                                {% if can_manage_archive %}<div class="dropdown-divider"></div>{% endif %}
+                                <li><button class="dropdown-item text-danger" onclick="deleteProject({{ i.id }}, '{{ i.csc_name|replace("'", "") }}')"><i class="bi bi-trash me-2"></i> Löschen</button></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+{% else %}
+    <tr id="noResultsRow">
+        <td colspan="6" class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            {% if view_type == 'archive' %}
+                Das Archiv ist leer.
+            {% else %}
+                Keine aktiven Besichtigungen gefunden.
+            {% endif %}
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
                 </table>
             </div>
         </div>
@@ -148,46 +218,23 @@
     </div>
 
     <script>
-        function confirmChangeStatus(id, status, msg) {
-            if (confirm(msg)) changeStatus(id, status);
-        }
-
+        function confirmChangeStatus(id, status, msg) { if (confirm(msg)) changeStatus(id, status); }
         async function createQuickProject() {
             const name = document.getElementById('newCscName').value;
             const type = document.getElementById('newImmoType').value;
-
-            if(!name.trim()) {
-                alert("Bitte Projektname eingeben!");
-                return;
-            }
-
+            if(!name.trim()) { alert("Bitte Projektname eingeben!"); return; }
             const btn = document.querySelector('#newProjectModal .btn-primary');
-            const original = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "Lege an...";
-
+            const original = btn.innerText; btn.disabled = true; btn.innerText = "Lege an...";
             try {
                 const res = await fetch('/projects/create_quick', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ csc_name: name, immo_type: type })
                 });
                 const data = await res.json();
-
-                if(data.success) {
-                    window.location.href = '/projects/' + data.id + '/details';
-                } else {
-                    alert("Fehler: " + data.error);
-                    btn.disabled = false;
-                    btn.innerText = original;
-                }
-            } catch(e) {
-                alert("Netzwerkfehler");
-                btn.disabled = false;
-                btn.innerText = original;
-            }
+                if(data.success) window.location.href = '/projects/' + data.id + '/details';
+                else { alert("Fehler: " + data.error); btn.disabled = false; btn.innerText = original; }
+            } catch(e) { alert("Netzwerkfehler"); btn.disabled = false; btn.innerText = original; }
         }
     </script>
-
     <script src="{{ url_for('static', filename='js/immo_overview.js') }}"></script>
 {% endblock %}

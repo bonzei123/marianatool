@@ -2,6 +2,7 @@ import os
 import json
 import csv
 import io
+import shutil
 from flask import make_response
 from datetime import datetime
 from flask import render_template, request, jsonify, current_app, url_for, send_from_directory, Blueprint, flash, \
@@ -19,33 +20,50 @@ from app.pdf_generator import PdfGenerator
 # VIEW ROUTES (GET)
 # ==============================================================================
 
-# VERALTET / ABGESÄGT
-# @bp.route('/new', methods=['GET'])
-# ...
-
 @bp.route('/', methods=['GET'])
 @login_required
 @permission_required('immo_user')
 def overview():
-    """Liste der Projekte/Besichtigungen."""
-
-    # 1. Merken, wann der User ZULETZT da war (für die "Neu"-Markierung)
+    """Liste der AKTIVEN Projekte (is_archived = False)."""
     last_visit = current_user.last_projects_visit
-
-    # 2. Zeitstempel aktualisieren (fürs nächste Mal / Dashboard Reset)
     current_user.last_projects_visit = datetime.utcnow()
     db.session.commit()
 
-    # Daten laden
-    if current_user.has_permission('view_users') or current_user.is_admin:
-        inspections = Inspection.query.order_by(Inspection.created_at.desc()).all()
-    else:
-        inspections = Inspection.query.filter_by(user_id=current_user.id).order_by(Inspection.created_at.desc()).all()
+    query = Inspection.query
 
-    # WICHTIG: last_visit an das Template übergeben!
+    if not (current_user.has_permission('view_users') or current_user.is_admin):
+        query = query.filter_by(user_id=current_user.id)
+
+    # NEUER FILTER:
+    query = query.filter_by(is_archived=False)
+
+    inspections = query.order_by(Inspection.created_at.desc()).all()
+
     return render_template('immo/immo_overview.html',
                            inspections=inspections,
-                           last_visit=last_visit)
+                           last_visit=last_visit,
+                           view_type='active')
+
+
+@bp.route('/archive', methods=['GET'])
+@login_required
+@permission_required('immo_user')
+def archive_view():
+    """Liste der ARCHIVIERTEN Projekte (is_archived = True)."""
+    query = Inspection.query
+
+    if not (current_user.has_permission('view_users') or current_user.is_admin):
+        query = query.filter_by(user_id=current_user.id)
+
+    # NEUER FILTER:
+    query = query.filter_by(is_archived=True)
+
+    inspections = query.order_by(Inspection.updated_at.desc()).all()
+
+    return render_template('immo/immo_overview.html',
+                           inspections=inspections,
+                           last_visit=None,
+                           view_type='archive')
 
 
 # --- FILES ROUTEN ---
@@ -537,3 +555,101 @@ def export_csv():
     output.data = b'\xef\xbb\xbf' + output.data
 
     return output
+
+
+# ==============================================================================
+# DELETE & ARCHIVE ACTIONS
+# ==============================================================================
+
+@bp.route('/<int:inspection_id>/delete', methods=['POST'])
+@login_required
+@permission_required('immo_user')
+def delete_project(inspection_id):
+    """Löscht ein Projekt (DB + Dateien)."""
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection:
+        return jsonify({'success': False, 'error': 'Projekt nicht gefunden'}), 404
+
+    # --- BERECHTIGUNGSPRÜFUNG ---
+    # 1. Admin darf immer löschen
+    is_admin = current_user.is_admin
+    # 2. Owner darf nur löschen, wenn Status == Draft
+    is_owner_draft = (inspection.user_id == current_user.id and inspection.status == Inspection.STATUS_DRAFT)
+
+    if not (is_admin or is_owner_draft):
+        return jsonify({'success': False, 'error': 'Keine Berechtigung zum Löschen'}), 403
+
+    try:
+        # 1. Ordner löschen (falls vorhanden)
+        if inspection.pdf_path:
+            folder_name = os.path.dirname(inspection.pdf_path)
+        else:
+            # Fallback Versuche, den Ordner zu erraten, sparen wir uns hier der Sicherheit halber,
+            # oder wir löschen nur den DB Eintrag.
+            # Wenn wir create_quick nutzen, ist pdf_path immer gesetzt (als "Folder/").
+            folder_name = inspection.pdf_path.split('/')[0] if '/' in inspection.pdf_path else inspection.pdf_path
+
+        if folder_name:
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+            if os.path.exists(full_path):
+                shutil.rmtree(full_path)  # Löscht Ordner samt Inhalt rekursiv
+
+        # 2. DB Eintrag löschen
+        db.session.delete(inspection)
+        db.session.commit()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/<int:inspection_id>/archive', methods=['POST'])
+@login_required
+def archive_project(inspection_id):
+    """Setzt is_archived auf True (Status bleibt erhalten!)."""
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection: return jsonify({'success': False, 'error': '404'}), 404
+
+    if not (current_user.is_admin or current_user.has_permission('immo_files_access')):
+        return jsonify({'success': False, 'error': '403'}), 403
+
+    try:
+        # NUR DAS FLAG SETZEN
+        inspection.is_archived = True
+
+        db.session.add(InspectionLog(
+            inspection_id=inspection.id, user_id=current_user.id, action='archive',
+            details=f"Archiviert (Status war: {inspection.status_label})"
+        ))
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/<int:inspection_id>/unarchive', methods=['POST'])
+@login_required
+def unarchive_project(inspection_id):
+    """Setzt is_archived auf False (Status bleibt erhalten!)."""
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection: return jsonify({'success': False, 'error': '404'}), 404
+
+    if not (current_user.is_admin or current_user.has_permission('immo_files_access')):
+        return jsonify({'success': False, 'error': '403'}), 403
+
+    try:
+        # NUR DAS FLAG ENTFERNEN
+        inspection.is_archived = False
+
+        db.session.add(InspectionLog(
+            inspection_id=inspection.id, user_id=current_user.id, action='unarchive',
+            details="Wiederhergestellt"
+        ))
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500

@@ -151,6 +151,8 @@ class Inspection(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('inspections', lazy=True))
 
+    is_archived = db.Column(db.Boolean, default=False, nullable=False)
+
     # Datei-Pfad (Relativ zu UPLOAD_FOLDER)
     pdf_path = db.Column(db.String(255))
 

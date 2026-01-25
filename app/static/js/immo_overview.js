@@ -5,6 +5,58 @@
  * - Tabellen Sortierung
  */
 
+// --- PROJEKT LÖSCHEN ---
+async function deleteProject(id, name) {
+    if (!confirm(`WARNUNG: Möchtest du das Projekt "${name}" wirklich unwiderruflich löschen?\n\nAlle Daten und Dateien werden entfernt!`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/projects/${id}/delete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Zeile aus Tabelle entfernen (schöner Effekt)
+            const row = document.getElementById(`row-${id}`);
+            if (row) {
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 400);
+            } else {
+                location.reload();
+            }
+        } else {
+            alert("Fehler beim Löschen: " + data.error);
+        }
+    } catch (e) {
+        alert("Netzwerkfehler: " + e.message);
+    }
+}
+
+// --- PROJEKT ARCHIVIEREN ---
+async function archiveProject(id) {
+    if (!confirm("Soll dieses Projekt ins Archiv verschoben werden?")) return;
+
+    try {
+        const res = await fetch(`/projects/${id}/archive`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            location.reload(); // Reload nötig um Sortierung/Styles neu zu setzen
+        } else {
+            alert("Fehler: " + data.error);
+        }
+    } catch (e) {
+        alert("Netzwerkfehler: " + e.message);
+    }
+}
+
+// Bestehende Status Funktion (nur der Vollständigkeit halber, falls du sie suchst)
 async function changeStatus(id, newStatus) {
     try {
         const res = await fetch('/projects/status', {
@@ -14,22 +66,13 @@ async function changeStatus(id, newStatus) {
         });
 
         const data = await res.json();
-
         if (data.success) {
-            const btn = document.querySelector(`#row-${id} .status-btn`);
-            if(btn) {
-                btn.className = btn.className.replace(/btn-(primary|secondary|success|danger|warning|light)/g, '');
-                btn.classList.add('btn-' + data.new_color);
-                btn.innerText = data.new_label;
-            } else {
-                location.reload();
-            }
+            location.reload();
         } else {
-            alert('Fehler: ' + data.error);
+            alert("Fehler: " + (data.error || "Unbekannt"));
         }
     } catch (e) {
-        console.error(e);
-        alert('Verbindungsfehler beim Status-Update.');
+        alert("Netzwerkfehler: " + e.message);
     }
 }
 
@@ -138,5 +181,28 @@ function updateSortIcons(colIndex, isAsc) {
     const icon = activeHeader.querySelector('i');
     if(icon) {
         icon.className = isAsc ? 'bi bi-sort-down ms-1 sort-icon text-dark' : 'bi bi-sort-up ms-1 sort-icon text-dark';
+    }
+}
+
+// --- PROJEKT WIEDERHERSTELLEN ---
+async function unarchiveProject(id) {
+    if (!confirm("Soll dieses Projekt wiederhergestellt werden (Status: Genehmigt)?")) return;
+
+    try {
+        const res = await fetch(`/projects/${id}/unarchive`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Seite neu laden, damit das Projekt aus der Archiv-Liste verschwindet
+            // und wieder in der aktiven Liste auftaucht
+            location.reload();
+        } else {
+            alert("Fehler: " + data.error);
+        }
+    } catch (e) {
+        alert("Netzwerkfehler: " + e.message);
     }
 }
