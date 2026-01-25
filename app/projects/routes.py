@@ -193,28 +193,24 @@ def upload_chunk():
 @login_required
 @permission_required('immo_user')
 def create_quick():
-    """
-    Erstellt schnell ein neues Projekt (Draft) und gibt die ID zurück.
-    Ersetzt den alten Wizard.
-    """
     try:
         data = request.json
         csc_name = data.get('csc_name', 'Unbekannt')
         immo_type = data.get('immo_type', 'einzel')
 
-        # 1. Ordnernamen generieren (Sicher & Eindeutig)
-        # Format: Name_Timestamp (um Kollisionen zu vermeiden)
+        # 1. Ordnernamen
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-        safe_csc = secure_filename(csc_name.replace(" ", "_"))
-        if not safe_csc: safe_csc = "Project"
+        safe_csc = secure_filename(csc_name.replace(" ", "_")) or "Project"
         folder_name = f"{safe_csc}_{ts}"
 
-        # Ordner erstellen
         upload_folder = current_app.config['UPLOAD_FOLDER']
         full_folder_path = os.path.join(upload_folder, folder_name)
         os.makedirs(full_folder_path, exist_ok=True)
 
-        # 2. JSON Struktur initieren
+        # 2. STRUKTUR SNAPSHOT ERSTELLEN (NEU!)
+        # Wir frieren den aktuellen Stand des Formulars ein
+        form_snapshot = get_current_form_structure_as_dict()
+
         full_json_record = {
             "meta": {
                 "csc": csc_name,
@@ -222,17 +218,17 @@ def create_quick():
                 "date": datetime.utcnow().isoformat(),
                 "uploaded_by": current_user.username
             },
+            "form_config": form_snapshot,  # <--- HIER GESPEICHERT
             "form_responses": {},
             "attachments": []
         }
 
-        # 3. DB Eintrag (DRAFT)
         inspection = Inspection(
             user_id=current_user.id,
             csc_name=csc_name,
             inspection_type=immo_type,
             status=Inspection.STATUS_DRAFT,
-            pdf_path=os.path.join(folder_name, ""),  # Placeholder, damit der Ordner bekannt ist
+            pdf_path=os.path.join(folder_name, ""),
             data_json=json.dumps(full_json_record)
         )
         db.session.add(inspection)
@@ -252,26 +248,44 @@ def create_quick():
 @bp.route('/<int:inspection_id>/generate_pdf', methods=['GET'])
 @login_required
 def generate_and_download_pdf(inspection_id):
-    """Generiert das PDF aus den DB-Daten neu."""
     inspection = db.session.get(Inspection, inspection_id)
     if not inspection: return render_template('errors/404.html'), 404
 
+    # Rechte Check ... (hier gekürzt)
     if not (current_user.is_admin or current_user.has_permission(
             'immo_files_access') or inspection.user_id == current_user.id):
         return render_template('errors/403.html'), 403
 
     try:
-        sections = ImmoSection.query.order_by(ImmoSection.order).all()
-        gen = PdfGenerator(sections, inspection, current_app.config['UPLOAD_FOLDER'])
+        # ENTSCHEIDUNG: Snapshot oder Live?
+        sections_data = []
+
+        # 1. Snapshot prüfen
+        if inspection.data_json:
+            try:
+                d = json.loads(inspection.data_json)
+                if d.get('form_config'):
+                    sections_data = d.get('form_config')
+            except:
+                pass
+
+        # 2. Fallback: Live Daten holen und konvertieren
+        if not sections_data:
+            sections_data = get_current_form_structure_as_dict()
+
+        # Generator aufrufen (Achtung: Der Generator muss jetzt Dictionaries verstehen!)
+        gen = PdfGenerator(sections_data, inspection, current_app.config['UPLOAD_FOLDER'])
         rel_path = gen.create()
+
         inspection.pdf_path = rel_path
         db.session.commit()
         folder, filename = os.path.split(rel_path)
         return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], folder), filename,
                                    as_attachment=True)
+
     except Exception as e:
         current_app.logger.error(f"PDF Gen Error: {e}")
-        flash(f"Fehler bei PDF Generierung: {e}", "danger")
+        flash(f"Fehler: {e}", "danger")
         return redirect(url_for('projects.overview'))
 
 
@@ -653,3 +667,97 @@ def unarchive_project(inspection_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# --- HELPER FUNKTION (Neu) ---
+def get_current_form_structure_as_dict():
+    """Lädt die aktuelle DB-Struktur und gibt sie als Liste von Dictionaries zurück."""
+    sections_db = ImmoSection.query.order_by(ImmoSection.order).all()
+    structure = []
+
+    for sec in sections_db:
+        sec_data = {
+            "id": sec.id,
+            "title": sec.title,
+            "is_expanded": sec.is_expanded,
+            "questions": []
+        }
+        for q in sec.questions:
+            # Wir speichern ALLES, was für die Anzeige wichtig ist
+            sec_data["questions"].append({
+                "id": str(q.id),  # ID als String für JSON Konsistenz
+                "label": q.label,
+                "type": q.type,
+                "width": q.width,
+                "width_tablet": q.width_tablet,
+                "width_mobile": q.width_mobile,
+                "tooltip": q.tooltip,
+                "is_required": q.is_required,
+                "is_print": getattr(q, 'is_print', True),
+                "options_json": q.options_json,  # Rohdaten speichern
+                "types_json": q.types_json
+            })
+        structure.append(sec_data)
+    return structure
+
+
+@bp.route('/<int:inspection_id>/config_snapshot', methods=['GET'])
+@login_required
+def get_project_config(inspection_id):
+    """
+    Gibt die Konfiguration zurück, die für DIESES Projekt gilt.
+    Entweder den Snapshot (falls vorhanden) oder Live-Daten (Fallback).
+    """
+    inspection = db.session.get(Inspection, inspection_id)
+    if not inspection: return jsonify({'error': 'Not found'}), 404
+
+    # 1. Versuchen, Snapshot zu laden
+    snapshot = None
+    if inspection.data_json:
+        try:
+            data = json.loads(inspection.data_json)
+            snapshot = data.get('form_config')
+        except:
+            pass
+
+    # 2. Wenn Snapshot da ist -> formatieren für JS
+    if snapshot:
+        # Der Snapshot ist fast schon das Format, das das Frontend braucht,
+        # aber das Frontend erwartet "content" statt "questions" und geparste Options.
+        frontend_data = []
+        for sec in snapshot:
+            questions_processed = []
+            for q in sec['questions']:
+                # JSON Strings in echte Listen wandeln, falls nötig
+                opts = []
+                if q.get('options_json'):
+                    opts = json.loads(q['options_json']) if isinstance(q['options_json'], str) else q['options_json']
+
+                types = []
+                if q.get('types_json'):
+                    types = json.loads(q['types_json']) if isinstance(q['types_json'], str) else q['types_json']
+
+                questions_processed.append({
+                    "id": q['id'],
+                    "label": q['label'],
+                    "type": q['type'],
+                    "width": q.get('width', 'full'),
+                    "width_tablet": q.get('width_tablet', 'default'),
+                    "width_mobile": q.get('width_mobile', 'default'),
+                    "tooltip": q.get('tooltip', ''),
+                    "is_required": q.get('is_required', False),
+                    "options": opts,
+                    "types": types
+                })
+
+            frontend_data.append({
+                "id": sec['id'],
+                "title": sec['title'],
+                "is_expanded": sec['is_expanded'],
+                "content": questions_processed
+            })
+        return jsonify(frontend_data)
+
+    # 3. Fallback: Alte Logik (Live Daten)
+    # Wir rufen einfach die existierende globale Config-Funktion auf
+    return get_form_config()

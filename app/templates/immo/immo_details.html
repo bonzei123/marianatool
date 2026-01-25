@@ -221,10 +221,11 @@
     </div>
 
     <script>
-        const savedResponses = {{ inspection.data_json | safe }};
+        const savedResponses = {{ inspection.data_json | safe }} || {};
         const inspectionId = {{ inspection.id }};
-        const formConfigUrl = "{{ url_for('projects.get_form_config') }}";
+        const formConfigUrl = "{{ url_for('projects.get_project_config', inspection_id=inspection.id) }}";
         const uploadFolder = "{{ folder_name }}";
+
 
         // --- Status ändern Wrapper ---
         function confirmStatus(newStatus) {

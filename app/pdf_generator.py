@@ -6,15 +6,18 @@ from flask import current_app
 
 
 class PdfGenerator(FPDF):
-    def __init__(self, sections, inspection=None, upload_folder="app/static/uploads", target_type=None):
+    def __init__(self, sections_data, inspection=None, upload_folder="app/static/uploads", target_type=None):
+        """
+        sections_data: Liste von Dictionaries (nicht mehr DB Objekte!)
+        """
         super().__init__()
-        self.sections = sections
+        self.sections = sections_data
         self.inspection = inspection
         self.upload_folder = upload_folder
 
         # PFADE
-        self.logo_path = os.path.join(current_app.root_path, 'static', 'img', 'logo_green.png')
-        self.watermark_path = os.path.join(current_app.root_path, 'static', 'img', 'logo_transparent.png')
+        self.logo_path = os.path.join(current_app.root_path, 'static', 'img', 'logo.png')
+        self.watermark_path = os.path.join(current_app.root_path, 'static', 'img', 'watermark.png')
 
         if self.inspection:
             self.target_type = self.inspection.inspection_type
@@ -36,35 +39,20 @@ class PdfGenerator(FPDF):
             except:
                 self.form_data = {}
 
-        # Ränder (Oben 35mm Platz für Header/Logo)
         self.set_margins(20, 35, 20)
         self.set_auto_page_break(auto=True, margin=20)
-
         self.add_page()
 
+    # --- HEADER & FOOTER (Identisch zu vorher) ---
     def header(self):
-        # 1. WASSERZEICHEN (Zentriert)
         if os.path.exists(self.watermark_path):
-            # A4 Seite = 210mm Breite
-            wm_width = 160  # Breite des Wasserzeichens (mm)
-
-            # Automatische Berechnung der X-Mitte: (Seite - Bild) / 2
-            x_pos = (210 - wm_width) / 2
-
-            # Y-Position: Optische Mitte (ca. 85-90mm von oben)
-            y_pos = 85
-
-            self.image(self.watermark_path, x=x_pos, y=y_pos, w=wm_width)
-
-        # 2. LOGO OBEN RECHTS (Klein & Original)
+            x_pos = (210 - 160) / 2
+            self.image(self.watermark_path, x=x_pos, y=85, w=160)
         if os.path.exists(self.logo_path):
-            # x=165 (rechtsbündig zum Rand 20mm), y=10 (oben)
             self.image(self.logo_path, x=165, y=10, w=30)
 
-        # 3. HEADER TEXT
-        self.set_y(10)  # Auf Höhe des Logos beginnen
+        self.set_y(10)
         self.set_font('Arial', 'B', 14)
-
         if self.inspection:
             title = f"Protokoll: {self._clean(self.inspection.csc_name)}"
             sub = f"ID: {self.inspection.id} | {self.inspection.created_at.strftime('%d.%m.%Y')}"
@@ -72,13 +60,9 @@ class PdfGenerator(FPDF):
             t_label = self._clean(self.target_type.upper()) if self.target_type else "ALLE"
             title = f"Erfassungsbogen ({t_label})"
             sub = "Leerformular"
-
-        # Titel rendern (Links)
         self.cell(0, 8, self._clean(title), ln=True, align='L')
         self.set_font('Arial', '', 10)
         self.cell(0, 6, self._clean(sub), ln=True, align='L')
-
-        # Trennlinie
         self.ln(5)
         self.line(self.l_margin, self.get_y(), 210 - self.r_margin, self.get_y())
         self.ln(8)
@@ -87,59 +71,86 @@ class PdfGenerator(FPDF):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128)
-        page = f"Seite {self.page_no()}"
-        self.cell(0, 10, page, 0, 0, 'C')
+        self.cell(0, 10, f"Seite {self.page_no()}", 0, 0, 'C')
         self.set_text_color(0)
 
-    # --- HELPER & LOGIK ---
-
+    # --- HELPER ---
     def _clean(self, text):
         if not text: return ""
         text = str(text)
         replacements = {"–": "-", "—": "-", "“": '"', "”": '"', "‘": "'", "’": "'", "…": "...", "€": "EUR"}
-        for k, v in replacements.items():
-            text = text.replace(k, v)
+        for k, v in replacements.items(): text = text.replace(k, v)
         try:
             return text.encode('latin-1', 'replace').decode('latin-1')
         except:
             return text
 
+    def _get_opts(self, q):
+        """Hilft beim Parsen der Optionen aus dem Dict."""
+        raw = q.get('options_json')
+        if not raw: return []
+        if isinstance(raw, list): return raw
+        try:
+            return json.loads(raw)
+        except:
+            return []
+
+    def _get_types(self, q):
+        raw = q.get('types_json')
+        if not raw: return []
+        if isinstance(raw, list): return raw
+        try:
+            return json.loads(raw)
+        except:
+            return []
+
     def _calculate_height(self, q, label):
         lines = self.multi_cell(0, 6, label, split_only=True)
         label_height = len(lines) * 6
         input_height = 0
+        q_type = q.get('type')
+
         if self.inspection is None:
-            if q.type == 'textarea':
+            if q_type == 'textarea':
                 input_height = 30 + 2
-            elif q.type == 'checkbox':
+            elif q_type == 'checkbox':
                 input_height = 6 + 2
-            elif q.type == 'select':
-                opts = json.loads(q.options_json) if q.options_json else []
+            elif q_type == 'select':
+                opts = self._get_opts(q)
                 input_height = (len(opts) * 5) + 2
-            elif q.type == 'file':
+            elif q_type == 'file':
                 input_height = 40 + 2
-            elif q.type in ['info', 'alert']:
-                return len(self.multi_cell(0, 6, self._clean(f"Hinweis: {q.label}"), split_only=True)) * 6 + 4
-            elif q.type == 'header':
+            elif q_type in ['info', 'alert']:
+                return len(self.multi_cell(0, 6, self._clean(f"Hinweis: {q.get('label')}"), split_only=True)) * 6 + 4
+            elif q_type == 'header':
                 return len(self.multi_cell(0, 8, label, split_only=True)) * 8 + 4
             else:
                 input_height = 8 + 2
             return label_height + input_height + 2
 
-        val = self.form_data.get(q.id, "")
+        # Filled
+        val = self.form_data.get(q.get('id'), "")
         val_lines = self.multi_cell(0, 6, str(val), split_only=True)
         text_height = len(val_lines) * 6 + 4
         return label_height + text_height + 5
 
     def create(self):
         self.set_font('Arial', '', 11)
+
+        # Iteration über Dicts statt Objekte
         for sec in self.sections:
+            sec_title = sec.get('title', '')
+            questions = sec.get('questions', [])
+
             visible_questions = []
-            for q in sec.questions:
-                q_types = json.loads(q.types_json) if q.types_json else []
+            for q in questions:
+                q_types = self._get_types(q)
                 type_match = not self.target_type or self.target_type in q_types
-                print_allowed = getattr(q, 'is_print', True)
-                if type_match and print_allowed: visible_questions.append(q)
+                # Zugriff auf 'is_print' via get(), default True
+                print_allowed = q.get('is_print', True)
+
+                if type_match and print_allowed:
+                    visible_questions.append(q)
 
             if not visible_questions: continue
 
@@ -148,43 +159,47 @@ class PdfGenerator(FPDF):
             self.set_fill_color(240, 240, 240)
             self.set_font('Arial', 'B', 12)
             self.set_x(self.l_margin)
-            self.cell(0, 10, self._clean(sec.title), 1, 1, 'L', fill=True)
+            self.cell(0, 10, self._clean(sec_title), 1, 1, 'L', fill=True)
             self.ln(2)
             self.set_font('Arial', '', 11)
 
             for q in visible_questions:
                 self.set_x(self.l_margin)
-                label = self._clean(q.label)
-                if getattr(q, 'is_required', False): label += " *"
+                label = self._clean(q.get('label', ''))
+                if q.get('is_required', False): label += " *"
+
                 needed = self._calculate_height(q, label)
 
                 if self.get_y() + needed > self.page_break_trigger:
                     self.add_page()
-                    self._print_continuation(sec.title)
+                    self._print_continuation(sec_title)
 
-                if q.type == 'header':
+                q_type = q.get('type')
+
+                if q_type == 'header':
                     self.ln(3)
                     self.set_font('Arial', 'B', 11)
                     self.multi_cell(0, 8, label)
                     self.set_font('Arial', '', 11)
                     continue
 
-                if q.type in ['info', 'alert']:
+                if q_type in ['info', 'alert']:
                     self.set_text_color(100, 100, 100)
                     self.set_font('Arial', 'I', 10)
-                    self.multi_cell(0, 6, self._clean(f"Hinweis: {q.label}"))
+                    self.multi_cell(0, 6, self._clean(f"Hinweis: {label}"))
                     self.set_font('Arial', '', 11)
                     self.set_text_color(0, 0, 0)
                     self.ln(4)
                     continue
 
-                val = self.form_data.get(q.id)
+                val = self.form_data.get(q.get('id'))
                 if self.inspection is None:
                     self._render_blank_field(q, label)
                 else:
                     self._render_filled_field(q, label, val)
                 self.ln(2)
 
+        # File Output
         if self.inspection:
             filename = f"Inspection_{self.inspection.id}.pdf"
             folder = os.path.dirname(self.inspection.pdf_path) if self.inspection.pdf_path else "temp"
@@ -212,23 +227,25 @@ class PdfGenerator(FPDF):
         self.set_font('Arial', 'B', 10)
         self.multi_cell(0, 6, label)
         self.set_font('Arial', '', 10)
-        if q.type == 'textarea':
+        q_type = q.get('type')
+
+        if q_type == 'textarea':
             self.ln(1);
             self.set_x(self.l_margin);
             self.cell(0, 30, "", 1, 1)
-        elif q.type == 'checkbox':
+        elif q_type == 'checkbox':
             self.ln(1);
             self.set_x(self.l_margin);
             self.cell(5, 5, "", 1, 0);
             self.cell(0, 5, self._clean(" Ja / Bestätigt"), ln=True)
-        elif q.type == 'select':
-            options = json.loads(q.options_json) if q.options_json else []
+        elif q_type == 'select':
+            opts = self._get_opts(q)
             self.ln(1)
-            for opt in options:
+            for opt in opts:
                 self.set_x(self.l_margin);
                 self.cell(5, 5, "", 1, 0);
                 self.cell(0, 5, self._clean(f" {opt}"), ln=True)
-        elif q.type == 'file':
+        elif q_type == 'file':
             self.ln(1);
             self.set_x(self.l_margin);
             self.set_font('Arial', 'I', 9)
@@ -246,7 +263,7 @@ class PdfGenerator(FPDF):
         self.multi_cell(0, 6, label + ":")
         self.set_font('Arial', '', 10)
 
-        if q.type == 'file':
+        if q.get('type') == 'file':
             if not val:
                 self.set_x(self.l_margin + 5);
                 self.cell(0, 6, "-", ln=True);
