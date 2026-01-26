@@ -61,6 +61,19 @@
                         </button>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm hover-shadow" style="cursor: pointer;" onclick="openChangelogModal()">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3 text-info">
+                                <i class="bi bi-megaphone fs-1"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Versionshinweise</h5>
+                            <p class="card-text text-muted small">
+                                App-Version aktualisieren und Patchnotes schreiben.
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <div class="card shadow-sm mb-3">
                     <div class="card-header bg-warning text-dark fw-bold">Fragenkatalog</div>
                     <div class="card-body text-center">
@@ -273,4 +286,62 @@
             </form>
         </div>
     </div>
+    <div class="modal fade" id="changelogModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Version & Patchnotes bearbeiten</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Aktuelle Version</label>
+                        <input type="text" id="settingVersion" class="form-control" placeholder="z.B. 1.2.0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Inhalt (Markdown unterstützt)</label>
+                        <textarea id="settingChangelogText" class="form-control" rows="10" placeholder="# Update 1.2.0&#10;- Feature A hinzugefügt&#10;- Bug B gefixt..."></textarea>
+                        <div class="form-text">Verwende Markdown für Formatierung (# Überschrift, - Liste, **Fett**)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" onclick="saveChangelogSettings()">Speichern & Veröffentlichen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Laden beim Öffnen
+        async function openChangelogModal() {
+            try {
+                const res = await fetch('/settings/changelog');
+                const data = await res.json();
+                document.getElementById('settingVersion').value = data.version;
+                document.getElementById('settingChangelogText').value = data.text;
+                new bootstrap.Modal(document.getElementById('changelogModal')).show();
+            } catch(e) { alert("Fehler beim Laden"); }
+        }
+
+        // Speichern
+        async function saveChangelogSettings() {
+            const version = document.getElementById('settingVersion').value;
+            const text = document.getElementById('settingChangelogText').value;
+
+            try {
+                const res = await fetch('/settings/changelog', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ version: version, text: text })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    location.reload(); // Reload damit Footer sich aktualisiert
+                } else {
+                    alert("Fehler: " + data.error);
+                }
+            } catch(e) { alert("Speicherfehler"); }
+        }
+    </script>
 {% endblock %}

@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold">Versionshinweise</h1>
+                <span class="badge bg-primary fs-5 mt-2">v{{ version }}</span>
+            </div>
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 markdown-body">
+                    {# Hier wird das gerenderte HTML eingefügt #}
+                    {{ content_html|safe }}
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Zurück zur Startseite</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

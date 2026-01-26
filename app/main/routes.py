@@ -1,11 +1,11 @@
 import os
 from app.main import bp
 from datetime import datetime
-from flask import request, flash, redirect, url_for, current_app, render_template, send_from_directory
+from flask import request, flash, redirect, url_for, current_app, render_template, send_from_directory, jsonify
 from flask_login import login_required, current_user
 from flask_mail import Message
 from app.extensions import db, mail
-from app.models import DashboardTile, Inspection, User, SiteContent, ImmoSetting
+from app.models import DashboardTile, Inspection, User, SiteContent, ImmoSetting, SystemSetting
 
 
 @bp.route('/home')
@@ -132,6 +132,49 @@ def impressum():
 @bp.route('/datenschutz')
 def datenschutz():
     return render_template('main/legal.html', title="Datenschutz", content="")
+
+
+@bp.app_context_processor
+def inject_version():
+    """Macht die Variable 'app_version' in allen Templates verfügbar."""
+    version = SystemSetting.get_value('app_version', '1.0.0')
+    return dict(app_version=version)
+
+
+# --- PUBLIC ROUTE ---
+@bp.route('/versionshinweise', methods=['GET'])
+def changelog_view():
+    """Zeigt die Patchnotes an."""
+    version = SystemSetting.get_value('app_version', '1.0.0')
+    raw_text = SystemSetting.get_value('changelog_text', '# Keine Patchnotes verfügbar.')
+
+    # Markdown in HTML wandeln
+    content_html = markdown.markdown(raw_text)
+
+    return render_template('changelog.html', version=version, content_html=content_html)
+
+
+# --- ADMIN API (Speichern) ---
+@bp.route('/settings/changelog', methods=['POST'])
+@login_required
+# @permission_required('admin')  <-- Falls du Admin-Check hast
+def update_changelog():
+    data = request.json
+    try:
+        SystemSetting.set_value('app_version', data.get('version'))
+        SystemSetting.set_value('changelog_text', data.get('text'))
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/settings/changelog', methods=['GET'])
+@login_required
+def get_changelog_settings():
+    return jsonify({
+        'version': SystemSetting.get_value('app_version', '1.0.0'),
+        'text': SystemSetting.get_value('changelog_text', '')
+    })
 
 
 @bp.route('/favicon.ico')

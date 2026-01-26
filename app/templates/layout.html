@@ -108,6 +108,10 @@
         <div class="small">
             <a href="{{ url_for('main.impressum') }}" class="text-decoration-none text-muted me-3">Impressum</a>
             <a href="{{ url_for('main.datenschutz') }}" class="text-decoration-none text-muted">Datenschutz</a>
+            <a href="{{ url_for('main.changelog_view') }}" class="text-decoration-none text-muted mx-2">Versionshinweise</a>
+        </div>
+        <div class="mt-2" style="font-size: 0.75rem; color: #aaa;">
+            v{{ app_version }}
         </div>
     </div>
 </footer>

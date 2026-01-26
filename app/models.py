@@ -238,6 +238,25 @@ class MarketStat(db.Model):
         return m_app - (m_ok + m_rej + m_wd)
 
 
+class SystemSetting(db.Model):
+    key = db.Column(db.String(50), primary_key=True)  # z.B. 'app_version', 'changelog_text'
+    value = db.Column(db.Text)
+
+    @staticmethod
+    def get_value(key, default=None):
+        setting = db.session.get(SystemSetting, key)
+        return setting.value if setting else default
+
+    @staticmethod
+    def set_value(key, value):
+        setting = db.session.get(SystemSetting, key)
+        if not setting:
+            setting = SystemSetting(key=key)
+            db.session.add(setting)
+        setting.value = value
+        db.session.commit()
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
