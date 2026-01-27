@@ -193,6 +193,9 @@ def upload_chunk():
 @login_required
 @permission_required('immo_user')
 def create_quick():
+    # 1. Onboarding Check
+    if not current_user.onboarding_confirmed_at:
+        return jsonify({'success': False, 'error': 'REDIRECT_ONBOARDING', 'url': url_for('onboarding.start')}), 403
     try:
         data = request.json
         csc_name = data.get('csc_name', 'Unbekannt')
@@ -672,7 +675,7 @@ def unarchive_project(inspection_id):
 # --- HELPER FUNKTION (Neu) ---
 def get_current_form_structure_as_dict():
     """Lädt die aktuelle DB-Struktur und gibt sie als Liste von Dictionaries zurück."""
-    sections_db = ImmoSection.query.order_by(ImmoSection.order).all()
+    sections_db = ImmoSection.query.filter_by(category='immo').order_by(ImmoSection.order).all()
     structure = []
 
     for sec in sections_db:

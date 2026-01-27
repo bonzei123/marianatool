@@ -37,7 +37,7 @@
                         <i class="bi bi-plus-lg"></i> Neue Besichtigung
                     </button>
 
-                {# --- BUTTONS FÜR ARCHIV ANSICHT --- #}
+                    {# --- BUTTONS FÜR ARCHIV ANSICHT --- #}
                 {% else %}
                     <a href="{{ url_for('projects.overview') }}" class="btn btn-outline-primary">
                         <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
@@ -80,109 +80,109 @@
                     </tr>
                     </thead>
                     <tbody class="bg-white" id="projectTableBody">
-{% for i in inspections %}
-    <tr id="row-{{ i.id }}"
-        style="cursor: pointer;"
-        class="{{ 'table-secondary text-muted' if i.is_archived else '' }}"
-        onclick="window.location.href='{{ url_for('projects.detail_view', inspection_id=i.id) }}'">
+                    {% for i in inspections %}
+                        <tr id="row-{{ i.id }}"
+                            style="cursor: pointer;"
+                            class="{{ 'table-secondary text-muted' if i.is_archived else '' }}"
+                            onclick="window.location.href='{{ url_for('projects.detail_view', inspection_id=i.id) }}'">
 
-        <td>
-            {% if i.is_archived %}
-                 <span class="badge bg-secondary w-100 py-2" title="Ursprünglicher Status: {{ i.status_label }}">
+                            <td>
+                                {% if i.is_archived %}
+                                    <span class="badge bg-secondary w-100 py-2" title="Ursprünglicher Status: {{ i.status_label }}">
                      <i class="bi bi-archive-fill me-1"></i> Archiv
                  </span>
-            {% elif current_user.is_admin or current_user.has_permission('immo_files_access') %}
-                <div class="dropdown" onclick="event.stopPropagation()">
-                    <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
-                            type="button" data-bs-toggle="dropdown">{{ i.status_label }}</button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'submitted', 'Status auf EINGEREICHT ändern?')">🔵 Eingereicht</a></li>
-                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'review', 'Status auf IN PRÜFUNG ändern?')">🟡 In Prüfung</a></li>
-                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'done', 'Status auf GENEHMIGT ändern?')">🟢 Genehmigt</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'rejected', 'Status auf ABGELEHNT ändern?')">🔴 Ablehnen</a></li>
-                    </ul>
-                </div>
-            {% else %}
-                {% if i.status == 'draft' and i.user_id == current_user.id %}
-                    <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
-                            onclick="event.stopPropagation(); confirmChangeStatus({{ i.id }}, 'submitted', 'Verbindlich einreichen?')">
-                        <i class="bi bi-send-fill me-1"></i> Einreichen
-                    </button>
-                {% else %}
-                    <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
-                {% endif %}
-            {% endif %}
-        </td>
+                                {% elif current_user.is_admin or current_user.has_permission('immo_files_access') %}
+                                    <div class="dropdown" onclick="event.stopPropagation()">
+                                        <button class="btn btn-sm btn-{{ i.status_color }} dropdown-toggle status-btn w-100"
+                                                type="button" data-bs-toggle="dropdown">{{ i.status_label }}</button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'submitted', 'Status auf EINGEREICHT ändern?')">🔵 Eingereicht</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'review', 'Status auf IN PRÜFUNG ändern?')">🟡 In Prüfung</a></li>
+                                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'done', 'Status auf GENEHMIGT ändern?')">🟢 Genehmigt</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="confirmChangeStatus({{ i.id }}, 'rejected', 'Status auf ABGELEHNT ändern?')">🔴 Ablehnen</a></li>
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    {% if i.status == 'draft' and i.user_id == current_user.id %}
+                                        <button class="btn btn-sm btn-outline-primary w-100 fw-bold"
+                                                onclick="event.stopPropagation(); confirmChangeStatus({{ i.id }}, 'submitted', 'Verbindlich einreichen?')">
+                                            <i class="bi bi-send-fill me-1"></i> Einreichen
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-{{ i.status_color }} w-100 py-2">{{ i.status_label }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
 
-        <td class="fw-bold {{ 'text-secondary' if i.is_archived else 'text-primary' }}">
-            {{ i.csc_name }}
-            {% if not i.is_archived and view_type == 'active' and (not last_visit or (i.updated_at and i.updated_at > last_visit)) %}
-                <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEU</span>
-            {% endif %}
-        </td>
+                            <td class="fw-bold {{ 'text-secondary' if i.is_archived else 'text-primary' }}">
+                                {{ i.csc_name }}
+                                {% if not i.is_archived and view_type == 'active' and (not last_visit or (i.updated_at and i.updated_at > last_visit)) %}
+                                    <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEU</span>
+                                {% endif %}
+                            </td>
 
-        <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
+                            <td><span class="badge bg-light text-dark border">{{ i.inspection_type }}</span></td>
 
-        <td class="small text-muted">{{ i.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td class="small text-muted">{{ i.created_at.strftime('%d.%m.%Y') }}</td>
 
-        <td>
-             <div class="d-flex align-items-center">
-                <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">{{ i.user.username[0]|upper }}</div>
-                <div style="line-height: 1.1;"><div class="small fw-bold">{{ i.user.username }}</div></div>
-            </div>
-        </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:25px; height:25px; font-size:0.7rem;">{{ i.user.username[0]|upper }}</div>
+                                    <div style="line-height: 1.1;"><div class="small fw-bold">{{ i.user.username }}</div></div>
+                                </div>
+                            </td>
 
-        <td class="text-end" onclick="event.stopPropagation()">
-            <div class="d-flex justify-content-end gap-1">
-                <a href="{{ url_for('projects.generate_and_download_pdf', inspection_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank" title="PDF">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                </a>
+                            <td class="text-end" onclick="event.stopPropagation()">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <a href="{{ url_for('projects.generate_and_download_pdf', inspection_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank" title="PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
 
-                {% set can_delete = current_user.is_admin or (i.user_id == current_user.id and i.status == 'draft') %}
-                {% set can_manage_archive = current_user.is_admin or current_user.has_permission('immo_files_access') %}
+                                    {% set can_delete = current_user.is_admin or (i.user_id == current_user.id and i.status == 'draft') %}
+                                    {% set can_manage_archive = current_user.is_admin or current_user.has_permission('immo_files_access') %}
 
-                {% if can_delete or can_manage_archive %}
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    {% if can_delete or can_manage_archive %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow">
 
-                            {# ARCHIVIEREN (Nur wenn NICHT archiviert) #}
-                            {% if can_manage_archive and not i.is_archived %}
-                                <li><button class="dropdown-item text-secondary" onclick="archiveProject({{ i.id }})"><i class="bi bi-archive me-2"></i> Archivieren</button></li>
-                            {% endif %}
+                                                {# ARCHIVIEREN (Nur wenn NICHT archiviert) #}
+                                                {% if can_manage_archive and not i.is_archived %}
+                                                    <li><button class="dropdown-item text-secondary" onclick="archiveProject({{ i.id }})"><i class="bi bi-archive me-2"></i> Archivieren</button></li>
+                                                {% endif %}
 
-                            {# WIEDERHERSTELLEN (Nur wenn archiviert) #}
-                            {% if can_manage_archive and i.is_archived %}
-                                <li><button class="dropdown-item text-success" onclick="unarchiveProject({{ i.id }})"><i class="bi bi-arrow-counterclockwise me-2"></i> Wiederherstellen</button></li>
-                            {% endif %}
+                                                {# WIEDERHERSTELLEN (Nur wenn archiviert) #}
+                                                {% if can_manage_archive and i.is_archived %}
+                                                    <li><button class="dropdown-item text-success" onclick="unarchiveProject({{ i.id }})"><i class="bi bi-arrow-counterclockwise me-2"></i> Wiederherstellen</button></li>
+                                                {% endif %}
 
-                            {# LÖSCHEN #}
-                            {% if can_delete %}
-                                {% if can_manage_archive %}<div class="dropdown-divider"></div>{% endif %}
-                                <li><button class="dropdown-item text-danger" onclick="deleteProject({{ i.id }}, '{{ i.csc_name|replace("'", "") }}')"><i class="bi bi-trash me-2"></i> Löschen</button></li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                {% endif %}
-            </div>
-        </td>
-    </tr>
-{% else %}
-    <tr id="noResultsRow">
-        <td colspan="6" class="text-center py-5 text-muted">
-            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-            {% if view_type == 'archive' %}
-                Das Archiv ist leer.
-            {% else %}
-                Keine aktiven Besichtigungen gefunden.
-            {% endif %}
-        </td>
-    </tr>
-{% endfor %}
-</tbody>
+                                                {# LÖSCHEN #}
+                                                {% if can_delete %}
+                                                    {% if can_manage_archive %}<div class="dropdown-divider"></div>{% endif %}
+                                                    <li><button class="dropdown-item text-danger" onclick="deleteProject({{ i.id }}, '{{ i.csc_name|replace("'", "") }}')"><i class="bi bi-trash me-2"></i> Löschen</button></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr id="noResultsRow">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                {% if view_type == 'archive' %}
+                                    Das Archiv ist leer.
+                                {% else %}
+                                    Keine aktiven Besichtigungen gefunden.
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -216,7 +216,219 @@
             </div>
         </div>
     </div>
+    {# --- ONBOARDING LOGIK (Nur auf der Projekt-Seite) --- #}
 
+    {# BEDINGUNG:
+   1. Onboarding noch nicht erledigt
+   2. User ist KEIN Admin
+   3. User HAT die Rolle 'immo_user' (oder entsprechende Permission)
+#}
+    {% if not current_user.onboarding_confirmed_at and not current_user.is_admin and current_user.has_permission('immo_user') %}
+
+        <div class="modal fade" id="onboardingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="onbTitle">Erste Schritte</h5>
+                    </div>
+                    <div class="modal-body py-4" id="onbBody">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Lade Anleitung...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <div class="d-flex justify-content-between w-100 align-items-center">
+                            <div id="onbSteps" class="text-muted small"></div>
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" id="btnPrev" style="display:none">Zurück</button>
+                                <button type="button" class="btn btn-primary" id="btnNext">Weiter</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', async function() {
+                const CONFIG_URL = '/formbuilder/onboarding/config';
+                const COMPLETE_URL = '/onboarding/complete';
+
+                const modalEl = document.getElementById('onboardingModal');
+                // Sicherheitscheck: Falls das Modal gar nicht im DOM ist (weil If-Bedingung false), brechen wir ab
+                if (!modalEl) return;
+
+                const bsModal = new bootstrap.Modal(modalEl);
+                const titleEl = document.getElementById('onbTitle');
+                const bodyEl = document.getElementById('onbBody');
+                const stepsEl = document.getElementById('onbSteps');
+                const btnNext = document.getElementById('btnNext');
+                const btnPrev = document.getElementById('btnPrev');
+
+                let steps = [];
+                let currentStepIndex = 0;
+                let isErrorState = false;
+
+                bsModal.show();
+                await loadConfig();
+
+                // Event Listener für Checkbox-Klicks im Modal-Body (Delegation)
+                bodyEl.addEventListener('change', function(e) {
+                    if (e.target && e.target.type === 'checkbox') {
+                        validateStep();
+                    }
+                });
+
+                async function loadConfig() {
+                    try {
+                        const res = await fetch(CONFIG_URL);
+                        if(!res.ok) throw new Error("Fehler (" + res.status + ")");
+
+                        const data = await res.json();
+                        steps = data.filter(s => s.content && s.content.length > 0);
+
+                        if (steps.length === 0) {
+                            steps = [{
+                                title: "Willkommen",
+                                content: [{type: 'info', label: "Willkommen!"}]
+                            }];
+                        }
+                        renderStep();
+                    } catch (e) {
+                        console.error(e);
+                        isErrorState = true;
+                        titleEl.innerText = "Fehler";
+                        bodyEl.innerHTML = `<div class="alert alert-danger">Anleitung konnte nicht geladen werden.</div>`;
+                        btnNext.innerText = "Schließen";
+                        btnNext.onclick = () => bsModal.hide();
+                    }
+                }
+
+                function renderStep() {
+                    if(isErrorState) return;
+                    const step = steps[currentStepIndex];
+                    titleEl.innerText = step.title;
+
+                    let html = '';
+
+                    step.content.forEach(item => {
+                        // 1. Überschriften
+                        if (item.type === 'header') {
+                            html += `<h4 class="mt-4 mb-2" style="color:#19835A; border-bottom:1px solid #eee; padding-bottom:5px;">${item.label}</h4>`;
+                        }
+                        // 2. Info-Boxen
+                        else if (item.type === 'info') {
+                            html += `<div class="alert alert-info border-0 bg-light-info"><i class="bi bi-info-circle me-2"></i>${item.label}</div>`;
+                        }
+                        // 3. Warn-Boxen
+                        else if (item.type === 'alert') {
+                            html += `<div class="alert alert-warning border-0"><i class="bi bi-exclamation-triangle me-2"></i>${item.label}</div>`;
+                        }
+                        // 4. CHECKBOXEN (Optimiert: Ganze Fläche klickbar & mittig)
+                        else if (item.type === 'checkbox') {
+                            // Prüfen ob Pflichtfeld
+                            // HINWEIS: Wir fügen 'mt-0' hinzu, um Bootstrap-Standard-Abstand zu entfernen
+                            const requiredAttr = item.is_required ? 'required' : '';
+                            const reqClass = item.is_required ? 'req-check' : '';
+                            const requiredMark = item.is_required ? '<span class="text-danger fw-bold ms-1">*</span>' : '';
+
+                            html += `
+                <div class="form-check position-relative d-flex align-items-center my-3 p-3 border rounded bg-light hover-shadow" style="cursor: pointer; transition: background 0.2s;">
+                    <input type="checkbox" id="cb_${item.id}" ${requiredAttr} class="form-check-input mt-0 me-3 flex-shrink-0 ${reqClass}" style="transform: scale(1.2);">
+
+                    <label class="form-check-label stretched-link m-0" for="cb_${item.id}" style="user-select: none; width: 100%;">
+                        ${item.label} ${requiredMark}
+                    </label>
+                </div>`;
+                        }
+                        // 5. Standard Text
+                        else {
+                            html += `<p class="mb-2 text-muted">${item.label}</p>`;
+                        }
+                    });
+
+                    bodyEl.innerHTML = html;
+                    stepsEl.innerText = `Schritt ${currentStepIndex + 1} von ${steps.length}`;
+
+                    // Buttons steuern
+                    btnPrev.style.display = currentStepIndex === 0 ? 'none' : 'inline-block';
+
+                    if (currentStepIndex === steps.length - 1) {
+                        btnNext.innerText = "Verstanden & Starten";
+                        btnNext.classList.remove('btn-primary');
+                        btnNext.classList.add('btn-success');
+                    } else {
+                        btnNext.innerText = "Weiter";
+                        btnNext.classList.add('btn-primary');
+                        btnNext.classList.remove('btn-success');
+                    }
+
+                    // SOFORT Validierung aufrufen (deaktiviert Button, wenn Pflichtfelder da sind)
+                    validateStep();
+                }
+
+                // Funktion prüft, ob alle Pflicht-Checkboxen angehakt sind
+                function validateStep() {
+                    const requiredCheckboxes = bodyEl.querySelectorAll('input.req-check');
+                    let allChecked = true;
+
+                    requiredCheckboxes.forEach(cb => {
+                        if (!cb.checked) {
+                            allChecked = false;
+                        }
+                    });
+
+                    // Button aktivieren oder deaktivieren
+                    btnNext.disabled = !allChecked;
+                }
+
+                btnNext.onclick = async () => {
+                    if(isErrorState) { bsModal.hide(); return; }
+
+                    // Sicherheitscheck (falls jemand den Button via HTML manipuliert)
+                    if (btnNext.disabled) return;
+
+                    if (currentStepIndex < steps.length - 1) {
+                        currentStepIndex++;
+                        renderStep();
+                    } else {
+                        await finishOnboarding();
+                    }
+                };
+
+                btnPrev.onclick = () => {
+                    if (currentStepIndex > 0) {
+                        currentStepIndex--;
+                        renderStep();
+                    }
+                };
+
+                async function finishOnboarding() {
+                    const originalText = btnNext.innerText;
+                    btnNext.disabled = true;
+                    btnNext.innerText = "Speichere...";
+
+                    try {
+                        const res = await fetch(COMPLETE_URL, { method: 'POST' });
+                        const result = await res.json();
+                        if (result.success) {
+                            bsModal.hide();
+                            // Optional: Reload, damit der User direkt loslegen kann
+                            // window.location.reload();
+                        } else {
+                            alert("Fehler: " + result.error);
+                            btnNext.disabled = false;
+                            btnNext.innerText = originalText;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        bsModal.hide(); // Bei Fehler lassen wir ihn rein
+                    }
+                }
+            });
+        </script>
+    {% endif %}
     <script>
         function confirmChangeStatus(id, status, msg) { if (confirm(msg)) changeStatus(id, status); }
         async function createQuickProject() {
@@ -237,4 +449,5 @@
         }
     </script>
     <script src="{{ url_for('static', filename='js/immo_overview.js') }}"></script>
+
 {% endblock %}

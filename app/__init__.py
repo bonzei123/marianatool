@@ -53,7 +53,15 @@ def create_app(config_class=Config):
     # 8. Stats / Markt-Daten -> /stats
     from app.stats import bp as stats_bp
     app.register_blueprint(stats_bp, url_prefix='/stats')
-    
+
+    # 9. Bereichsleitung -> /bl
+    from app.bereichsleitung import bp as bl_bp
+    app.register_blueprint(bl_bp, url_prefix='/bl')
+
+    # 10. Onboarding -> /onboarding
+    from app.onboarding import bp as onboarding_bp
+    app.register_blueprint(onboarding_bp, url_prefix='/onboarding')
+
     # --- CONTEXT PROCESSORS & FILTERS ---
 
     @app.context_processor

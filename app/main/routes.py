@@ -178,6 +178,19 @@ def get_changelog_settings():
     })
 
 
+@bp.route('/onboarding/complete', methods=['POST'])
+@login_required
+def complete_onboarding():
+    """Markiert das Onboarding für den aktuellen User als erledigt."""
+    try:
+        current_user.onboarding_confirmed_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 @bp.route('/favicon.ico')
 def favicon():
     """Favicon ausliefern."""

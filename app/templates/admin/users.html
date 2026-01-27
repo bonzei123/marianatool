@@ -25,6 +25,7 @@
                             data-username="{{ user.username }}"
                             data-email="{{ user.email }}"
                             data-admin="{{ 'true' if user.is_admin else 'false' }}"
+                            data-onboarding="{{ user.onboarding_confirmed_at.strftime('%d.%m.%Y %H:%M') if user.onboarding_confirmed_at else '' }}"
                             data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
                             onclick="openEditModal(this)">
                             <td class="ps-4 fw-bold text-dark">
@@ -103,15 +104,23 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
-
                     <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
+
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <label class="fw-bold d-block mb-2 text-muted small">Onboarding Status</label>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div id="onboardingStatusText" class="fw-bold text-dark">-</div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="btnResetOnboarding" onclick="resetOnboarding()">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="mb-3 p-3 border rounded bg-light text-center">
                         <label class="fw-bold d-block mb-2 text-muted small">Passwort Management</label>
                         <button type="button" class="btn btn-outline-warning w-100 fw-bold" onclick="sendResetMail()">
                             <i class="bi bi-envelope-at-fill me-2"></i> Reset-Link senden
                         </button>
-                        <div class="form-text small mt-1">Sendet eine E-Mail an den User, um das Passwort neu zu setzen.</div>
                     </div>
 
                     <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
@@ -120,15 +129,11 @@
                     </div>
 
                     <label class="fw-bold mb-2">Berechtigungen & Apps:</label>
-
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         {% for permission in all_permissions %}
-                            <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item"
-                                 title="{{ permission.description }}">
+                            <div class="border rounded px-3 py-2 bg-white d-flex align-items-center permission-item" title="{{ permission.description }}">
                                 <div class="form-check m-0 w-100">
-                                    <input class="form-check-input edit-srv" type="checkbox" name="permissions"
-                                           value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
-
+                                    <input class="form-check-input edit-srv" type="checkbox" name="permissions" value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
                                     <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
                                         <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
                                         <div>
@@ -149,11 +154,11 @@
         </div>
     </div>
 
-    <div id="js-config"
-         data-update-url="{{ url_for('user.update_user', user_id=0) }}"
-         data-delete-url="{{ url_for('user.delete_user', user_id=0) }}"
-         data-reset-url="{{ url_for('user.trigger_reset', user_id=0) }}">
-    </div>
+<div id="js-config"
+     data-update-url="{{ url_for('user.update_user', user_id=0) }}"
+     data-delete-url="{{ url_for('user.delete_user', user_id=0) }}"
+     data-reset-url="{{ url_for('user.trigger_reset', user_id=0) }}"
+     data-reset-onboarding-url="{{ url_for('user.reset_onboarding', user_id=0) }}"> </div>
 
     <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 {% endblock %}

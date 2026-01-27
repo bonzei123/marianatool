@@ -176,3 +176,18 @@ def trigger_reset(user_id):
         send_reset_email(user)
         return jsonify({"success": True, "message": f"Reset-Link an {user.email} gesendet."})
     return jsonify({"success": False, "message": "User nicht gefunden"}), 404
+
+
+@bp.route('/manage/<int:user_id>/reset_onboarding', methods=['POST'])
+@login_required
+@permission_required('view_users')
+def reset_onboarding(user_id):
+    """Setzt den Onboarding-Status eines Users zurück."""
+    user = db.session.get(User, user_id)
+    if not user:
+        return jsonify({"success": False, "message": "User nicht gefunden"}), 404
+
+    user.onboarding_confirmed_at = None
+    db.session.commit()
+
+    return jsonify({"success": True, "message": f"Onboarding für {user.username} zurückgesetzt."})

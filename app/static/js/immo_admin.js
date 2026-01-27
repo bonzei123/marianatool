@@ -15,15 +15,25 @@ const editorPane = document.getElementById('editorPane');
 const previewPane = document.getElementById('previewPane');
 const wrapper = document.getElementById('adminWrapper');
 
+const configEl = document.getElementById('builder-config');
+const LOAD_URL = configEl ? configEl.dataset.loadUrl : '/projects/config'; // Fallback
+const SAVE_URL = configEl ? configEl.dataset.saveUrl : '/formbuilder/save';
+const PREVIEW_KEY = configEl ? configEl.dataset.previewStorageKey : 'immo_admin_preview';
+
 async function init() {
-    const showPreview = localStorage.getItem('immo_admin_preview') !== 'false';
+    const showPreview = localStorage.getItem(PREVIEW_KEY) !== 'false';
     setPreviewState(showPreview);
 
-    const res = await fetch('/projects/config');
-    config = await res.json();
-    renderEditor();
-    renderPreview();
-    loadBackups();
+    try {
+        const res = await fetch(LOAD_URL);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        config = await res.json();
+        renderEditor();
+        renderPreview();
+    } catch (e) {
+        console.error("Fehler beim Laden der Config:", e);
+        alert("Fehler beim Laden der Konfiguration. Siehe Konsole.");
+    }
 }
 
 // --- VIEW TOGGLE & STORAGE ---
@@ -37,12 +47,12 @@ function setPreviewState(show) {
         previewPane.style.display = 'block';
         resizer.style.display = 'flex';
         editorPane.style.flex = '1';
-        localStorage.setItem('immo_admin_preview', 'true');
+        localStorage.setItem(PREVIEW_KEY, 'true');
     } else {
         previewPane.style.display = 'none';
         resizer.style.display = 'none';
         editorPane.style.flex = '1';
-        localStorage.setItem('immo_admin_preview', 'false');
+        localStorage.setItem(PREVIEW_KEY, 'false');
     }
 }
 
@@ -233,7 +243,6 @@ function toggleOpt(sel) {
 function removeEl(btn) { btn.closest(btn.classList.contains('btn-del')?'.question-card':'.section-card').remove(); sync(); }
 function addSection() { config.push({id: generateUniqueId('s'), title:'Neu', content:[]}); renderEditor(); sync(); }
 
-// NEU: is_print default true setzen
 function addQ(btn) { renderQ(btn.parentElement.previousElementSibling, {id: generateUniqueId('q'), label:'', type:'text', is_print: true}); sync(); }
 
 function scrape() {
@@ -248,6 +257,8 @@ function scrape() {
             if(badges[2].classList.contains('active')) types.push('ausgabe');
 
             let qId = q.querySelector('.q-id').value;
+            // Falls ID ein Client-Side String ist, übergeben wir sie so,
+            // Backend entscheidet (beim Onboarding ignorieren wir sie meist beim Re-Create)
             if(!qId) qId = generateUniqueId('q_scrape');
 
             qs.push({
@@ -277,10 +288,18 @@ function scrape() {
 
 async function saveConfig() {
     try {
-        const res = await fetch('/formbuilder/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(scrape()) });
+        const res = await fetch(SAVE_URL, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(scrape())
+        });
         const result = await res.json();
-        if(result.success) { alert("✅ Gespeichert!"); loadBackups(); }
-        else { alert("❌ Fehler: " + result.error); }
+        if(result.success) {
+            alert("✅ Gespeichert!");
+            // Optional: Seite neu laden, um echte DB-IDs zu bekommen
+            // window.location.reload();
+        }
+        else { alert("❌ Fehler: " + (result.error || "Unbekannter Fehler")); }
     } catch(e) { alert("Netzwerk Fehler: " + e); }
 }
 
@@ -306,20 +325,9 @@ function loadBackup(json) { if(json && confirm("Backup laden?")) { config = JSON
 // --- HELPER FÜR RESPONSIVE KLASSEN ---
 function getColClass(q) {
     const map = { 'full': 12, 'half': 6, 'third': 4 };
-
-    // 1. Desktop Wert ermitteln (Fallback: 6/Halb)
     let desk = map[q.width] || 6;
-
-    // 2. Tablet Wert (Wenn 'default', nimm Desktop)
     let tab = (q.width_tablet === 'default' || !q.width_tablet) ? desk : (map[q.width_tablet] || desk);
-
-    // 3. Mobile Wert (Wenn 'default', nimm Desktop - laut deiner Anforderung)
     let mob = (q.width_mobile === 'default' || !q.width_mobile) ? desk : (map[q.width_mobile] || desk);
-
-    // 4. Bootstrap Klassen bauen
-    // Mobile ist der Standard (col-X)
-    // Tablet überschreibt Mobile ab md (col-md-X)
-    // Desktop überschreibt Tablet ab lg (col-lg-X)
 
     let classes = `col-${mob}`;
     if (tab !== mob) classes += ` col-md-${tab}`;
@@ -346,7 +354,6 @@ function renderPreview() {
         }
 
         const openAttr = isOpen ? 'open' : '';
-        // UPDATE: Container ist jetzt eine Bootstrap Row mit Gutter (g-3)
         let html = `<details ${openAttr}><summary>${s.title}</summary><div class="p-content row g-3">`;
         let hasVisible = false;
 
@@ -354,13 +361,11 @@ function renderPreview() {
             if(q.types && !q.types.includes(currentSimType)) return;
             hasVisible = true;
 
-            // UPDATE: Berechne die responsive Klasse statt statisch 'w-half'
             const colClass = getColClass(q);
             const reqMark = q.is_required ? ' <span style="color:red; font-weight:bold">*</span>' : '';
 
             let fieldHtml = '';
 
-            // Header, Info und Alert sind immer volle Breite (col-12)
             if(q.type === 'header') fieldHtml = `<div class="col-12" style="margin-top:15px; border-bottom:2px solid #ddd; padding-bottom:5px;"><h4 style="color:#19835A; margin:0;">${q.label}</h4></div>`;
             else if (q.type === 'info') fieldHtml = `<div class="col-12 alert alert-info">${q.label}</div>`;
             else if (q.type === 'alert') fieldHtml = `<div class="col-12 alert alert-danger">${q.label}</div>`;

@@ -6,7 +6,11 @@
     {"id": 4, "slug": "immo_admin", "name": "Formular Editor", "description": "Darf den Fragebogen bearbeiten", "icon": "bi-pencil-square"},
     {"id": 5, "slug": "immo_files_access", "name": "Datei Zugriff", "description": "Darf alle Projekt-Dateien sehen", "icon": "bi-folder"},
     {"id": 6, "slug": "roadmap_access", "name": "Roadmap lesen", "description": "Darf die Roadmap sehen", "icon": "bi-map"},
-    {"id": 7, "slug": "roadmap_edit", "name": "Roadmap schreiben", "description": "Darf die Roadmap bearbeiten", "icon": "bi-pen"}
+    {"id": 7, "slug": "roadmap_edit", "name": "Roadmap schreiben", "description": "Darf die Roadmap bearbeiten", "icon": "bi-pen"},
+    {"id": 8, "slug": "analytics_access", "name": "Auswertungen sehen", "description": "Darf Statistiken und Exporte aufrufen", "icon": "bi-graph-up-arrow"},
+    {"id": 9, "slug": "stats_access", "name": "Marktdaten lesen", "description": "Darf bundesweite Statistiken einsehen", "icon": "bi-bar-chart-line"},
+    {"id": 10, "slug": "bl_user", "name": "Bereichsleitung (Lesen)", "description": "Einsicht in die Bereichsleitungs-Liste", "icon": "bi-building"},
+    {"id": 11, "slug": "bl_bl", "name": "Bereichsleitung (Verwalten)", "description": "Verwaltung von Bereichen und Vereinen", "icon": "bi-building-gear"}
   ],
   "tiles": [
     {
@@ -14,8 +18,16 @@
       "route": "projects.overview",
       "icon": "bi-list-ul",
       "color": "#3498db",
-      "order": 2,
+      "order": 1,
       "permission_slug": "immo_user"
+    },
+    {
+      "title": "Bereichsleitung",
+      "route": "bereichsleitung.index",
+      "icon": "bi-building",
+      "color": "#8e44ad",
+      "order": 2,
+      "permission_slug": "bl_user"
     },
     {
       "title": "Datei Browser",

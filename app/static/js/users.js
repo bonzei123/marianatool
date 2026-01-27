@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = row.getAttribute('data-username');
         const email = row.getAttribute('data-email');
         const isAdmin = row.getAttribute('data-admin') === 'true';
+        const onboardingDate = row.getAttribute('data-onboarding');
         const permissionsRaw = row.getAttribute('data-permissions');
         const permissions = permissionsRaw ? permissionsRaw.split(',').map(Number) : [];
 
@@ -50,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const realUpdateUrl = updateUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realDeleteUrl = deleteUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realResetUrl = resetUrlTemplate.replace('/0/', `/${currentUserId}/`);
+        const realResetOnboardingUrl = configDiv.dataset.resetOnboardingUrl.replace('/0/', `/${currentUserId}/`); // NEU
 
         // C. Form Action setzen
         document.getElementById('editForm').action = realUpdateUrl;
@@ -67,6 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('editUser').value = name;
         document.getElementById('editEmail').value = email || "";
         document.getElementById('editAdmin').checked = isAdmin;
+        const obText = document.getElementById('onboardingStatusText');
+        const obBtn = document.getElementById('btnResetOnboarding');
 
         // F. Checkboxen setzen (zuerst alle resetten, dann setzen)
         document.querySelectorAll('#editModal .edit-srv').forEach(cb => cb.checked = false);
@@ -75,6 +79,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const chk = document.querySelector(`#editModal input[value="${permId}"]`);
             if (chk) chk.checked = true;
         });
+
+        obBtn.dataset.url = realResetOnboardingUrl;
+
+        if (onboardingDate) {
+            obText.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> ${onboardingDate}</span>`;
+            obBtn.disabled = false;
+        } else {
+            obText.innerHTML = `<span class="text-muted"><i class="bi bi-circle"></i> Ausstehend</span>`;
+            obBtn.disabled = true;
+        }
 
         // G. Anzeigen
         if (editModalInstance) editModalInstance.show();
@@ -150,5 +164,26 @@ async function sendResetMail() {
         alert("Netzwerkfehler: " + e);
         btn.innerHTML = originalText;
         btn.disabled = false;
+    }
+}
+
+async function resetOnboarding() {
+    const btn = document.getElementById('btnResetOnboarding');
+    const url = btn.dataset.url;
+
+    if(!url || !confirm("Soll das Onboarding für diesen User zurückgesetzt werden? Er muss es beim nächsten Login erneut durchlaufen.")) return;
+
+    try {
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+
+        if(data.success) {
+            alert("Erfolgreich zurückgesetzt.");
+            window.location.reload();
+        } else {
+            alert("Fehler: " + data.message);
+        }
+    } catch(e) {
+        alert("Netzwerkfehler");
     }
 }

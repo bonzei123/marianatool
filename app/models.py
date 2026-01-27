@@ -36,6 +36,7 @@ class User(UserMixin, db.Model):
     last_projects_visit = db.Column(db.DateTime)
     last_users_visit = db.Column(db.DateTime)
     last_roadmap_visit = db.Column(db.DateTime)
+    onboarding_confirmed_at = db.Column(db.DateTime, nullable=True)
     permissions = db.relationship('Permission', secondary=user_permissions, lazy='subquery',
                                   backref=db.backref('users', lazy=True))
 
@@ -79,7 +80,9 @@ class ImmoSection(db.Model):
     title = db.Column(db.String(200))
     order = db.Column(db.Integer)
     is_expanded = db.Column(db.Boolean, default=True)
-    questions = db.relationship('ImmoQuestion', backref='section', cascade="all, delete-orphan", order_by='ImmoQuestion.order')
+    category = db.Column(db.String(20), default='immo', nullable=False)
+    questions = db.relationship('ImmoQuestion', backref='section', cascade="all, delete-orphan",
+                                order_by='ImmoQuestion.order')
 
 
 class ImmoQuestion(db.Model):
