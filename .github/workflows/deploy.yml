@@ -7,7 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   # Format: ghcr.io/username/repository-name
-  IMAGE_NAME: ghcr.io/DEIN_GITHUB_USER/marianatool
+  IMAGE_NAME: ghcr.io/bonzei123/marianatool
 
 jobs:
   build-and-push:
