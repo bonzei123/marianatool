@@ -3,11 +3,12 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from datetime import datetime
-from app.models import User, Permission, Inspection, InspectionLog
+from app.models import User, Permission, Inspection, InspectionLog, Verein  # <--- Verein importiert
 from app.auth.forms import UpdateAccountForm
 from app.utils import send_reset_email
 from app.decorators import permission_required
 from app.user import bp
+
 
 # ==============================================================================
 # SELF SERVICE (Mein Profil)
@@ -58,6 +59,7 @@ def list_users():
     # last_visit übergeben
     return render_template('admin/users.html',
                            users=User.query.all(),
+                           vereine=Verein.query.order_by(Verein.name).all(),  # <--- Vereine laden
                            all_permissions=Permission.query.all(),
                            last_visit=last_visit)
 
@@ -72,11 +74,23 @@ def create_user():
     password = request.form.get('password')
     is_admin = 'is_admin' in request.form
 
+    # Verein ID holen (kann leer sein)
+    verein_id = request.form.get('verein_id')
+    if verein_id and verein_id.isdigit():
+        verein_id = int(verein_id)
+    else:
+        verein_id = None
+
     if User.query.filter((User.username == username) | (User.email == email)).first():
         flash('User oder E-Mail existiert bereits', 'danger')
     else:
-        new_user = User(username=username, email=email, password_hash=generate_password_hash(password),
-                        is_admin=is_admin)
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password),
+            is_admin=is_admin,
+            verein_id=verein_id  # <--- Verein setzen
+        )
         for s_id in request.form.getlist('permissions'):
             s = db.session.get(Permission, int(s_id))
             if s: new_user.permissions.append(s)
@@ -99,7 +113,14 @@ def update_user(user_id):
     # 1. Basisdaten
     user.is_admin = 'is_admin' in request.form
 
-    # 2. Email Update
+    # 2. Verein Update
+    verein_id = request.form.get('verein_id')
+    if verein_id and verein_id.isdigit():
+        user.verein_id = int(verein_id)
+    else:
+        user.verein_id = None
+
+    # 3. Email Update
     new_email = request.form.get('email')
     if new_email and new_email != user.email:
         if not User.query.filter_by(email=new_email).first():
@@ -108,7 +129,7 @@ def update_user(user_id):
             flash(f'E-Mail {new_email} ist schon vergeben!', 'warning')
             return redirect(url_for('user.list_users'))
 
-    # 3. Permissions
+    # 4. Permissions
     user.permissions = []
     for s_id in request.form.getlist('permissions'):
         s = db.session.get(Permission, int(s_id))

@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('bereichsleitung.index') }}#grow" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i> Zurück</a>
+                <div>
+                    <h2 class="text-black fw-bold mb-0">Anbaustelle Details</h2>
+                    <p class="text-black-50 mb-0">Verwaltung des Standorts</p>
+                </div>
+            </div>
+            <button type="submit" form="anbauForm" class="btn btn-success fw-bold px-4 shadow"><i class="bi bi-save me-2"></i>Speichern</button>
+        </div>
+
+        <form id="anbauForm" method="POST">
+            <div class="row">
+                <<div class="col-md-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light fw-bold text-uppercase text-muted small">Basisdaten</div>
+                    <div class="card-body">
+
+                        <div class="mb-4 bg-light p-3 rounded border">
+                            <label class="fw-bold mb-1">Aktueller Status</label>
+                            <div class="d-flex gap-2">
+                    <span class="badge align-self-center p-2" style="{{ anbau.status_color_css }}">
+                        {{ anbau.status_label }}
+                    </span>
+                                <select name="status" class="form-select w-auto fw-bold">
+                                    {% for s in status_options %}
+                                        <option value="{{ s.id }}" {% if anbau.status_id == s.id %}selected{% endif %}>
+                                            {{ s.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="fw-bold">Bezeichnung</label>
+                            <input type="text" name="name" class="form-control form-control-lg fw-bold" value="{{ anbau.name }}" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="fw-bold">Adresse</label>
+                                <input type="text" name="address" class="form-control" value="{{ anbau.address or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fw-bold">Bundesland</label>
+                                <select name="state" class="form-select">
+                                    <option value="">- Wählen -</option>
+                                    {% for k, v in states %}
+                                        <option value="{{ k }}" {% if anbau.state == k %}selected{% endif %}>{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Typ (Nicht änderbar)</label>
+                            <select class="form-select bg-light" disabled>
+                                <option value="einzel" {% if anbau.anbau_type == 'einzel' %}selected{% endif %}>Einzelanbau</option>
+                                <option value="cluster" {% if anbau.anbau_type == 'cluster' %}selected{% endif %}>Cluster (Gemeinschaft)</option>
+                            </select>
+                            <small class="text-muted">Der Anlagetyp kann nach Erstellung nicht mehr geändert werden.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-buildings me-2"></i>Zugehörige Vereine</div>
+                        <div class="card-body">
+                            {% if anbau.vereine %}
+                                <ul class="list-group list-group-flush">
+                                    {% for v in anbau.vereine %}
+                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            <span>{{ v.name }}</span>
+                                            <a href="{{ url_for('bereichsleitung.verein_detail', id=v.id) }}" class="btn btn-sm btn-light border"><i class="bi bi-arrow-right"></i></a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted small">Aktuell kein Verein zugewiesen.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

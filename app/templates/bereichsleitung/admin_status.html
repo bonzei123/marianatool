@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Status Definitionen</h3>
+        <a href="{{ url_for('bereichsleitung.index') }}#admin" class="btn btn-outline-secondary">Zurück</a>
+    </div>
+
+    <div class="row">
+        {% for context, items in grouped.items() %}
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white text-uppercase fw-bold">{{ context }}</div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for s in items %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="badge me-2" style="{{ s.get_color_css(items|length) }}">{{ loop.index }}</span>
+                                {{ s.name }}
+                            </div>
+                            <div class="d-flex gap-1">
+                                {% if not loop.first %}
+                                <form action="{{ url_for('bereichsleitung.move_status', id=s.id, direction='up') }}" method="POST">
+                                    <button class="btn btn-sm btn-light border"><i class="bi bi-arrow-up"></i></button>
+                                </form>
+                                {% endif %}
+                                {% if not loop.last %}
+                                <form action="{{ url_for('bereichsleitung.move_status', id=s.id, direction='down') }}" method="POST">
+                                    <button class="btn btn-sm btn-light border"><i class="bi bi-arrow-down"></i></button>
+                                </form>
+                                {% endif %}
+                                <form action="{{ url_for('bereichsleitung.delete_status', id=s.id) }}" method="POST" onsubmit="return confirm('Status löschen? Alle betroffenen Objekte werden auf Default gesetzt.');">
+                                    <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <form action="{{ url_for('bereichsleitung.add_status') }}" method="POST" class="d-flex gap-2">
+                        <input type="hidden" name="context" value="{{ context }}">
+                        <input type="text" name="name" class="form-control form-control-sm" placeholder="Neuer Status..." required>
+                        <button class="btn btn-sm btn-success">+</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

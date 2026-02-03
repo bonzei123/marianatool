@@ -1,24 +1,477 @@
 {% extends "layout.html" %}
+
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <div>
-            <h2 class="mb-0 fw-bold"><i class="bi bi-building me-2"></i>Bereichsleitung</h2>
-            <div class="text-muted small">Verwaltung von Regionalstrukturen und Vereinen</div>
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-black fw-bold mb-0">Bereichsleitung Dashboard</h2>
+                <p class="text-black-50 mb-0">Verwaltung der Anbau- und Abgabevereinigungen</p>
+            </div>
         </div>
-        
-        {% if current_user.has_permission('bl_bl') or current_user.is_admin %}
-        <div>
-            <button class="btn btn-primary fw-bold">
-                <i class="bi bi-plus-lg me-2"></i> Bereich anlegen
-            </button>
+
+        <ul class="nav nav-tabs mb-4" id="blTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="myclub-tab" data-bs-toggle="tab" data-bs-target="#myclub" type="button" role="tab">
+                    <i class="bi bi-house-heart-fill me-2"></i>Mein Verein
+                </button>
+            </li>
+
+            {% if current_user.has_permission('bl_bl') or current_user.is_admin %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="clubs-tab" data-bs-toggle="tab" data-bs-target="#clubs" type="button" role="tab">
+                        <i class="bi bi-buildings-fill me-2"></i>Vereine
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="grow-tab" data-bs-toggle="tab" data-bs-target="#grow" type="button" role="tab">
+                        <i class="bi bi-flower1 me-2"></i>Anbaustellen
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="dist-tab" data-bs-toggle="tab" data-bs-target="#dist" type="button" role="tab">
+                        <i class="bi bi-shop me-2"></i>Abgabestellen
+                    </button>
+                </li>
+                {% if current_user.is_admin %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold text-warning" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab">
+                            <i class="bi bi-gear-wide-connected me-2"></i>Import & Admin
+                        </button>
+                    </li>
+                {% endif %}
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="blTabsContent">
+
+            <div class="tab-pane fade show active" id="myclub" role="tabpanel">
+                {% if mein_verein %}
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-success text-white fw-bold">
+                                    <i class="bi bi-info-circle me-2"></i>Vereinsdaten
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="fw-bold text-dark">{{ mein_verein.name }}</h3>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted fw-bold">Sitz:</div>
+                                        <div class="col-8">{{ mein_verein.zip_code }} {{ mein_verein.city }} ({{ mein_verein.state_seat }})</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted fw-bold">Vorstand:</div>
+                                        <div class="col-8">{{ mein_verein.board_member or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted fw-bold">Präv.-Beauftr.:</div>
+                                        <div class="col-8">{{ mein_verein.prev_officer or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4 text-muted fw-bold">e.V. Status:</div>
+                                        <div class="col-8">
+                                            {% if mein_verein.is_ev %}
+                                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> Eingetragen (e.V.)</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Nicht eingetragen</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 p-3 bg-light rounded border">
+                                        <label class="small text-uppercase text-muted fw-bold ls-1">Aktueller Status</label>
+                                        <div class="d-flex align-items-center mt-2">
+                                            <span class="badge fs-6 py-2 px-3 shadow-sm" style="{{ mein_verein.status_color_css }}">
+                                                {{ mein_verein.status_label }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-dark text-white fw-bold">
+                                    <i class="bi bi-people-fill me-2"></i>Zuständige Bereichsleitung
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted small">
+                                        Diese Personen sind für die Verwaltung deines Vereins in diesem System zuständig.
+                                    </p>
+
+                                    {% if mein_verein.managers %}
+                                        <div class="list-group">
+                                            {% for manager in mein_verein.managers %}
+                                                <div class="list-group-item d-flex align-items-center">
+                                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width:40px; height:40px;">
+                                                        <i class="bi bi-person-fill text-secondary fs-5"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 fw-bold">{{ manager.username }}</h6>
+                                                        <small class="text-muted">{{ manager.email }}</small>
+                                                    </div>
+                                                    {% if manager.is_admin %}
+                                                        <span class="badge bg-danger ms-auto">Admin</span>
+                                                    {% else %}
+                                                        <span class="badge bg-primary ms-auto">BL</span>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Noch keine Bereichsleitung zugewiesen.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center p-5 shadow-sm">
+                        <h1 class="display-4"><i class="bi bi-emoji-frown"></i></h1>
+                        <h4 class="mt-3">Du bist noch keinem Verein zugeordnet.</h4>
+                        <p>Bitte wende dich an einen Administrator, um deinen Account mit einem Verein zu verknüpfen.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="clubs" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="fw-bold mt-2">Alle Vereine</h5>
+                    {% if current_user.is_admin %}
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createVereinModal">+ Neuer Verein</button>
+                    {% endif %}
+                </div>
+
+                <div class="card shadow border-0">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Name</th>
+                                <th>Ort</th>
+                                <th>Status</th>
+                                <th>Anbau</th>
+                                <th class="text-end pe-4">Aktion</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for v in vereine %}
+                                <tr onclick="window.location='{{ url_for('bereichsleitung.verein_detail', id=v.id) }}'" style="cursor: pointer;">
+                                    <td class="ps-4 fw-bold">{{ v.name }} {% if v.is_ev %}<span class="badge bg-success ms-1">e.V.</span>{% endif %}</td>
+                                    <td>{{ v.zip_code }} {{ v.city }}</td>
+                                    <td>
+                                        <span class="badge border" style="{{ v.status_color_css }}">{{ v.status_label }}</span>
+                                    </td>
+                                    <td class="small text-muted">
+                                        {{ v.anbaustelle.name if v.anbaustelle else '-' }}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        {% if current_user.is_admin %}
+                                            <form action="{{ url_for('bereichsleitung.delete_entity', type='verein', id=v.id) }}"
+                                                  method="POST"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Verein wirklich löschen?');"
+                                                  onclick="event.stopPropagation()">
+                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% else %}
+                                            <i class="bi bi-chevron-right text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="5" class="text-center p-4">Keine Vereine gefunden.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="grow" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="fw-bold mt-2">Anbaustellen</h5>
+                    {% if current_user.is_admin %}
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAnbauModal">+ Neue Anbaustelle</button>
+                    {% endif %}
+                </div>
+
+                <div class="card shadow border-0">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Name / ID</th>
+                                <th>Typ</th>
+                                <th>Status</th> <th>Standort</th>
+                                <th class="text-end pe-4">Aktion</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for a in anbaustellen %}
+                                <tr onclick="window.location='{{ url_for('bereichsleitung.anbau_detail', id=a.id) }}'" style="cursor: pointer;">
+                                    <td class="ps-4 fw-bold">{{ a.name }}</td>
+                                    <td>
+                                        {% if a.anbau_type == 'cluster' %}
+                                            <span class="badge bg-info text-dark">Cluster</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Einzel</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge border" style="{{ a.status_color_css }}">{{ a.status_label }}</span>
+                                    </td>
+                                    <td>{{ a.address }} <span class="text-muted">({{ a.state }})</span></td>
+                                    <td class="text-end pe-4">
+                                        {% if current_user.is_admin %}
+                                            <form action="{{ url_for('bereichsleitung.delete_entity', type='anbau', id=a.id) }}"
+                                                  method="POST"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Anbaustelle wirklich löschen?');"
+                                                  onclick="event.stopPropagation()">
+                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% else %}
+                                            <i class="bi bi-chevron-right text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="text-center p-4">Keine Anbaustellen zugewiesen.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="dist" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="fw-bold mt-2">Abgabestellen</h5>
+                    {% if current_user.is_admin %}
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAbgabeModal">+ Neue Abgabestelle</button>
+                    {% endif %}
+                </div>
+
+                <div class="card shadow border-0">
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Verein</th>
+                                <th>Status</th> <th>Adresse</th>
+                                <th>Bundesland</th>
+                                <th class="text-end pe-4">Aktion</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for d in ausgabestellen %}
+                                <tr onclick="window.location='{{ url_for('bereichsleitung.ausgabe_detail', id=d.id) }}'" style="cursor: pointer;">
+                                    <td class="ps-4">{{ d.verein.name }}</td>
+                                    <td>
+                                        <span class="badge border" style="{{ d.status_color_css }}">{{ d.status_label }}</span>
+                                    </td>
+                                    <td class="fw-bold">{{ d.address }}</td>
+                                    <td>{{ d.state }}</td>
+                                    <td class="text-end pe-4">
+                                        {% if current_user.is_admin %}
+                                            <form action="{{ url_for('bereichsleitung.delete_entity', type='abgabe', id=d.id) }}"
+                                                  method="POST"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Abgabestelle löschen?');"
+                                                  onclick="event.stopPropagation()">
+                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% else %}
+                                            <i class="bi bi-chevron-right text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="text-center p-4">Keine Abgabestellen gefunden.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="admin" role="tabpanel">
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                         <div class="card shadow-sm border-0">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="fw-bold mb-0">Status-Workflows verwalten</h5>
+                                    <p class="text-muted mb-0 small">Definiere die Schritte für Vereine, Anbau und Ausgabe.</p>
+                                </div>
+                                <a href="{{ url_for('bereichsleitung.manage_status') }}" class="btn btn-dark fw-bold">
+                                    <i class="bi bi-list-check me-2"></i>Verwalten
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-3">
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-primary text-white fw-bold">1. Vereine Import</div>
+                            <div class="card-body">
+                                <p class="small text-muted">Importiert Stammdaten. Aktualisiert existierende Vereine (Name Match).</p>
+                                <form action="{{ url_for('bereichsleitung.import_data', type='vereine') }}" method="POST" enctype="multipart/form-data">
+                                    <input type="file" name="file" class="form-control mb-2" required accept=".json">
+                                    <button class="btn btn-primary w-100 btn-sm fw-bold">Vereine Importieren</button>
+                                </form>
+                                <hr>
+                                <small class="fw-bold d-block mb-1">JSON Struktur:</small>
+                                <pre class="bg-light p-2 rounded border text-muted" style="font-size: 0.65rem; max-height: 150px; overflow-y: auto;">
+[
+  {
+    "name": "Muster Verein e.V.",
+    "city": "Berlin",
+    "zip_code": "10115",
+    "state_seat": "BE",
+    "status": "Gegründet",
+    "is_ev": true
+  }
+]</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-success text-white fw-bold">2. Anbaustellen Import</div>
+                            <div class="card-body">
+                                <p class="small text-muted">Erstellt Anbau-Cluster oder Einzelstandorte.</p>
+                                <form action="{{ url_for('bereichsleitung.import_data', type='anbau') }}" method="POST" enctype="multipart/form-data">
+                                    <input type="file" name="file" class="form-control mb-2" required accept=".json">
+                                    <button class="btn btn-success w-100 btn-sm fw-bold">Anbau Importieren</button>
+                                </form>
+                                <hr>
+                                <small class="fw-bold d-block mb-1">JSON Struktur:</small>
+                                <pre class="bg-light p-2 rounded border text-muted" style="font-size: 0.65rem; max-height: 150px; overflow-y: auto;">
+[
+  {
+    "name": "Cluster Nord",
+    "address": "Feldweg 1, Hamburg",
+    "state": "HH",
+    "type": "cluster"
+  }
+]</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-warning text-dark fw-bold">3. Abgabestellen Import</div>
+                            <div class="card-body">
+                                <p class="small text-muted">Benötigt Feld <code>verein_name</code> im JSON zur Zuordnung.</p>
+                                <form action="{{ url_for('bereichsleitung.import_data', type='abgabe') }}" method="POST" enctype="multipart/form-data">
+                                    <input type="file" name="file" class="form-control mb-2" required accept=".json">
+                                    <button class="btn btn-warning w-100 btn-sm fw-bold">Abgabe Importieren</button>
+                                </form>
+                                <hr>
+                                <small class="fw-bold d-block mb-1">JSON Struktur:</small>
+                                <pre class="bg-light p-2 rounded border text-muted" style="font-size: 0.65rem; max-height: 150px; overflow-y: auto;">
+[
+  {
+    "verein_name": "Muster Verein e.V.",
+    "address": "Hauptstr. 5, Berlin",
+    "state": "BE"
+  }
+]</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        {% endif %}
     </div>
 
-    <div class="alert alert-info">
-        <i class="bi bi-cone-striped me-2"></i> 
-        <strong>In Entwicklung:</strong> Dieser Bereich wird gerade aufgebaut. Hier entsteht die Übersicht der Bereichsleiter.
+    <div class="modal fade" id="createVereinModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('bereichsleitung.create_entity', type='verein') }}" method="POST">
+                <div class="modal-header bg-success text-white"><h5 class="modal-title">Verein anlegen</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="name" class="form-control" required></div>
+                    <div class="mb-3"><label class="fw-bold">Stadt</label><input type="text" name="city" class="form-control"></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-success fw-bold w-100">Erstellen</button></div>
+            </form>
+        </div>
     </div>
-</div>
+
+    <div class="modal fade" id="createAnbauModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('bereichsleitung.create_entity', type='anbau') }}" method="POST">
+                <div class="modal-header bg-success text-white"><h5 class="modal-title">Anbaustelle anlegen</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="name" class="form-control" required></div>
+                    <div class="mb-3"><label class="fw-bold">Typ</label>
+                        <select name="type" class="form-select"><option value="einzel">Einzel</option><option value="cluster">Cluster</option></select>
+                    </div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-success fw-bold w-100">Erstellen</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createAbgabeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('bereichsleitung.create_entity', type='abgabe') }}" method="POST">
+                <div class="modal-header bg-success text-white"><h5 class="modal-title">Abgabestelle anlegen</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="fw-bold">Adresse</label><input type="text" name="address" class="form-control" required></div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Gehört zu Verein (ID)</label>
+                        <select name="verein_id" class="form-select" required>
+                            <option value="">- Verein wählen -</option>
+                            {% for v in vereine %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-success fw-bold w-100">Erstellen</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Beim Laden: Prüfen ob ein Hash in der URL steht (z.B. #clubs)
+            let hash = window.location.hash;
+            if (hash) {
+                // Suche den Button, der dieses Target hat
+                let triggerEl = document.querySelector(`#blTabs button[data-bs-target="${hash}"]`);
+                if (triggerEl) {
+                    // Tab aktivieren
+                    let tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            }
+
+            // 2. Beim Klicken: Hash in die URL schreiben (ohne Reload)
+            let tabEls = document.querySelectorAll('#blTabs button[data-bs-toggle="tab"]');
+            tabEls.forEach(function(el) {
+                el.addEventListener('shown.bs.tab', function (event) {
+                    let target = event.target.getAttribute('data-bs-target');
+                    if(target) {
+                        history.replaceState(null, null, target);
+                    }
+                });
+            });
+        });
+    </script>
+
 {% endblock %}

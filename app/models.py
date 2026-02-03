@@ -6,15 +6,32 @@ from flask_login import UserMixin
 from app.extensions import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Many-to-Many Tabelle
+# --- KONSTANTEN ---
+
+GERMAN_STATES = [
+    ('BW', 'Baden-Württemberg'), ('BY', 'Bayern'), ('BE', 'Berlin'),
+    ('BB', 'Brandenburg'), ('HB', 'Bremen'), ('HH', 'Hamburg'),
+    ('HE', 'Hessen'), ('MV', 'Mecklenburg-Vorpommern'), ('NI', 'Niedersachsen'),
+    ('NW', 'Nordrhein-Westfalen'), ('RP', 'Rheinland-Pfalz'), ('SL', 'Saarland'),
+    ('SN', 'Sachsen'), ('ST', 'Sachsen-Anhalt'), ('SH', 'Schleswig-Holstein'),
+    ('TH', 'Thüringen')
+]
+
+# --- ASSOCIATION TABLES ---
+
 user_permissions = db.Table('user_permissions',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'), primary_key=True)
-)
+                            db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+                            db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'), primary_key=True)
+                            )
+
+# Kreuzverbindung: Welche User sind Bereichsleiter für welche Vereine?
+verein_bereichsleitung = db.Table('verein_bereichsleitung',
+                                  db.Column('verein_id', db.Integer, db.ForeignKey('verein.id'), primary_key=True),
+                                  db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+                                  )
 
 
 class Permission(db.Model):
-    # Tabellenname explizit setzen (optional, aber sauber)
     __tablename__ = 'permission'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -26,29 +43,167 @@ class Permission(db.Model):
     background_image = db.Column(db.String(100), nullable=True)
 
 
+class StatusDefinition(db.Model):
+    """
+    Speichert dynamische Status-Workflows für verschiedene Bereiche.
+    """
+    __tablename__ = 'status_definition'
+
+    CONTEXT_VEREIN = 'verein'
+    CONTEXT_ANBAU = 'anbau'
+    CONTEXT_AUSGABE = 'ausgabe'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    context = db.Column(db.String(20), nullable=False)  # z.B. 'verein', 'anbau'
+    position = db.Column(db.Integer, default=0)  # Für die Sortierung
+
+    def get_color_css(self, total_steps):
+        """Berechnet dynamisch eine Farbe von Rot (0) bis Grün (100%)."""
+        if total_steps <= 1:
+            hue = 0
+        else:
+            # 0 = Rot, 120 = Grün.
+            # Wir normalisieren die Position auf 0.0 bis 1.0
+            percent = self.position / (total_steps - 1)
+            hue = int(percent * 120)
+
+        # HSL Rückgabe für CSS (Sättigung 70%, Helligkeit 45%)
+        return f"background-color: hsl({hue}, 70%, 45%); color: white;"
+
+
+class Anbaustelle(db.Model):
+    __tablename__ = 'anbaustelle'
+
+    TYPE_SINGLE = 'einzel'
+    TYPE_CLUSTER = 'cluster'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(255))
+    state = db.Column(db.String(50))  # Bundesland Dropdown Value
+    anbau_type = db.Column(db.String(20), default=TYPE_SINGLE)
+
+    # Relation: Eine Anbaustelle kann mehrere Vereine beherbergen (Cluster)
+    vereine = db.relationship('Verein', backref='anbaustelle', lazy=True)
+
+    # NEU: Status Relation
+    status_id = db.Column(db.Integer, db.ForeignKey('status_definition.id'), nullable=True)
+    status_rel = db.relationship('StatusDefinition', foreign_keys=[status_id])
+
+    @property
+    def status_label(self):
+        return self.status_rel.name if self.status_rel else "Kein Status"
+
+    @property
+    def status_color_css(self):
+        if not self.status_rel:
+            return "background-color: #6c757d; color: white;"
+
+        # Wir müssen wissen, wie viele Schritte es insgesamt in diesem Kontext gibt
+        # Das ist performancetechnisch nicht ideal direkt im Model, aber für kleine Mengen ok.
+        total = db.session.query(StatusDefinition).filter_by(context='anbau').count()
+        return self.status_rel.get_color_css(total)
+
+
+class Verein(db.Model):
+    __tablename__ = 'verein'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(100))
+    zip_code = db.Column(db.String(10))
+
+    # Bundesländer
+    state_seat = db.Column(db.String(50))  # Sitz des Vereins
+    state_grow = db.Column(db.String(50))  # Anbaubundesland
+    state_dist = db.Column(db.String(50))  # Default Abgabebundesland
+
+    # Personen (Textfelder)
+    board_member = db.Column(db.String(150))  # Vorstand
+    prev_officer = db.Column(db.String(150))  # Präventionsbeauftragter
+
+    is_ev = db.Column(db.Boolean, default=False)
+
+    # NEU: Status Relation statt String
+    status_id = db.Column(db.Integer, db.ForeignKey('status_definition.id'), nullable=True)
+    status_rel = db.relationship('StatusDefinition', foreign_keys=[status_id])
+
+    # Relationen
+    anbaustelle_id = db.Column(db.Integer, db.ForeignKey('anbaustelle.id'), nullable=True)
+
+    # Manager (Bereichsleitung) - Many-to-Many
+    managers = db.relationship('User', secondary=verein_bereichsleitung,
+                               backref=db.backref('managed_vereine', lazy=True))
+
+    @property
+    def status_label(self):
+        return self.status_rel.name if self.status_rel else "Kein Status"
+
+    @property
+    def status_color_css(self):
+        if not self.status_rel:
+            return "background-color: #6c757d; color: white;"
+
+        total = db.session.query(StatusDefinition).filter_by(context='verein').count()
+        return self.status_rel.get_color_css(total)
+
+
+class Ausgabestelle(db.Model):
+    __tablename__ = 'ausgabestelle'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))  # Optionaler Name
+    address = db.Column(db.String(255))
+    state = db.Column(db.String(50))
+
+    verein_id = db.Column(db.Integer, db.ForeignKey('verein.id'), nullable=False)
+    verein = db.relationship('Verein', backref='ausgabestellen', lazy=True)
+
+    # NEU: Status Relation
+    status_id = db.Column(db.Integer, db.ForeignKey('status_definition.id'), nullable=True)
+    status_rel = db.relationship('StatusDefinition', foreign_keys=[status_id])
+
+    @property
+    def status_label(self):
+        return self.status_rel.name if self.status_rel else "Kein Status"
+
+    @property
+    def status_color_css(self):
+        if not self.status_rel:
+            return "background-color: #6c757d; color: white;"
+
+        total = db.session.query(StatusDefinition).filter_by(context='ausgabe').count()
+        return self.status_rel.get_color_css(total)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False) # <--- NEU
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     last_projects_visit = db.Column(db.DateTime)
     last_users_visit = db.Column(db.DateTime)
     last_roadmap_visit = db.Column(db.DateTime)
     onboarding_confirmed_at = db.Column(db.DateTime, nullable=True)
+
+    # Permissions
     permissions = db.relationship('Permission', secondary=user_permissions, lazy='subquery',
                                   backref=db.backref('users', lazy=True))
 
+    # NEU: Ein User kann Mitglied in EINEM Verein sein
+    verein_id = db.Column(db.Integer, db.ForeignKey('verein.id'), nullable=True)
+    verein = db.relationship('Verein', foreign_keys=[verein_id], backref='members')
+
     def has_permission(self, slug_name):
-        # Admin darf alles (Gott-Modus)
         if self.is_admin:
             return True
-        # Sonst prüfen wir, ob der User den Service/Permission hat
         return any(p.slug == slug_name for p in self.permissions)
 
     def get_reset_token(self, expires_sec=1800):
-        # Erstellt ein Token, das 30 Minuten gültig ist
         return jwt.encode(
             {'user_id': self.id, 'exp': time() + expires_sec},
             current_app.config['SECRET_KEY'], algorithm='HS256'
@@ -110,8 +265,8 @@ class ImmoBackup(db.Model):
 
 
 class SiteContent(db.Model):
-    id = db.Column(db.String(50), primary_key=True)  # z.B. 'roadmap'
-    content = db.Column(db.Text, nullable=True)  # Markdown Text
+    id = db.Column(db.String(50), primary_key=True)
+    content = db.Column(db.Text, nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     author = db.relationship('User', backref='content_updates')
@@ -121,10 +276,10 @@ class DashboardTile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64), nullable=False)
     description = db.Column(db.String(255))
-    icon = db.Column(db.String(64), default="bi-box")  # z.B. "bi-house-check-fill"
-    color_hex = db.Column(db.String(7), default="#19835A")  # z.B. "#19835A"
-    route_name = db.Column(db.String(128), nullable=False)  # z.B. 'immo.immo_form'
-    order = db.Column(db.Integer, default=0)  # Sortierung (1, 2, 3...)
+    icon = db.Column(db.String(64), default="bi-box")
+    color_hex = db.Column(db.String(7), default="#19835A")
+    route_name = db.Column(db.String(128), nullable=False)
+    order = db.Column(db.Integer, default=0)
     required_permission_id = db.Column(db.Integer, db.ForeignKey('permission.id'), nullable=True)
     required_permission = db.relationship('Permission')
 
@@ -132,40 +287,29 @@ class DashboardTile(db.Model):
 class Inspection(db.Model):
     __tablename__ = 'inspection'
 
-    # Status Konstanten (für sauberen Code)
-    STATUS_DRAFT = 'draft'  # Entwurf (noch nicht abgesendet)
-    STATUS_SUBMITTED = 'submitted'  # Abgeschickt (Grau/Blau)
-    STATUS_REVIEW = 'review'  # In Prüfung (Gelb)
-    STATUS_DONE = 'done'  # Erledigt / Genehmigt (Grün)
-    STATUS_REJECTED = 'rejected'  # Abgelehnt / Nachbesserung (Rot)
+    STATUS_DRAFT = 'draft'
+    STATUS_SUBMITTED = 'submitted'
+    STATUS_REVIEW = 'review'
+    STATUS_DONE = 'done'
+    STATUS_REJECTED = 'rejected'
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Metadaten zur Besichtigung
-    csc_name = db.Column(db.String(100), nullable=False)  # Name des Anbauclubs/Projekts
-    inspection_type = db.Column(db.String(50))  # einzel, cluster, ausgabe
-
-    # Status (Ampel) - HIER GEÄNDERT: Default ist jetzt Draft
+    csc_name = db.Column(db.String(100), nullable=False)
+    inspection_type = db.Column(db.String(50))
     status = db.Column(db.String(20), default=STATUS_DRAFT)
 
-    # Verknüpfung zum Ersteller
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('inspections', lazy=True))
 
     is_archived = db.Column(db.Boolean, default=False, nullable=False)
-
-    # Datei-Pfad (Relativ zu UPLOAD_FOLDER)
     pdf_path = db.Column(db.String(255))
-
-    # JSON Daten (Wir speichern die kompletten Formulardaten,
-    # damit man später Statistiken fahren oder editieren kann)
     data_json = db.Column(db.Text, nullable=True)
 
     @property
     def status_color(self):
-        """Gibt die Bootstrap-Farbe für den Status zurück"""
         colors = {
             self.STATUS_DRAFT: 'secondary',
             self.STATUS_SUBMITTED: 'primary',
@@ -177,7 +321,6 @@ class Inspection(db.Model):
 
     @property
     def status_label(self):
-        """Gibt ein schönes Label zurück"""
         labels = {
             self.STATUS_DRAFT: 'Entwurf',
             self.STATUS_SUBMITTED: 'Eingereicht',
@@ -193,25 +336,22 @@ class InspectionLog(db.Model):
     inspection_id = db.Column(db.Integer, db.ForeignKey('inspection.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    action = db.Column(db.String(50))  # z.B. 'status_change', 'data_update', 'file_upload'
-    details = db.Column(db.Text)  # Beschreibung was geändert wurde
+    action = db.Column(db.String(50))
+    details = db.Column(db.Text)
 
     inspection = db.relationship('Inspection', backref=db.backref('logs', order_by=timestamp.desc(), lazy=True))
     user = db.relationship('User')
 
 
 class MarketStat(db.Model):
-    """Speichert die Antragszahlen pro Bundesland."""
     id = db.Column(db.Integer, primary_key=True)
     state_name = db.Column(db.String(50), unique=True)
 
-    # Gesamtmarkt (Scraper)
     applied = db.Column(db.Integer, default=0)
     approved = db.Column(db.Integer, default=0)
     rejected = db.Column(db.Integer, default=0)
     withdrawn = db.Column(db.Integer, default=0)
 
-    # NEU: Mariana Interne Zahlen (Manuell oder später autom. gepflegt)
     mariana_applied = db.Column(db.Integer, default=0)
     mariana_approved = db.Column(db.Integer, default=0)
     mariana_rejected = db.Column(db.Integer, default=0)
@@ -222,8 +362,6 @@ class MarketStat(db.Model):
 
     @property
     def open_applications(self):
-        """Berechnet: Gestellt - (Genehmigt + Abgelehnt + Zurückgezogen)"""
-        # (x or 0) wandelt None sicher in 0 um
         app = self.applied or 0
         ok = self.approved or 0
         rej = self.rejected or 0
@@ -232,8 +370,6 @@ class MarketStat(db.Model):
 
     @property
     def mariana_open(self):
-        """Berechnet offene Mariana Anträge."""
-        # Auch hier: None sicher in 0 umwandeln
         m_app = self.mariana_applied or 0
         m_ok = self.mariana_approved or 0
         m_rej = self.mariana_rejected or 0
@@ -242,7 +378,7 @@ class MarketStat(db.Model):
 
 
 class SystemSetting(db.Model):
-    key = db.Column(db.String(50), primary_key=True)  # z.B. 'app_version', 'changelog_text'
+    key = db.Column(db.String(50), primary_key=True)
     value = db.Column(db.Text)
 
     @staticmethod

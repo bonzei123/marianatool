@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteUrlTemplate = configDiv.dataset.deleteUrl;
     const resetUrlTemplate = configDiv.dataset.resetUrl;
 
-    // --- NEU: UX - Ganze Permission-Box klickbar machen ---
+    // --- UX - Ganze Permission-Box klickbar machen ---
     document.querySelectorAll('.permission-item').forEach(item => {
         item.style.cursor = 'pointer'; // Hand-Cursor anzeigen
 
@@ -24,11 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!chk) return;
 
             // 1. Wenn der User direkt das kleine Kästchen trifft:
-            // Lassen wir den Browser machen (sonst verhindern wir den Klick darauf).
             if (e.target === chk) return;
 
             // 2. Wenn der User auf Text, Icon, Label oder Hintergrund klickt:
-            // Verhindern wir, dass das Label den Klick weiterleitet (würde sonst doppelt feuern)
             e.preventDefault();
 
             // Und schalten den Haken manuell um
@@ -42,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUserId = row.getAttribute('data-id');
         const name = row.getAttribute('data-username');
         const email = row.getAttribute('data-email');
+        const vereinId = row.getAttribute('data-verein-id'); // <--- NEU: Verein ID lesen
         const isAdmin = row.getAttribute('data-admin') === 'true';
         const onboardingDate = row.getAttribute('data-onboarding');
         const permissionsRaw = row.getAttribute('data-permissions');
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const realUpdateUrl = updateUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realDeleteUrl = deleteUrlTemplate.replace('/0/', `/${currentUserId}/`);
         const realResetUrl = resetUrlTemplate.replace('/0/', `/${currentUserId}/`);
-        const realResetOnboardingUrl = configDiv.dataset.resetOnboardingUrl.replace('/0/', `/${currentUserId}/`); // NEU
+        const realResetOnboardingUrl = configDiv.dataset.resetOnboardingUrl.replace('/0/', `/${currentUserId}/`);
 
         // C. Form Action setzen
         document.getElementById('editForm').action = realUpdateUrl;
@@ -68,6 +67,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('editTitle').innerText = "Bearbeiten: " + name;
         document.getElementById('editUser').value = name;
         document.getElementById('editEmail').value = email || "";
+
+        // <--- NEU: Verein Dropdown setzen
+        const vereinSelect = document.getElementById('editVerein');
+        if (vereinSelect) {
+            vereinSelect.value = vereinId || "";
+        }
+
         document.getElementById('editAdmin').checked = isAdmin;
         const obText = document.getElementById('onboardingStatusText');
         const obBtn = document.getElementById('btnResetOnboarding');

@@ -16,7 +16,13 @@
             <div class="card border-0 shadow-lg rounded-3 overflow-hidden">
                 <table class="table table-hover mb-0 align-middle" id="userTable">
                     <thead class="bg-light">
-                    <tr><th class="ps-4">User</th><th>E-Mail</th><th>Rolle</th><th>Rechte</th><th class="text-end pe-4">Aktion</th></tr>
+                    <tr>
+                        <th class="ps-4">User</th>
+                        <th>E-Mail</th>
+                        <th>Verein</th> <th>Rolle</th>
+                        <th>Rechte</th>
+                        <th class="text-end pe-4">Aktion</th>
+                    </tr>
                     </thead>
                     <tbody>
                     {% for user in users %}
@@ -24,6 +30,7 @@
                             data-id="{{ user.id }}"
                             data-username="{{ user.username }}"
                             data-email="{{ user.email }}"
+                            data-verein-id="{{ user.verein_id or '' }}"
                             data-admin="{{ 'true' if user.is_admin else 'false' }}"
                             data-onboarding="{{ user.onboarding_confirmed_at.strftime('%d.%m.%Y %H:%M') if user.onboarding_confirmed_at else '' }}"
                             data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
@@ -34,7 +41,17 @@
                                     <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.6em;">NEU</span>
                                 {% endif %}
                             </td>
-                            <td class="text-muted">{{ user.email }}</td> <td>
+                            <td class="text-muted">{{ user.email }}</td>
+
+                            <td class="text-muted">
+                                {% if user.verein %}
+                                    <i class="bi bi-people-fill me-1 text-success"></i> {{ user.verein.name }}
+                                {% else %}
+                                    <span class="text-secondary opacity-50">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
                             {% if user.is_admin %}
                                 <span class="badge bg-danger">Admin</span>
                             {% else %}
@@ -61,6 +78,17 @@
                 <div class="modal-body p-4">
                     <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="username" class="form-control" required></div>
                     <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" class="form-control" required></div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold">Mitgliedschaft (Verein)</label>
+                        <select name="verein_id" class="form-select">
+                            <option value="">- Kein Verein -</option>
+                            {% for v in vereine %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     <div class="mb-3"><label class="fw-bold">Start-Passwort</label><input type="text" name="password" class="form-control" required></div>
 
                     <div class="form-check form-switch mb-3 p-3 border rounded bg-light">
@@ -105,6 +133,16 @@
                 <div class="modal-body p-4">
                     <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
                     <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold">Mitgliedschaft (Verein)</label>
+                        <select name="verein_id" id="editVerein" class="form-select">
+                            <option value="">- Kein Verein -</option>
+                            {% for v in vereine %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
                     <div class="mb-3 p-3 border rounded bg-light">
                         <label class="fw-bold d-block mb-2 text-muted small">Onboarding Status</label>
