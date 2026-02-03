@@ -2,7 +2,7 @@ import json
 from app.extensions import db, mail
 from app.models import ImmoSection, ImmoQuestion, User
 from flask_mail import Message
-from flask import current_app
+from flask import current_app, url_for
 
 
 def import_json_data(data):
