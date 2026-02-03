@@ -1,5 +1,5 @@
 import json
-from app.extensions import db
+from app.extensions import db, mail
 from app.models import ImmoSection, ImmoQuestion, User
 from flask_mail import Message
 from flask import current_app
@@ -83,11 +83,38 @@ def import_json_data(data):
 
 def send_reset_email(user):
     """
-    Sendet eine Passwort-Reset-Mail an den User.
-    (Hier als Platzhalter, falls noch nicht implementiert)
+    Sendet eine echte Passwort-Reset-Mail mit Flask-Mail.
     """
     token = user.get_reset_token()
-    # Hier müsste deine Mail-Logik hin, z.B.:
-    # msg = Message('Passwort zurücksetzen', sender='noreply@demo.com', recipients=[user.email])
-    # ...
-    print(f"Simuliere Mail an {user.email} mit Token: {token}")
+
+    # 1. Betreff und Absender konfigurieren
+    msg = Message('Passwort zurücksetzen - MarianaTool',
+                  sender=current_app.config.get('MAIL_DEFAULT_SENDER'),
+                  recipients=[user.email])
+
+    # 2. Reset-Link generieren
+    # _external=True ist zwingend nötig, damit die volle Domain (http://...) generiert wird
+    reset_url = url_for('auth.reset_token', token=token, _external=True)
+
+    # 3. E-Mail Inhalt (Plaintext)
+    msg.body = f'''Hallo {user.username},
+
+um dein Passwort zurückzusetzen, klicke bitte auf den folgenden Link:
+
+{reset_url}
+
+Dieser Link ist 30 Minuten gültig.
+
+Wenn du diese Anfrage nicht gestellt hast, ignoriere diese E-Mail einfach. Es werden keine Änderungen vorgenommen.
+
+Dein MarianaTool Team
+'''
+
+    # 4. Senden
+    try:
+        mail.send(msg)
+        print(f"[MAIL] Reset-Mail erfolgreich an {user.email} gesendet.")
+    except Exception as e:
+        print(f"[ERROR] Fehler beim Senden der Mail an {user.email}: {e}")
+        # Optional: Hier könnte man loggen oder den Fehler raisen,
+        # damit der User im Frontend Feedback bekommt.
