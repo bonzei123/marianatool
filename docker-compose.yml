@@ -1,9 +1,8 @@
 version: '3.8'
 
-permissions:
+services:
   webtool:
-    build:
-      context: https://github.com/bonzei123/marianatool.git
+    image: ghcr.io/bonzei123/marianatool:latest
     container_name: marianatool
     restart: always
     ports:
