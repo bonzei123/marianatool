@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from datetime import datetime
-from app.models import User, Permission, Inspection, InspectionLog, Verein  # <--- Verein importiert
+from app.models import User, Permission, Inspection, InspectionLog, Verein
 from app.auth.forms import UpdateAccountForm
 from app.utils import send_reset_email
 from app.decorators import permission_required
@@ -19,7 +19,10 @@ from app.user import bp
 def profile_view():
     """Zeigt das eigene Profil an."""
     form = UpdateAccountForm()
+    # Bestehende Daten ins Formular laden
     form.username.data = current_user.username
+    form.first_name.data = current_user.first_name
+    form.last_name.data = current_user.last_name
     form.email.data = current_user.email
     return render_template('auth/profile.html', form=form)
 
@@ -30,8 +33,13 @@ def profile_update():
     """Aktualisiert das eigene Profil."""
     form = UpdateAccountForm()
     if form.validate_on_submit():
-        current_user.username = form.username.data
+        # Username NICHT aktualisieren (Read-Only Policy)
+        # current_user.username = form.username.data
+
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
         current_user.email = form.email.data
+
         db.session.commit()
         flash('Dein Profil wurde aktualisiert!', 'success')
         return redirect(url_for('user.profile_view'))
@@ -59,7 +67,7 @@ def list_users():
     # last_visit übergeben
     return render_template('admin/users.html',
                            users=User.query.all(),
-                           vereine=Verein.query.order_by(Verein.name).all(),  # <--- Vereine laden
+                           vereine=Verein.query.order_by(Verein.name).all(),
                            all_permissions=Permission.query.all(),
                            last_visit=last_visit)
 
@@ -70,6 +78,8 @@ def list_users():
 def create_user():
     """Legt einen neuen User an."""
     username = request.form.get('username')
+    first_name = request.form.get('first_name')  # <--- NEU
+    last_name = request.form.get('last_name')  # <--- NEU
     email = request.form.get('email')
     password = request.form.get('password')
     is_admin = 'is_admin' in request.form
@@ -86,10 +96,12 @@ def create_user():
     else:
         new_user = User(
             username=username,
+            first_name=first_name,
+            last_name=last_name,
             email=email,
             password_hash=generate_password_hash(password),
             is_admin=is_admin,
-            verein_id=verein_id  # <--- Verein setzen
+            verein_id=verein_id
         )
         for s_id in request.form.getlist('permissions'):
             s = db.session.get(Permission, int(s_id))
@@ -110,8 +122,14 @@ def update_user(user_id):
         flash('User nicht gefunden', 'danger')
         return redirect(url_for('user.list_users'))
 
-    # 1. Basisdaten
+    # 1. Basisdaten (Admin, Namen)
     user.is_admin = 'is_admin' in request.form
+
+    # NEU: Namen aktualisieren (falls im Admin-Formular gesendet)
+    if 'first_name' in request.form:
+        user.first_name = request.form.get('first_name')
+    if 'last_name' in request.form:
+        user.last_name = request.form.get('last_name')
 
     # 2. Verein Update
     verein_id = request.form.get('verein_id')

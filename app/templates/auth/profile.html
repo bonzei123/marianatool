@@ -7,16 +7,31 @@
             <div class="card-body p-4">
                 <form method="POST">
                     {{ form.hidden_tag() }}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.first_name.label(class="form-label fw-bold") }}
+                            {{ form.first_name(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            {{ form.last_name.label(class="form-label fw-bold") }}
+                            {{ form.last_name(class="form-control") }}
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         {{ form.username.label(class="form-label fw-bold") }}
-                        {{ form.username(class="form-control") }}
+                        {{ form.username(class="form-control", disabled=True) }}
+                        <div class="form-text text-muted">Der Benutzername kann nicht geändert werden.</div>
                     </div>
-                    <div class="mb-3">
+
+                    <div class="mb-4">
                         {{ form.email.label(class="form-label fw-bold") }}
                         {{ form.email(class="form-control") }}
                     </div>
+
                     <div class="d-grid">
-                        {{ form.submit(class="btn btn-success") }}
+                        {{ form.submit(class="btn btn-success fw-bold") }}
                     </div>
                 </form>
             </div>

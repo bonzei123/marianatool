@@ -11,9 +11,21 @@
                 </div>
                 <form method="post" action="">
                     {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            {{ form.first_name.label(class="form-label fw-bold small text-muted") }}
+                            {{ form.first_name(class="form-control", placeholder="Max") }}
+                        </div>
+                        <div class="col-6 mb-3">
+                            {{ form.last_name.label(class="form-label fw-bold small text-muted") }}
+                            {{ form.last_name(class="form-control", placeholder="Mustermann") }}
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         {{ form.username.label(class="form-label fw-bold small text-muted") }}
-                        {{ form.username(class="form-control", placeholder="Wunsch-Benutzername") }}
+                        {{ form.username(class="form-control", placeholder="Wunsch-Benutzername (Login)") }}
                     </div>
                     <div class="mb-3">
                         {{ form.email.label(class="form-label fw-bold small text-muted") }}

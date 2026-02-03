@@ -109,8 +109,11 @@
                                                         <i class="bi bi-person-fill text-secondary fs-5"></i>
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-0 fw-bold">{{ manager.username }}</h6>
-                                                        <small class="text-muted">{{ manager.email }}</small>
+                                                        <h6 class="mb-0 fw-bold">{{ manager.full_name }}</h6>
+                                                        <div class="d-flex flex-column">
+                                                            <small class="text-muted">{{ manager.email }}</small>
+                                                            <small class="text-muted fst-italic" style="font-size: 0.7rem;">Login: {{ manager.username }}</small>
+                                                        </div>
                                                     </div>
                                                     {% if manager.is_admin %}
                                                         <span class="badge bg-danger ms-auto">Admin</span>
@@ -153,8 +156,8 @@
                             <thead class="bg-light text-muted small text-uppercase">
                             <tr>
                                 <th class="ps-4">Name</th>
-                                <th>Ort</th>
-                                <th>Status</th>
+                                <th>Bundesland</th> <th>Status</th>
+                                <th>Bereichsleiter</th>
                                 <th>Anbau</th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
@@ -162,14 +165,34 @@
                             <tbody>
                             {% for v in vereine %}
                                 <tr onclick="window.location='{{ url_for('bereichsleitung.verein_detail', id=v.id) }}'" style="cursor: pointer;">
-                                    <td class="ps-4 fw-bold">{{ v.name }} {% if v.is_ev %}<span class="badge bg-success ms-1">e.V.</span>{% endif %}</td>
-                                    <td>{{ v.zip_code }} {{ v.city }}</td>
+                                    <td class="ps-4 fw-bold">
+                                        {{ v.name }}
+                                        {% if v.is_ev %}<span class="badge bg-success ms-1">e.V.</span>{% endif %}
+                                        <div class="small text-muted fw-normal">{{ v.city }}</div>
+                                    </td>
+
+                                    <td>{{ v.state_seat }}</td>
+
                                     <td>
                                         <span class="badge border" style="{{ v.status_color_css }}">{{ v.status_label }}</span>
                                     </td>
+
+                                    <td>
+                                        {% if v.managers %}
+                                            {% for m in v.managers %}
+                                                <div class="small text-dark">
+                                                    <i class="bi bi-person-fill text-muted me-1"></i>{{ m.full_name }}
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted small opacity-50">-</span>
+                                        {% endif %}
+                                    </td>
+
                                     <td class="small text-muted">
                                         {{ v.anbaustelle.name if v.anbaustelle else '-' }}
                                     </td>
+
                                     <td class="text-end pe-4">
                                         {% if current_user.is_admin %}
                                             <form action="{{ url_for('bereichsleitung.delete_entity', type='verein', id=v.id) }}"
@@ -185,7 +208,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center p-4">Keine Vereine gefunden.</td></tr>
+                                <tr><td colspan="6" class="text-center p-4">Keine Vereine gefunden.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -242,7 +265,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="4" class="text-center p-4">Keine Anbaustellen zugewiesen.</td></tr>
+                                <tr><td colspan="5" class="text-center p-4">Keine Anbaustellen zugewiesen.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -293,7 +316,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="4" class="text-center p-4">Keine Abgabestellen gefunden.</td></tr>
+                                <tr><td colspan="5" class="text-center p-4">Keine Abgabestellen gefunden.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>

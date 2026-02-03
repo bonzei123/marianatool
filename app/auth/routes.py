@@ -64,7 +64,16 @@ def register_action():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_pw = generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data, email=form.email.data, password_hash=hashed_pw)
+
+        # NEU: first_name und last_name übergeben
+        new_user = User(
+            username=form.username.data,
+            email=form.email.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            password_hash=hashed_pw
+        )
+
         db.session.add(new_user)
         db.session.commit()
         flash('Account erstellt! Du kannst dich nun einloggen.', 'success')

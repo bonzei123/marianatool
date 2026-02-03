@@ -39,8 +39,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // A. Daten aus Tabelle lesen
         currentUserId = row.getAttribute('data-id');
         const name = row.getAttribute('data-username');
+
+        // <--- NEU: Vor- und Nachname lesen
+        const firstName = row.getAttribute('data-firstname');
+        const lastName = row.getAttribute('data-lastname');
+
         const email = row.getAttribute('data-email');
-        const vereinId = row.getAttribute('data-verein-id'); // <--- NEU: Verein ID lesen
+        const vereinId = row.getAttribute('data-verein-id');
         const isAdmin = row.getAttribute('data-admin') === 'true';
         const onboardingDate = row.getAttribute('data-onboarding');
         const permissionsRaw = row.getAttribute('data-permissions');
@@ -66,9 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // E. Felder befüllen
         document.getElementById('editTitle').innerText = "Bearbeiten: " + name;
         document.getElementById('editUser').value = name;
+
+        // <--- NEU: Input Felder befüllen
+        document.getElementById('editFirstName').value = firstName || "";
+        document.getElementById('editLastName').value = lastName || "";
+
         document.getElementById('editEmail').value = email || "";
 
-        // <--- NEU: Verein Dropdown setzen
         const vereinSelect = document.getElementById('editVerein');
         if (vereinSelect) {
             vereinSelect.value = vereinId || "";
@@ -105,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const filter = document.getElementById('userSearch').value.toLowerCase();
         const rows = document.querySelectorAll('#userTable tbody tr');
         rows.forEach(r => {
+            // Wir suchen jetzt im gesamten Text der Zeile (enthält Username, Fullname und Email)
             const text = r.innerText.toLowerCase();
             r.style.display = text.includes(filter) ? '' : 'none';
         });

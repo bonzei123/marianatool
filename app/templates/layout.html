@@ -41,10 +41,22 @@
 </nav>
 
 <div id="sideMenu" class="sidebar" onclick="event.stopPropagation()">
-    <div class="sidebar-header">
+    <div class="sidebar-header mb-3">
         <h5 class="m-0 fw-bold text-success">Menü</h5>
         <button class="btn-close" onclick="document.getElementById('sideMenu').classList.remove('open')"></button>
     </div>
+
+    {% if current_user.is_authenticated %}
+        <div class="px-3 pb-3 mb-3 border-bottom d-flex align-items-center">
+            <div class="bg-success text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
+                {{ current_user.first_name[0]|upper if current_user.first_name else current_user.username[0]|upper }}
+            </div>
+            <div style="line-height: 1.2;">
+                <div class="fw-bold text-dark">{{ current_user.display_name }}</div>
+                <small class="text-muted" style="font-size: 0.75rem;">{{ current_user.username }}</small>
+            </div>
+        </div>
+    {% endif %}
 
     <div class="mb-4">
         <h6 class="text-uppercase text-muted small fw-bold mb-3">Aktionen</h6>

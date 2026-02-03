@@ -17,7 +17,7 @@
                 <table class="table table-hover mb-0 align-middle" id="userTable">
                     <thead class="bg-light">
                     <tr>
-                        <th class="ps-4">User</th>
+                        <th class="ps-4">User / Name</th>
                         <th>E-Mail</th>
                         <th>Verein</th> <th>Rolle</th>
                         <th>Rechte</th>
@@ -29,18 +29,25 @@
                         <tr style="cursor:pointer;"
                             data-id="{{ user.id }}"
                             data-username="{{ user.username }}"
+                            data-firstname="{{ user.first_name or '' }}"
+                            data-lastname="{{ user.last_name or '' }}"
                             data-email="{{ user.email }}"
                             data-verein-id="{{ user.verein_id or '' }}"
                             data-admin="{{ 'true' if user.is_admin else 'false' }}"
                             data-onboarding="{{ user.onboarding_confirmed_at.strftime('%d.%m.%Y %H:%M') if user.onboarding_confirmed_at else '' }}"
                             data-permissions="{{ user.permissions|map(attribute='id')|list|join(',') }}"
                             onclick="openEditModal(this)">
-                            <td class="ps-4 fw-bold text-dark">
-                                {{ user.username }}
-                                {% if not last_visit or (user.created_at and user.created_at > last_visit) %}
-                                    <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.6em;">NEU</span>
-                                {% endif %}
+
+                            <td class="ps-4 text-dark">
+                                <div class="fw-bold">
+                                    {{ user.full_name }}
+                                    {% if not last_visit or (user.created_at and user.created_at > last_visit) %}
+                                        <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.6em;">NEU</span>
+                                    {% endif %}
+                                </div>
+                                <div class="small text-muted" style="font-size: 0.75rem;">Login: {{ user.username }}</div>
                             </td>
+
                             <td class="text-muted">{{ user.email }}</td>
 
                             <td class="text-muted">
@@ -76,7 +83,19 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="mb-3"><label class="fw-bold">Name</label><input type="text" name="username" class="form-control" required></div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="fw-bold">Vorname</label>
+                            <input type="text" name="first_name" class="form-control" placeholder="Max">
+                        </div>
+                        <div class="col-6">
+                            <label class="fw-bold">Nachname</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Mustermann">
+                        </div>
+                    </div>
+
+                    <div class="mb-3"><label class="fw-bold">Benutzername (Login)</label><input type="text" name="username" class="form-control" required></div>
                     <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" class="form-control" required></div>
 
                     <div class="mb-3">
@@ -104,9 +123,9 @@
                                  title="{{ permission.description }}">
                                 <div class="form-check m-0 w-100">
                                     <input class="form-check-input edit-srv" type="checkbox" name="permissions"
-                                           value="{{ permission.id }}" id="edit_srv_{{ permission.id }}">
+                                           value="{{ permission.id }}" id="create_srv_{{ permission.id }}">
 
-                                    <label class="form-check-label w-100 d-flex align-items-center" for="edit_srv_{{ permission.id }}" style="cursor:pointer;">
+                                    <label class="form-check-label w-100 d-flex align-items-center" for="create_srv_{{ permission.id }}" style="cursor:pointer;">
                                         <i class="bi {{ permission.icon }} me-2 text-secondary"></i>
                                         <div>
                                             <span class="small fw-bold d-block">{{ permission.name }}</span>
@@ -131,7 +150,23 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="mb-3"><label class="fw-bold">User</label><input type="text" id="editUser" class="form-control" disabled></div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="fw-bold">Vorname</label>
+                            <input type="text" name="first_name" id="editFirstName" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="fw-bold">Nachname</label>
+                            <input type="text" name="last_name" id="editLastName" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold">Benutzername (Login)</label>
+                        <input type="text" id="editUser" class="form-control" disabled style="background-color: #e9ecef;">
+                    </div>
+
                     <div class="mb-3"><label class="fw-bold">E-Mail</label><input type="email" name="email" id="editEmail" class="form-control" required></div>
 
                     <div class="mb-3">

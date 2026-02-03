@@ -179,7 +179,9 @@ class Ausgabestelle(db.Model):
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
+    username = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    first_name = db.Column(db.String(64))
+    last_name = db.Column(db.String(64))
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
@@ -223,6 +225,28 @@ class User(UserMixin, db.Model):
         except:
             return None
         return db.session.get(User, user_id)
+
+    @property
+    def display_name(self):
+        """
+        Gibt Vorname zurück, wenn vorhanden.
+        Sonst den Username.
+        Gut für die Begrüßung im Dashboard ("Hallo Thomas").
+        """
+        if self.first_name:
+            return self.first_name
+        return self.username
+
+    @property
+    def full_name(self):
+        """
+        Gibt vollen Namen zurück, wenn vorhanden.
+        Sonst den Username.
+        Gut für PDFs und Listen ("Müller, Thomas").
+        """
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.username
 
 
 class ImmoSetting(db.Model):

@@ -13,7 +13,9 @@ class LoginForm(FlaskForm):
 
 class RegisterForm(FlaskForm):
     username = StringField("Benutzer", validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField("E-Mail", validators=[DataRequired(), Email()]) # <--- NEU
+    first_name = StringField("Vorname", validators=[DataRequired()])
+    last_name = StringField("Nachname", validators=[DataRequired()])
+    email = StringField("E-Mail", validators=[DataRequired(), Email()])
     password = PasswordField("Passwort", validators=[DataRequired()])
     confirm_password = PasswordField("Passwort bestätigen", validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField("Registrieren")
@@ -28,16 +30,14 @@ class RegisterForm(FlaskForm):
 
 
 class UpdateAccountForm(FlaskForm):
+    # Username bleibt als Feld erhalten für die Anzeige, wird aber im Template deaktiviert
     username = StringField("Benutzer", validators=[DataRequired(), Length(min=2, max=20)])
+    first_name = StringField("Vorname", validators=[DataRequired()])
+    last_name = StringField("Nachname", validators=[DataRequired()])
     email = StringField("E-Mail", validators=[DataRequired(), Email()])
     submit = SubmitField("Aktualisieren")
 
-
-    def validate_username(self, username):
-        if username.data != current_user.username:
-            user = User.query.filter_by(username=username.data).first()
-            if user: raise ValidationError('Benutzername vergeben.')
-
+    # validate_username wurde ENTFERNT, da der Username nicht mehr geändert werden darf.
 
     def validate_email(self, email):
         if email.data != current_user.email:
