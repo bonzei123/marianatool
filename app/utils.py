@@ -94,7 +94,7 @@ def send_reset_email(user):
 
     # 2. Reset-Link generieren
     # _external=True ist zwingend nötig, damit die volle Domain (http://...) generiert wird
-    reset_url = url_for('auth.reset_token', token=token, _external=True)
+    reset_url = url_for('auth.reset_token_view', token=token, _external=True)
 
     # 3. E-Mail Inhalt (Plaintext)
     msg.body = f'''Hallo {user.username},
