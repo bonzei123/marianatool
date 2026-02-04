@@ -8,15 +8,62 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
     <style>
         :root {
-            /* Hier wird das Hintergrundbild dynamisch aus dem Context Processor geladen */
             --bg-image: url("{{ url_for('static', filename='img/backgrounds/' + current_background_image) }}");
+            --header-color: #198754;
+            --footer-color: #ffffff;
         }
+
+        html {
+            height: 100%;
+            background: linear-gradient(to bottom, var(--header-color) 0%, var(--header-color) 50%, var(--footer-color) 50%, var(--footer-color) 100%);
+            background-attachment: fixed;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom {
+            background-color: var(--header-color) !important;
+        }
+
+        /* FIX: z-index entfernt, damit Modals nicht überlagert werden */
+        .main-content-wrapper {
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            /* z-index: 1;  <-- ENTFERNT */
+        }
+
+        /* FIX: z-index entfernt */
+        .footer {
+            background-color: var(--footer-color) !important;
+            position: relative;
+            /* z-index: 10; <-- ENTFERNT */
+        }
+
+        .ts-wrapper.form-select.is-invalid { border-color: #dc3545; }
+        .ts-wrapper.form-select.is-valid { border-color: #198754; }
     </style>
 </head>
-<body class="d-flex flex-column min-vh-100"> <nav class="navbar navbar-dark navbar-custom sticky-top">
+<body>
+
+<nav class="navbar navbar-dark navbar-custom sticky-top">
     <div class="container d-flex justify-content-between align-items-center">
 
         <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('main.home') }}">
@@ -101,18 +148,20 @@
     </div>
 </div>
 
-<div class="{% block container_type %}container{% endblock %} mt-5 pb-5 flex-grow-1">
-    {% with messages = get_flashed_messages(with_categories = true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} shadow-sm">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-</div>
+<main class="main-content-wrapper">
+    <div class="{% block container_type %}container{% endblock %} mt-5 pb-5">
+        {% with messages = get_flashed_messages(with_categories = true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} shadow-sm">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
 
-<footer class="footer mt-auto py-4 bg-white border-top">
+<footer class="footer mt-auto py-4 border-top">
     <div class="container text-center">
         <img src="{{ url_for('static', filename='img/logo_green.png') }}" style="height: 50px;" class="mb-3">
         <p class="text-muted small mb-2">&copy; 2026 Bereichsleitungs-Portal. Alle Rechte vorbehalten.</p>
@@ -190,16 +239,35 @@
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 <script>
     document.addEventListener('click', function(event) {
         var sideMenu = document.getElementById('sideMenu');
-        // Wenn das Menü offen ist, schließe es bei jedem Klick, der bis hierhin propagiert
         if (sideMenu.classList.contains('open')) {
             sideMenu.classList.remove('open');
         }
     });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initTomSelects();
+    });
+
+    document.addEventListener('shown.bs.modal', function () {
+        initTomSelects();
+    });
+
+    function initTomSelects() {
+        document.querySelectorAll('select:not(.tomselected):not(.no-search)').forEach((el) => {
+            new TomSelect(el, {
+                create: false,
+                sortField: { field: "text", direction: "asc" },
+                placeholder: 'Suchen oder wählen...'
+            });
+        });
+    }
 </script>
 </body>
 </html>

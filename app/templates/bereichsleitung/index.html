@@ -143,22 +143,32 @@
             </div>
 
             <div class="tab-pane fade" id="clubs" role="tabpanel">
-                <div class="d-flex justify-content-between mb-3">
-                    <h5 class="fw-bold mt-2">Alle Vereine</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mt-2 m-0">Alle Vereine</h5>
                     {% if current_user.is_admin %}
-                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createVereinModal">+ Neuer Verein</button>
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createVereinModal">
+                            <i class="bi bi-plus-lg me-1"></i> Neuer Verein
+                        </button>
                     {% endif %}
                 </div>
 
                 <div class="card shadow border-0">
+                    <div class="card-header bg-white p-3 border-bottom">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="searchClubs" class="form-control border-start-0" placeholder="Vereine durchsuchen..." onkeyup="filterTable('searchClubs', 'tableClubs')">
+                        </div>
+                    </div>
+
                     <div class="card-body p-0">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light text-muted small text-uppercase">
+                        <table class="table table-hover align-middle mb-0" id="tableClubs">
+                            <thead class="bg-light text-muted small text-uppercase sticky-top">
                             <tr>
-                                <th class="ps-4">Name</th>
-                                <th>Bundesland</th> <th>Status</th>
-                                <th>Bereichsleiter</th>
-                                <th>Anbau</th>
+                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableClubs')">Name <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(1, 'tableClubs')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableClubs')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableClubs')">Bereichsleiter <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(4, 'tableClubs')">Anbau <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
@@ -170,13 +180,10 @@
                                         {% if v.is_ev %}<span class="badge bg-success ms-1">e.V.</span>{% endif %}
                                         <div class="small text-muted fw-normal">{{ v.city }}</div>
                                     </td>
-
                                     <td>{{ v.state_seat }}</td>
-
                                     <td>
                                         <span class="badge border" style="{{ v.status_color_css }}">{{ v.status_label }}</span>
                                     </td>
-
                                     <td>
                                         {% if v.managers %}
                                             {% for m in v.managers %}
@@ -188,11 +195,9 @@
                                             <span class="text-muted small opacity-50">-</span>
                                         {% endif %}
                                     </td>
-
                                     <td class="small text-muted">
                                         {{ v.anbaustelle.name if v.anbaustelle else '-' }}
                                     </td>
-
                                     <td class="text-end pe-4">
                                         {% if current_user.is_admin %}
                                             <form action="{{ url_for('bereichsleitung.delete_entity', type='verein', id=v.id) }}"
@@ -217,21 +222,31 @@
             </div>
 
             <div class="tab-pane fade" id="grow" role="tabpanel">
-                <div class="d-flex justify-content-between mb-3">
-                    <h5 class="fw-bold mt-2">Anbaustellen</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mt-2 m-0">Anbaustellen</h5>
                     {% if current_user.is_admin %}
-                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAnbauModal">+ Neue Anbaustelle</button>
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAnbauModal">
+                            <i class="bi bi-plus-lg me-1"></i> Neue Anbaustelle
+                        </button>
                     {% endif %}
                 </div>
 
                 <div class="card shadow border-0">
+                    <div class="card-header bg-white p-3 border-bottom">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="searchGrow" class="form-control border-start-0" placeholder="Anbaustellen durchsuchen..." onkeyup="filterTable('searchGrow', 'tableGrow')">
+                        </div>
+                    </div>
+
                     <div class="card-body p-0">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0" id="tableGrow">
                             <thead class="bg-light text-muted small text-uppercase">
                             <tr>
-                                <th class="ps-4">Name / ID</th>
-                                <th>Typ</th>
-                                <th>Status</th> <th>Standort</th>
+                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableGrow')">Name / ID <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(1, 'tableGrow')">Typ <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableGrow')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableGrow')">Standort <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
@@ -274,21 +289,31 @@
             </div>
 
             <div class="tab-pane fade" id="dist" role="tabpanel">
-                <div class="d-flex justify-content-between mb-3">
-                    <h5 class="fw-bold mt-2">Abgabestellen</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mt-2 m-0">Abgabestellen</h5>
                     {% if current_user.is_admin %}
-                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAbgabeModal">+ Neue Abgabestelle</button>
+                        <button class="btn btn-success btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createAbgabeModal">
+                            <i class="bi bi-plus-lg me-1"></i> Neue Abgabestelle
+                        </button>
                     {% endif %}
                 </div>
 
                 <div class="card shadow border-0">
+                    <div class="card-header bg-white p-3 border-bottom">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="searchDist" class="form-control border-start-0" placeholder="Abgabestellen durchsuchen..." onkeyup="filterTable('searchDist', 'tableDist')">
+                        </div>
+                    </div>
+
                     <div class="card-body p-0">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0" id="tableDist">
                             <thead class="bg-light text-muted small text-uppercase">
                             <tr>
-                                <th class="ps-4">Verein</th>
-                                <th>Status</th> <th>Adresse</th>
-                                <th>Bundesland</th>
+                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableDist')">Verein <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(1, 'tableDist')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableDist')">Adresse <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableDist')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
@@ -325,7 +350,6 @@
             </div>
 
             <div class="tab-pane fade" id="admin" role="tabpanel">
-
                 <div class="row mt-4">
                     <div class="col-12">
                          <div class="card shadow-sm border-0">
@@ -357,11 +381,11 @@
                                 <pre class="bg-light p-2 rounded border text-muted" style="font-size: 0.65rem; max-height: 150px; overflow-y: auto;">
 [
   {
-    "name": "Muster Verein e.V.",
+    "name": "Mariana CSC Berlin",
     "city": "Berlin",
     "zip_code": "10115",
     "state_seat": "BE",
-    "status": "Gegründet",
+    "status_id": 1,
     "is_ev": true
   }
 ]</pre>
@@ -386,7 +410,8 @@
     "name": "Cluster Nord",
     "address": "Feldweg 1, Hamburg",
     "state": "HH",
-    "type": "cluster"
+    "type": "cluster",
+    "status_id": 1
   }
 ]</pre>
                             </div>
@@ -407,9 +432,10 @@
                                 <pre class="bg-light p-2 rounded border text-muted" style="font-size: 0.65rem; max-height: 150px; overflow-y: auto;">
 [
   {
-    "verein_name": "Muster Verein e.V.",
+    "verein_name": "Mariana CSC Berlin",
     "address": "Hauptstr. 5, Berlin",
-    "state": "BE"
+    "state": "BE",
+    "status_id": 1
   }
 ]</pre>
                             </div>
@@ -470,21 +496,21 @@
         </div>
     </div>
 
+    <style>
+        .cursor-pointer { cursor: pointer; user-select: none; }
+        .cursor-pointer:hover { background-color: #f8f9fa; }
+    </style>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // 1. Beim Laden: Prüfen ob ein Hash in der URL steht (z.B. #clubs)
             let hash = window.location.hash;
             if (hash) {
-                // Suche den Button, der dieses Target hat
                 let triggerEl = document.querySelector(`#blTabs button[data-bs-target="${hash}"]`);
                 if (triggerEl) {
-                    // Tab aktivieren
                     let tab = new bootstrap.Tab(triggerEl);
                     tab.show();
                 }
             }
-
-            // 2. Beim Klicken: Hash in die URL schreiben (ohne Reload)
             let tabEls = document.querySelectorAll('#blTabs button[data-bs-toggle="tab"]');
             tabEls.forEach(function(el) {
                 el.addEventListener('shown.bs.tab', function (event) {
@@ -495,6 +521,53 @@
                 });
             });
         });
+
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let rowText = tr[i].textContent || tr[i].innerText;
+                if (rowText.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+        function sortTable(n, tableId) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById(tableId);
+            switching = true;
+            dir = "asc";
+
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    let xContent = x.textContent || x.innerText;
+                    let yContent = y.textContent || y.innerText;
+                    if (dir == "asc") {
+                        if (xContent.toLowerCase() > yContent.toLowerCase()) { shouldSwitch = true; break; }
+                    } else if (dir == "desc") {
+                        if (xContent.toLowerCase() < yContent.toLowerCase()) { shouldSwitch = true; break; }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount ++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
+                }
+            }
+        }
     </script>
 
 {% endblock %}
