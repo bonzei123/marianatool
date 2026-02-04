@@ -194,7 +194,7 @@ def upload_chunk():
 @permission_required('immo_user')
 def create_quick():
     # 1. Onboarding Check
-    if not current_user.onboarding_confirmed_at:
+    if not current_user.onboarding_confirmed_at and not current_user.is_admin:
         return jsonify({'success': False, 'error': 'REDIRECT_ONBOARDING', 'url': url_for('onboarding.start')}), 403
     try:
         data = request.json

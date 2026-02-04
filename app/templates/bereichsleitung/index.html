@@ -164,18 +164,24 @@
                         <table class="table table-hover align-middle mb-0" id="tableClubs">
                             <thead class="bg-light text-muted small text-uppercase sticky-top">
                             <tr>
-                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableClubs')">Name <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(1, 'tableClubs')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(2, 'tableClubs')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(3, 'tableClubs')">Bereichsleiter <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(4, 'tableClubs')">Anbau <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th style="width: 40px;" class="text-center bg-light">
+                                    <input type="checkbox" class="form-check-input select-all" data-target="tableClubs">
+                                </th>
+                                <th class="ps-2 cursor-pointer" onclick="sortTable(1, 'tableClubs')">Name <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableClubs')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableClubs')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(4, 'tableClubs')">Bereichsleiter <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(5, 'tableClubs')">Anbau <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for v in vereine %}
                                 <tr onclick="window.location='{{ url_for('bereichsleitung.verein_detail', id=v.id) }}'" style="cursor: pointer;">
-                                    <td class="ps-4 fw-bold">
+                                    <td class="text-center" onclick="event.stopPropagation()">
+                                        <input type="checkbox" class="form-check-input select-row" value="{{ v.id }}">
+                                    </td>
+                                    <td class="ps-2 fw-bold">
                                         {{ v.name }}
                                         {% if v.is_ev %}<span class="badge bg-success ms-1">e.V.</span>{% endif %}
                                         <div class="small text-muted fw-normal">{{ v.city }}</div>
@@ -213,7 +219,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="6" class="text-center p-4">Keine Vereine gefunden.</td></tr>
+                                <tr><td colspan="7" class="text-center p-4">Keine Vereine gefunden.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -241,19 +247,25 @@
 
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0" id="tableGrow">
-                            <thead class="bg-light text-muted small text-uppercase">
+                            <thead class="bg-light text-muted small text-uppercase sticky-top">
                             <tr>
-                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableGrow')">Name / ID <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(1, 'tableGrow')">Typ <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(2, 'tableGrow')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(3, 'tableGrow')">Standort <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th style="width: 40px;" class="text-center bg-light">
+                                    <input type="checkbox" class="form-check-input select-all" data-target="tableGrow">
+                                </th>
+                                <th class="ps-2 cursor-pointer" onclick="sortTable(1, 'tableGrow')">Name / ID <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableGrow')">Typ <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableGrow')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(4, 'tableGrow')">Standort <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for a in anbaustellen %}
                                 <tr onclick="window.location='{{ url_for('bereichsleitung.anbau_detail', id=a.id) }}'" style="cursor: pointer;">
-                                    <td class="ps-4 fw-bold">{{ a.name }}</td>
+                                    <td class="text-center" onclick="event.stopPropagation()">
+                                        <input type="checkbox" class="form-check-input select-row" value="{{ a.id }}">
+                                    </td>
+                                    <td class="ps-2 fw-bold">{{ a.name }}</td>
                                     <td>
                                         {% if a.anbau_type == 'cluster' %}
                                             <span class="badge bg-info text-dark">Cluster</span>
@@ -280,7 +292,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center p-4">Keine Anbaustellen zugewiesen.</td></tr>
+                                <tr><td colspan="6" class="text-center p-4">Keine Anbaustellen zugewiesen.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -308,19 +320,25 @@
 
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0" id="tableDist">
-                            <thead class="bg-light text-muted small text-uppercase">
+                            <thead class="bg-light text-muted small text-uppercase sticky-top">
                             <tr>
-                                <th class="ps-4 cursor-pointer" onclick="sortTable(0, 'tableDist')">Verein <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(1, 'tableDist')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(2, 'tableDist')">Adresse <i class="bi bi-arrow-down-up small ms-1"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable(3, 'tableDist')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th style="width: 40px;" class="text-center bg-light">
+                                    <input type="checkbox" class="form-check-input select-all" data-target="tableDist">
+                                </th>
+                                <th class="ps-2 cursor-pointer" onclick="sortTable(1, 'tableDist')">Verein <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(2, 'tableDist')">Status <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(3, 'tableDist')">Adresse <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable(4, 'tableDist')">Bundesland <i class="bi bi-arrow-down-up small ms-1"></i></th>
                                 <th class="text-end pe-4">Aktion</th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for d in ausgabestellen %}
                                 <tr onclick="window.location='{{ url_for('bereichsleitung.ausgabe_detail', id=d.id) }}'" style="cursor: pointer;">
-                                    <td class="ps-4">{{ d.verein.name }}</td>
+                                    <td class="text-center" onclick="event.stopPropagation()">
+                                        <input type="checkbox" class="form-check-input select-row" value="{{ d.id }}">
+                                    </td>
+                                    <td class="ps-2">{{ d.verein.name }}</td>
                                     <td>
                                         <span class="badge border" style="{{ d.status_color_css }}">{{ d.status_label }}</span>
                                     </td>
@@ -341,7 +359,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center p-4">Keine Abgabestellen gefunden.</td></tr>
+                                <tr><td colspan="6" class="text-center p-4">Keine Abgabestellen gefunden.</td></tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -447,6 +465,125 @@
         </div>
     </div>
 
+    <div id="bulkActionBar" class="fixed-bottom bg-white border-top shadow p-3 d-none justify-content-center" style="z-index: 1050; left: 0; right: 0;">
+        <div class="container d-flex justify-content-between align-items-center" style="max-width: 960px;">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width:30px; height:30px;" id="selectedCount">0</div>
+                <span class="fw-bold text-dark">Elemente ausgewählt</span>
+            </div>
+            <div>
+                <button class="btn btn-dark fw-bold px-4 rounded-pill shadow-sm" onclick="openBulkEditModal()">
+                    <i class="bi bi-pencil-fill me-2"></i> Auswahl bearbeiten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bulkEditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-layers-half me-2"></i> Massenbearbeitung</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info small mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Fülle nur die Felder aus, die du ändern möchtest.
+                    </div>
+
+                    <form id="bulkForm">
+
+                        <div class="mb-3">
+                            <label class="fw-bold form-label">Neuer Status</label>
+                            <select name="status_id" id="bulkStatusSelect" class="form-select no-search">
+                                <option value="">- Unverändert -</option>
+                                {% for s in all_statuses %}
+                                     <option value="{{ s.id }}" data-context="{{ s.context }}">{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <div id="bulk-fields-verein" class="bulk-section d-none">
+
+                            <div class="mb-3">
+                                <label class="fw-bold form-label">Bereichsleiter zuweisen</label>
+                                <select name="manager_id" class="form-select">
+                                    <option value="">- Unverändert -</option>
+                                    {% if all_users %}
+                                        {% for u in all_users %}
+                                            <option value="{{ u.id }}">{{ u.full_name }} ({{ u.username }})</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>Keine User in DB</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="fw-bold form-label">Anbau-Cluster zuweisen</label>
+                                <select name="anbaustelle_id" class="form-select">
+                                    <option value="">- Unverändert -</option>
+                                    {% if all_clusters %}
+                                        {% for c in all_clusters %}
+                                            <option value="{{ c.id }}">{{ c.name }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>Keine Cluster vorhanden</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div class="form-check form-switch p-3 border rounded bg-light">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" name="is_ev_toggle" id="bulkEvToggle" style="float:none;" onchange="document.getElementById('bulkEvVal').value = this.checked ? 'true' : 'false'; document.getElementById('bulkEvVal').disabled = false;">
+                                <label class="form-check-label fw-bold">Ist e.V.? (Überschreiben)</label>
+                                <input type="hidden" name="is_ev" id="bulkEvVal" disabled>
+                            </div>
+                        </div>
+
+                        <div id="bulk-fields-anbau" class="bulk-section d-none">
+                            <p class="text-muted small fst-italic">Für Anbaustellen ist aktuell nur die Status-Änderung (siehe oben) möglich.</p>
+                        </div>
+
+                        <div id="bulk-fields-abgabe" class="bulk-section d-none">
+                            <p class="text-muted small fst-italic">Für Abgabestellen ist aktuell nur die Status-Änderung (siehe oben) möglich.</p>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between bg-light">
+                    <button type="button" class="btn btn-outline-danger fw-bold" onclick="initBulkDelete()">
+                        <i class="bi bi-trash"></i> Auswahl löschen
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-success fw-bold px-4" onclick="submitBulkEdit()">
+                            <i class="bi bi-check-lg me-1"></i> Speichern
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" style="z-index: 1060;">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="text-danger mb-3"><i class="bi bi-exclamation-triangle-fill display-4"></i></div>
+                    <h5 class="fw-bold mb-3">Wirklich löschen?</h5>
+                    <p class="text-muted small">Du bist dabei, <span id="delCount" class="fw-bold text-dark">0</span> Elemente unwiderruflich zu entfernen.</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-danger fw-bold" onclick="executeBulkDelete()">Ja, alles löschen</button>
+                        <button class="btn btn-light text-muted" data-bs-dismiss="modal">Abbrechen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="createVereinModal" tabindex="-1">
         <div class="modal-dialog">
             <form class="modal-content" action="{{ url_for('bereichsleitung.create_entity', type='verein') }}" method="POST">
@@ -497,72 +634,249 @@
     </div>
 
     <style>
+        /* Fix für Sticky Table Header unter der Navbar */
+        thead.sticky-top {
+            top: 70px !important; /* Höhe der Navbar + Puffer */
+            z-index: 900; /* Unter der Navbar (meist 1030), aber über dem Content */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Optional: Schatten */
+        }
         .cursor-pointer { cursor: pointer; user-select: none; }
         .cursor-pointer:hover { background-color: #f8f9fa; }
+        /* Checkbox Styling */
+        .select-row, .select-all { width: 1.2em; height: 1.2em; cursor: pointer; }
     </style>
 
     <script>
+        // --- GLOBALS FÜR BULK ACTIONS ---
+        let selectedIds = [];
+        let activeEntityType = '';
+        let bulkEditModalInstance = null;
+        let confirmDeleteModalInstance = null;
+
+        // FIX: URL Dynamisch generieren
+        const BASE_URL_UPDATE = "{{ url_for('bereichsleitung.bulk_update', entity_type='') }}";
+        const BASE_URL_DELETE = "{{ url_for('bereichsleitung.bulk_delete', entity_type='') }}";
+
         document.addEventListener("DOMContentLoaded", function() {
+            bulkEditModalInstance = new bootstrap.Modal(document.getElementById('bulkEditModal'));
+            confirmDeleteModalInstance = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+
+            // Initial Entity
+            if(window.location.hash === '#grow') activeEntityType = 'anbau';
+            else if(window.location.hash === '#dist') activeEntityType = 'abgabe';
+            else activeEntityType = 'verein';
+
             let hash = window.location.hash;
             if (hash) {
                 let triggerEl = document.querySelector(`#blTabs button[data-bs-target="${hash}"]`);
-                if (triggerEl) {
-                    let tab = new bootstrap.Tab(triggerEl);
-                    tab.show();
-                }
+                if (triggerEl) { let tab = new bootstrap.Tab(triggerEl); tab.show(); }
             }
+
             let tabEls = document.querySelectorAll('#blTabs button[data-bs-toggle="tab"]');
             tabEls.forEach(function(el) {
                 el.addEventListener('shown.bs.tab', function (event) {
                     let target = event.target.getAttribute('data-bs-target');
                     if(target) {
                         history.replaceState(null, null, target);
+                        clearSelection();
+                        if(target === '#clubs') activeEntityType = 'verein';
+                        else if(target === '#grow') activeEntityType = 'anbau';
+                        else if(target === '#dist') activeEntityType = 'abgabe';
+                        else activeEntityType = '';
+                        updateActionBar();
                     }
                 });
             });
+
+            document.body.addEventListener('change', function(e) {
+                if (e.target.classList.contains('select-all')) {
+                    const tableId = e.target.getAttribute('data-target');
+                    const table = document.getElementById(tableId);
+                    const rows = table.querySelectorAll('tbody tr:not([style*="display: none"]) .select-row');
+                    rows.forEach(cb => cb.checked = e.target.checked);
+                    updateActionBar();
+                }
+                if (e.target.classList.contains('select-row')) updateActionBar();
+            });
         });
 
+        function updateActionBar() {
+            let activeTableId = '';
+            if (activeEntityType === 'verein') activeTableId = 'tableClubs';
+            else if (activeEntityType === 'anbau') activeTableId = 'tableGrow';
+            else if (activeEntityType === 'abgabe') activeTableId = 'tableDist';
+
+            if (!activeTableId) { hideActionBar(); return; }
+            const table = document.getElementById(activeTableId);
+            if(!table) { hideActionBar(); return; }
+
+            const checkedBoxes = table.querySelectorAll('.select-row:checked');
+            selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+            const bar = document.getElementById('bulkActionBar');
+            const countSpan = document.getElementById('selectedCount');
+
+            if (selectedIds.length > 0) {
+                countSpan.innerText = selectedIds.length;
+                bar.classList.remove('d-none');
+                bar.classList.add('d-flex');
+            } else {
+                hideActionBar();
+                const headerCb = table.querySelector('.select-all');
+                if(headerCb) headerCb.checked = false;
+            }
+        }
+
+        function hideActionBar() {
+            document.getElementById('bulkActionBar').classList.add('d-none');
+            document.getElementById('bulkActionBar').classList.remove('d-flex');
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.select-row').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.select-all').forEach(cb => cb.checked = false);
+            selectedIds = [];
+            hideActionBar();
+        }
+
+        function openBulkEditModal() {
+            if(selectedIds.length === 0) return;
+
+            document.getElementById('bulkForm').reset();
+            if(document.getElementById('bulkEvVal')) document.getElementById('bulkEvVal').disabled = true;
+
+            document.querySelectorAll('.bulk-section').forEach(el => el.classList.add('d-none'));
+            const section = document.getElementById('bulk-fields-' + activeEntityType);
+            if(section) section.classList.remove('d-none');
+
+            // STATUS FILTERUNG
+            const statusSelect = document.getElementById('bulkStatusSelect');
+            const options = statusSelect.options;
+
+            let targetContext = activeEntityType;
+            if(activeEntityType === 'abgabe') targetContext = 'ausgabe';
+
+            for (let i = 0; i < options.length; i++) {
+                const opt = options[i];
+                if (opt.value === "") { opt.hidden = false; continue; }
+                const ctx = opt.getAttribute('data-context');
+
+                if (ctx === targetContext) {
+                    opt.hidden = false;
+                    opt.disabled = false;
+                } else {
+                    opt.hidden = true;
+                    opt.disabled = true;
+                }
+            }
+            statusSelect.value = "";
+            bulkEditModalInstance.show();
+        }
+
+        async function submitBulkEdit() {
+            const formData = new FormData(document.getElementById('bulkForm'));
+            let changes = {};
+
+            for (let [key, value] of formData.entries()) {
+                if (value.trim() !== "") {
+                    if(key === 'is_ev' && value === 'true') changes[key] = true;
+                    else if(key === 'is_ev' && value === 'false') changes[key] = false;
+                    else changes[key] = value;
+                }
+            }
+
+            if (Object.keys(changes).length === 0) {
+                alert("Keine Felder ausgefüllt."); return;
+            }
+
+            const btn = document.querySelector('#bulkEditModal .btn-success');
+            const oldText = btn.innerText;
+            btn.disabled = true; btn.innerText = 'Speichere...';
+
+            try {
+                // FIX: Nutze generierte URL
+                const url = BASE_URL_UPDATE + activeEntityType;
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ids: selectedIds, changes: changes })
+                });
+
+                const data = await res.json();
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Fehler: ' + data.error);
+                    btn.disabled = false; btn.innerText = oldText;
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Netzwerkfehler (siehe Konsole)');
+                btn.disabled = false; btn.innerText = oldText;
+            }
+        }
+
+        function initBulkDelete() {
+            document.getElementById('delCount').innerText = selectedIds.length;
+            confirmDeleteModalInstance.show();
+        }
+
+        async function executeBulkDelete() {
+            const btn = document.querySelector('#confirmDeleteModal .btn-danger');
+            btn.disabled = true; btn.innerText = "Lösche...";
+
+            try {
+                // FIX: Nutze generierte URL
+                const url = BASE_URL_DELETE + activeEntityType;
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ids: selectedIds })
+                });
+                const data = await res.json();
+                if(data.success) window.location.reload();
+                else {
+                    alert("Fehler: " + data.error);
+                    btn.disabled = false; btn.innerText = "Ja, alles löschen";
+                }
+            } catch(e) {
+                alert("Netzwerkfehler");
+            }
+        }
+
+        // --- FILTER & SORT (Hier unverändert) ---
         function filterTable(inputId, tableId) {
             const input = document.getElementById(inputId);
             const filter = input.value.toUpperCase();
             const table = document.getElementById(tableId);
             const tr = table.getElementsByTagName("tr");
-
             for (let i = 1; i < tr.length; i++) {
                 let rowText = tr[i].textContent || tr[i].innerText;
-                if (rowText.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
+                if (rowText.toUpperCase().indexOf(filter) > -1) tr[i].style.display = "";
+                else tr[i].style.display = "none";
             }
         }
 
         function sortTable(n, tableId) {
             var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
             table = document.getElementById(tableId);
-            switching = true;
-            dir = "asc";
-
+            switching = true; dir = "asc";
             while (switching) {
-                switching = false;
-                rows = table.rows;
+                switching = false; rows = table.rows;
                 for (i = 1; i < (rows.length - 1); i++) {
                     shouldSwitch = false;
                     x = rows[i].getElementsByTagName("TD")[n];
                     y = rows[i + 1].getElementsByTagName("TD")[n];
                     let xContent = x.textContent || x.innerText;
                     let yContent = y.textContent || y.innerText;
-                    if (dir == "asc") {
-                        if (xContent.toLowerCase() > yContent.toLowerCase()) { shouldSwitch = true; break; }
-                    } else if (dir == "desc") {
-                        if (xContent.toLowerCase() < yContent.toLowerCase()) { shouldSwitch = true; break; }
-                    }
+                    if (dir == "asc") { if (xContent.toLowerCase() > yContent.toLowerCase()) { shouldSwitch = true; break; } }
+                    else if (dir == "desc") { if (xContent.toLowerCase() < yContent.toLowerCase()) { shouldSwitch = true; break; } }
                 }
                 if (shouldSwitch) {
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount ++;
+                    switching = true; switchcount ++;
                 } else {
                     if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
                 }
